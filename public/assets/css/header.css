@@ -1,0 +1,120 @@
+:root{
+    --blue-royal: #0A51FF;
+    --bg-dark: #0d0d0d;
+    --bg-dark2: #161616;
+    --text-light: #e8e8e8;
+}
+
+/* --- Reset --- */
+.main-header * {
+    font-family: "Poppins", sans-serif;
+    box-sizing: border-box;
+}
+
+/* TOP LINE */
+.top-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-dark);
+    padding: 6px 25px;
+    color: var(--text-light);
+    font-size: 14px;
+}
+
+/* Redes sociales */
+.social-icon {
+    margin-left: 10px;
+    font-size: 17px;
+    color: #bfbfbf;
+    transition: .25s;
+}
+.social-icon:hover {
+    color: var(--blue-royal);
+}
+
+/* Botón login */
+.btn-login {
+    margin-left: 18px;
+    padding: 6px 14px;
+    background: var(--blue-royal);
+    border-radius: 5px;
+    color: white;
+    text-decoration: none;
+    font-size: 14px;
+    transition: .3s;
+}
+.btn-login:hover {
+    background: #0034b5;
+}
+
+/* LOGO CENTRADO */
+.logo-wrapper {
+    position: relative;
+    text-align: center;
+    padding: 25px 0 10px;
+}
+.logo-bg {
+    width: 100%;
+    height: 85px;
+    background: var(--bg-dark2);
+    border-radius: 0 0 40px 40px;
+    margin: 0 auto -60px;
+    box-shadow: 0 6px 12px rgba(0,0,0,.35);
+}
+.main-logo {
+    height: 120px;
+    position: relative;
+    z-index: 2;
+}
+
+/* NAVBAR */
+.navbar {
+    background: var(--bg-dark2);
+    display: flex;
+    justify-content: center;
+    padding: 10px 20px;
+}
+.menu {
+    display: flex;
+    gap: 22px;
+}
+.menu li {
+    list-style: none;
+}
+.menu li a {
+    color: var(--text-light);
+    padding: 10px 14px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: .25s;
+}
+.menu li a:hover {
+    background: var(--blue-royal);
+    border-radius: 5px;
+    color: white;
+}
+.menu-toggle { display: none; }
+
+/* RESPONSIVE */
+@media(max-width: 900px) {
+    .menu-toggle {
+        display: block;
+        background: none;
+        color: white;
+        font-size: 26px;
+        border: none;
+        cursor: pointer;
+        margin-left: auto;
+    }
+
+    .menu {
+        flex-direction: column;
+        width: 100%;
+        display: none;
+        text-align: center;
+    }
+    .menu.open {
+        display: block;
+    }
+}
