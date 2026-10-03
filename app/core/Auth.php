@@ -26,13 +26,15 @@ class Auth
     }
 
     /**
-     * Inicia sesión con los datos del usuario autenticado.
+     * Inicia una nueva sesión autenticada.
      */
     public static function login(array $user): void
     {
         self::start();
 
-        // Evita reutilización del ID de sesión anterior.
+        /*
+         * Regeneramos el ID únicamente al iniciar sesión.
+         */
         session_regenerate_id(true);
 
         $_SESSION['user'] = [
@@ -54,7 +56,33 @@ class Auth
     }
 
     /**
-     * Cierra la sesión del usuario.
+     * Actualiza los datos actuales de la sesión
+     * sin regenerar el ID de sesión.
+     */
+    public static function refreshUser(array $user): void
+    {
+        self::start();
+
+        $_SESSION['user'] = [
+            'id'          => (int) $user['id'],
+            'afiliado_id' => isset($user['afiliado_id'])
+                ? (int) $user['afiliado_id']
+                : null,
+
+            'usuario'     => $user['usuario'],
+
+            'rol_id'      => (int) $user['rol_id'],
+            'rol_clave'   => $user['rol_clave'],
+            'rol_nombre'  => $user['rol_nombre'],
+
+            'estado'      => $user['estado'],
+
+            'avatar'      => $user['avatar'] ?? null
+        ];
+    }
+
+    /**
+     * Cierra completamente la sesión.
      */
     public static function logout(): void
     {
@@ -71,7 +99,7 @@ class Auth
                 '',
                 time() - 42000,
                 $params['path'],
-                $params['domain'],
+                $params['domain'] ?? '',
                 $params['secure'],
                 $params['httponly']
             );
@@ -91,7 +119,7 @@ class Auth
     }
 
     /**
-     * Devuelve los datos del usuario autenticado.
+     * Devuelve el usuario autenticado.
      */
     public static function user(): ?array
     {
@@ -101,7 +129,7 @@ class Auth
     }
 
     /**
-     * Devuelve el ID del usuario autenticado.
+     * Devuelve el ID del usuario actual.
      */
     public static function id(): ?int
     {
@@ -134,10 +162,7 @@ class Auth
     }
 
     /**
-     * Exige uno de los roles especificados.
-     *
-     * Ejemplo:
-     * Auth::requireRole(['ADMIN', 'SUPERVISOR']);
+     * Exige alguno de los roles indicados.
      */
     public static function requireRole(array $roles): void
     {
@@ -151,3 +176,5 @@ class Auth
         }
     }
 }
+
+?>

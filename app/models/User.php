@@ -43,11 +43,34 @@ class User {
     }
     
     /** Buscar un usuario por su ID*/
-    public function findById($id) {
+    public function findById($id)
+    {
         $query = $this->pdo->prepare(
-            "SELECT * FROM tb_usuarios WHERE id = ? LIMIT 1"
+            "SELECT
+                u.id,
+                u.afiliado_id,
+                u.usuario,
+                u.password,
+                u.rol_id,
+                u.estado,
+                u.avatar,
+
+                r.clave AS rol_clave,
+                r.nombre AS rol_nombre,
+                r.estado AS rol_estado
+
+            FROM tb_usuarios u
+
+            INNER JOIN tb_roles r
+            ON r.id = u.rol_id
+
+            WHERE u.id = ?
+
+            LIMIT 1"
         );
+
         $query->execute([$id]);
+
         return $query->fetch(PDO::FETCH_ASSOC);
     }
 
@@ -238,6 +261,7 @@ class User {
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
     public function filterUsers($params)
     {
         $sqlBase = "
