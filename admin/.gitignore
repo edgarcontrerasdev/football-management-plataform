@@ -1,0 +1,47 @@
+# ==========================
+# Archivos del sistema
+# ==========================
+
+.DS_Store
+Thumbs.db
+
+# ==========================
+# Configuración del editor
+# ==========================
+
+.vscode/settings.json
+
+# ==========================
+# Dependencias
+# ==========================
+
+vendor/
+
+# ==========================
+# Archivos de entorno
+# ==========================
+
+.env
+.env.*
+
+# ==========================
+# Logs
+# ==========================
+
+*.log
+
+# ==========================
+# Caché
+# ==========================
+
+cache/
+tmp/
+
+# ==========================
+# Archivos subidos por usuarios
+# ==========================
+
+public/uploads/*
+
+# Mantener la carpeta en Git
+!public/uploads/.gitkeep

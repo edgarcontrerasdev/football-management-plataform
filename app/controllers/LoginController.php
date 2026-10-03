@@ -1,108 +1,199 @@
 <?php
-require_once __DIR__.'../../core/Auth.php';
-require_once __DIR__.'../../models/User.php';
 
-class LoginController {
+declare(strict_types=1);
 
-    public function login() {
+require_once __DIR__ . '/../core/Auth.php';
+require_once __DIR__ . '/../models/User.php';
 
+class LoginController
+{
+    /**
+     * Procesa el inicio de sesión.
+     */
+    public function login(): void
+    {
         header('Content-Type: application/json; charset=utf-8');
 
-        
-        require_once __DIR__.'../../../config/database.php';
+        require_once __DIR__ . '/../../config/database.php';
+
         Auth::start();
 
-         // Leer JSON en lugar de $_POST
-        $input = json_decode(file_get_contents('php://input'), true);
-        //capturamos datos enviados por el formulario
-        $inputUsuario = $input['usuario'] ?? '';
-        $inputPassword = $input['password'] ?? '';
+        /*
+         * ---------------------------------------------------------
+         * 1. Leer información enviada
+         * ---------------------------------------------------------
+         *
+         * El formulario actual trabaja con JSON.
+         * Dejamos también $_POST como respaldo para facilitar futuras
+         * integraciones o pruebas.
+         */
 
-        //creamos el modelo User y buscamos cualquier usuario con ese nombre
-        //sin importar el estado
+        $rawInput = file_get_contents('php://input');
+        $input    = json_decode($rawInput, true);
+
+        if (!is_array($input)) {
+            $input = $_POST;
+        }
+
+        $inputUsuario  = trim((string) ($input['usuario'] ?? ''));
+        $inputPassword = (string) ($input['password'] ?? '');
+
+        /*
+         * ---------------------------------------------------------
+         * 2. Validación de campos
+         * ---------------------------------------------------------
+         */
+
+        if ($inputUsuario === '' && $inputPassword === '') {
+
+            echo json_encode([
+                'success' => false,
+                'mensaje' => 'Los campos usuario y contraseña no pueden estar vacíos.'
+            ]);
+
+            exit;
+        }
+
+        if ($inputUsuario === '') {
+
+            echo json_encode([
+                'success' => false,
+                'mensaje' => 'El campo usuario no puede estar vacío.'
+            ]);
+
+            exit;
+        }
+
+        if ($inputPassword === '') {
+
+            echo json_encode([
+                'success' => false,
+                'mensaje' => 'El campo contraseña no puede estar vacío.'
+            ]);
+
+            exit;
+        }
+
+        /*
+         * ---------------------------------------------------------
+         * 3. Buscar usuario
+         * ---------------------------------------------------------
+         */
+
         $userModel = new User($pdo);
-     
+
         $user = $userModel->usuarioExiste($inputUsuario);
-       
-        //preparamos respuesta por default (JSON)
-        $response = ['success'=>false,'mensaje'=>"Error desconocido"];
 
-        //verificamos que el usuario y el password no vengan vacios
-        if($inputUsuario==null && $inputPassword==null){
-            $response=[
-                'mensaje'=>"Los campos usuario y contraseña no pueden estar vacios",
-                'success'=>false
-            ];
-            echo json_encode($response);
-            exit;
-        }else //verificar si el usuario viene vacio
-        if($inputUsuario==null){
-            $response =[
-                'mensaje'=>"El campo usuario no puede estar vacio",
-                'success'=>false
-            ];
-            echo json_encode($response);
-            exit;
-        }else //verificamos si el el password viene vacio
-         if($inputPassword==null){
-            $response=[
-                'mensaje'=>"El campo password no puede estar vacio",
-                'success'=>false
-            ];
-            echo json_encode($response);
+        if (!$user) {
+
+            echo json_encode([
+                'success' => false,
+                'mensaje' => 'Las credenciales proporcionadas no son válidas.'
+            ]);
+
             exit;
         }
 
-        //validacion de existencia de usuario
-        if(!$user){
-            $response = [
-                'mensaje'=>"El usuario no existe",
-                'success'=>false
-            ];
-            echo json_encode($response);
+        /*
+         * ---------------------------------------------------------
+         * 4. Verificar contraseña
+         * ---------------------------------------------------------
+         */
+
+        if (!password_verify($inputPassword, $user['password'])) {
+
+            echo json_encode([
+                'success' => false,
+                'mensaje' => 'Las credenciales proporcionadas no son válidas.'
+            ]);
+
             exit;
         }
 
-        //verificar contraseña
-        if(!password_verify($inputPassword,$user['password'])){
-            $response = [
-                'mensaje'=>"La contraseña es incorrecta",
-                'success'=>false
-            ];
-            echo json_encode($response);
+        /*
+         * ---------------------------------------------------------
+         * 5. Verificar estado del usuario
+         * ---------------------------------------------------------
+         *
+         * En V2 estado es texto:
+         * activo
+         */
+
+        if (strtolower((string) $user['estado']) !== 'activo') {
+
+            echo json_encode([
+                'success' => false,
+                'mensaje' => 'El usuario se encuentra inhabilitado. Contactar al administrador.'
+            ]);
+
             exit;
         }
 
-        //verificar el estado del usuario
-        if ((int)$user['estado'] !== 1) {
-            $response = [
-                'mensaje'=>"Usuario inhabilitado. Contactar al administrador",
-                'success'=>false
-            ];
-            echo json_encode($response);
+        /*
+         * ---------------------------------------------------------
+         * 6. Verificar estado del rol
+         * ---------------------------------------------------------
+         */
+
+        if (
+            isset($user['rol_estado']) &&
+            strtolower((string) $user['rol_estado']) !== 'activo'
+        ) {
+
+            echo json_encode([
+                'success' => false,
+                'mensaje' => 'El rol asignado al usuario no se encuentra activo.'
+            ]);
+
             exit;
         }
 
-        //loggin exitoso
-        Auth::login($user); //se guarda la sesion
-        $response['success']=true;
-        $response['mensaje']='Inicio de sesión exitoso';
-        $response['redirect']='/afec/admin/index.php';
+        /*
+         * ---------------------------------------------------------
+         * 7. Verificar que exista un rol válido
+         * ---------------------------------------------------------
+         */
 
-        echo json_encode($response);
+        if (
+            empty($user['rol_clave']) ||
+            empty($user['rol_nombre'])
+        ) {
+
+            echo json_encode([
+                'success' => false,
+                'mensaje' => 'El usuario no tiene un rol de acceso válido.'
+            ]);
+
+            exit;
+        }
+
+        /*
+         * ---------------------------------------------------------
+         * 8. Login exitoso
+         * ---------------------------------------------------------
+         */
+
+        Auth::login($user);
+
+        echo json_encode([
+            'success'  => true,
+            'mensaje'  => 'Inicio de sesión exitoso.',
+            'redirect' => '/afec/admin/index.php'
+        ]);
+
         exit;
     }
 
-    public function logout() {
-        session_start();
-        $_SESSION['info'] ='Has cerrado sesion correctamente';
-
+    /**
+     * Cierra la sesión.
+     */
+    public function logout(): void
+    {
         Auth::start();
+
         Auth::logout();
-        
-        header("Location: /afec/public/index.php?page=login");
+
+        header('Location: /afec/public/index.php?page=login');
         exit;
     }
 }
-
-?>

@@ -17,14 +17,31 @@ class User {
         return $query->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function usuarioExiste($usuario){
+    public function usuarioExiste($usuario)
+    {
         $query = $this->pdo->prepare(
-            "SELECT * FROM tb_usuarios WHERE usuario = ? LIMIT 1"
+            "SELECT
+                u.id,
+                u.afiliado_id,
+                u.usuario,
+                u.password,
+                u.rol_id,
+                u.estado,
+                u.avatar,
+                r.clave AS rol_clave,
+                r.nombre AS rol_nombre
+                FROM tb_usuarios u
+                INNER JOIN tb_roles r
+                ON r.id = u.rol_id
+                WHERE u.usuario = ?
+                LIMIT 1"
         );
+
         $query->execute([$usuario]);
+
         return $query->fetch(PDO::FETCH_ASSOC);
     }
-
+    
     /** Buscar un usuario por su ID*/
     public function findById($id) {
         $query = $this->pdo->prepare(
