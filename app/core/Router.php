@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 class Router
 {
+    private ?AuthorizationService $authorization = null;
     private ?array $user;
     private ?string $rol;
     private ?string $page;
@@ -48,11 +49,6 @@ class Router
             'permission' => 'torneos.ver'
         ],
 
-        /*
-         * Alias heredados.
-         * Los conservamos temporalmente para no romper
-         * enlaces existentes del sistema anterior.
-         */
         'liga' => [
             'controller' => 'LigasController',
             'permission' => 'ligas.ver'
@@ -117,6 +113,10 @@ class Router
         require_once ROOT_PATH . '/config/database.php';
 
         $this->db = $pdo;
+
+        require_once ROOT_PATH . '/app/services/AuthorizationService.php';
+
+        $this->authorization = new AuthorizationService($this->db);
 
         /*
          * ---------------------------------------------------------
@@ -221,13 +221,11 @@ class Router
          * ---------------------------------------------------------
          */
 
-        if (
+       if (
             $route['permission'] !== null &&
-            !$this->hasPermission($route['permission'])
+            !$this->authorization->hasPermission($route['permission'])
         ) {
-
             $this->forbiddenPage();
-
             return;
         }
 
@@ -371,35 +369,7 @@ class Router
         };
     }
 
-    /**
-     * Comprueba un permiso asignado al rol.
-     */
-    private function hasPermission(string $permission): bool
-    {
-        if (!$this->db || !$this->user) {
-            return false;
-        }
-
-        $sql = "
-            SELECT 1
-            FROM tb_rol_permisos rp
-            INNER JOIN tb_permisos p
-                ON p.id = rp.permiso_id
-            WHERE rp.rol_id = :rol_id
-              AND p.clave = :permiso
-              AND p.estado = 'activo'
-            LIMIT 1
-        ";
-
-        $stmt = $this->db->prepare($sql);
-
-        $stmt->execute([
-            ':rol_id'  => (int) $this->user['rol_id'],
-            ':permiso' => $permission
-        ]);
-
-        return (bool) $stmt->fetchColumn();
-    }
+    
 
     /**
      * Página 403.
