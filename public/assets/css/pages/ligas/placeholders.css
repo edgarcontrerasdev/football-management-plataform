@@ -1,0 +1,54 @@
+/* LIGAS: estados vacíos y contenido provisional */
+.module-placeholder {
+    min-height: 240px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 35px 20px;
+}
+
+.module-placeholder-icon {
+    width: 62px;
+    height: 62px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 14px;
+    border-radius: 50%;
+    background: rgba(30, 64, 175, .07);
+    color: #1e40af;
+    font-size: 24px;
+}
+
+.module-placeholder h5 {
+    margin-bottom: 7px;
+    color: #1f2937;
+    font-weight: 700;
+}
+
+.module-placeholder p {
+    max-width: 520px;
+    margin: 0;
+    color: #6b7280;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+    .liga-header { padding: 20px; }
+    .liga-title { font-size: 23px; }
+    .liga-actions { justify-content: flex-start; }
+
+    .liga-tabs-card .nav-tabs {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+    }
+
+    .liga-tabs-card .nav-link {
+        white-space: nowrap;
+        padding-left: 13px;
+        padding-right: 13px;
+    }
+}
