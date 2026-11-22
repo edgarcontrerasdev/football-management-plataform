@@ -427,11 +427,11 @@
         border-radius: 50%;
         width: 36px;
         height: 36px;
-        animation: equiposDashboardgirar 1s linear infinite;
+        animation: equipos-dashboard-girar 1s linear infinite;
         margin: auto;
     }
 
-    @keyframes equiposDashboardgirar { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }
+    @keyframes equipos-dashboard-girar { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }
 
     .skeleton {
         display: inline-block;
@@ -439,9 +439,9 @@
         width: 100%;
         background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
         background-size: 200% 100%;
-        animation: equiposDashboardshimmer 1.5s infinite;
+        animation: equipos-dashboard-shimmer 1.5s infinite;
     }
-    @keyframes equiposDashboardshimmer { 0% { background-position: -200% 0;} 100% { background-position: 200% 0;} }
+    @keyframes equipos-dashboard-shimmer { 0% { background-position: -200% 0;} 100% { background-position: 200% 0;} }
 
     /* estilos para filas vacias */
     .empty-state
@@ -483,10 +483,10 @@
     }
 
     .empty-state{
-        animation: equiposDashboardfadeIn .35s ease;
+        animation: equipos-dashboard-fade-in .35s ease;
     }
 
-    @keyframes equiposDashboardfadeIn{
+    @keyframes equipos-dashboard-fade-in{
         from{ opacity:0; transform:translateY(10px); }
         to{ opacity:1; transform:none; }
     }
@@ -568,7 +568,7 @@
         transform: translateX(-50%);
         display: flex;
         gap: 6px;
-        animation: equiposDetallefadeUp .25s ease;
+        animation: equipos-detalle-fade-up .25s ease;
     }
 
     .escudo-actions button {
@@ -696,7 +696,7 @@
     }
 
     /* Animación */
-    @keyframes equiposDetallefadeUp {
+    @keyframes equipos-detalle-fade-up {
         from {
             opacity: 0;
             transform: translate(-50%, 10px);
@@ -710,10 +710,10 @@
 
     /* DIRECCION */
     .direccion-update {
-        animation: equiposDetalledireccionFlash 1s ease;
+        animation: equipos-detalle-direccion-flash 1s ease;
     }
 
-    @keyframes equiposDetalledireccionFlash {
+    @keyframes equipos-detalle-direccion-flash {
         0% {
             background-color: #fff3cd;
             transform: translateY(5px);
@@ -1065,10 +1065,10 @@
         border-radius: 50%;
         width: 36px;
         height: 36px;
-        animation: equiposIndexgirar 1s linear infinite;
+        animation: equipos-index-girar 1s linear infinite;
         margin: auto;
     }
-    @keyframes equiposIndexgirar { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }
+    @keyframes equipos-index-girar { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }
 
     .skeleton {
         display: inline-block;
@@ -1076,9 +1076,9 @@
         width: 100%;
         background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
         background-size: 200% 100%;
-        animation: equiposIndexshimmer 1.5s infinite;
+        animation: equipos-index-shimmer 1.5s infinite;
     }
-    @keyframes equiposIndexshimmer { 0% { background-position: -200% 0;} 100% { background-position: 200% 0;} }
+    @keyframes equipos-index-shimmer { 0% { background-position: -200% 0;} 100% { background-position: 200% 0;} }
 }
 
 @scope (.equipos-detalle-page) {
