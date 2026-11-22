@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="/afec/public/assets/css/home.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/afec/public/assets/css/liga.css">
+    <link rel="stylesheet" href="/afec/public/assets/css/404.css">
     
     <!-- Stylesheets-->
    
