@@ -1,222 +1,316 @@
 <?php
 
-class Temporada{
+declare(strict_types=1);
 
-    private $pdo;
+class Temporada
+{
+    private PDO $pdo;
 
-    public function __construct($pdo){
-        $this->pdo = $pdo; 
+    public function __construct(PDO $pdo)
+    {
+        $this->pdo = $pdo;
     }
 
-    //obtener todas las temporadas
-    public function getAll(){
-        $sql = "SELECT *FROM tb_temporadas t";
-        $stm = $this->pdo->query($sql);
-        return $stm->fetchAll(PDO::FETCH_ASSOC);
+    public function listarPropietarios(): array
+    {
+        $organismos = $this->pdo->query("
+            SELECT id, nombre, siglas
+            FROM tb_organismos
+            WHERE estado = 'activo'
+            ORDER BY nombre
+        ")->fetchAll(PDO::FETCH_ASSOC);
+
+        $ligas = $this->pdo->query("
+            SELECT l.id, l.nombre, l.siglas
+            FROM tb_ligas l
+            WHERE l.estado = 'activo'
+              AND NOT EXISTS (
+                  SELECT 1 FROM tb_liga_organismos lo
+                  WHERE lo.liga_id = l.id
+                    AND lo.es_gestor = 1
+                    AND lo.estado = 'activo'
+              )
+            ORDER BY l.nombre
+        ")->fetchAll(PDO::FETCH_ASSOC);
+
+        return ['organismos' => $organismos, 'ligas' => $ligas];
     }
 
-    //obtener una temporada por ID
-    public function getById($id){
-        $sql = "SELECT * FROM tb_temporadas t WHERE t.id = :id";
-        $stm = $this->pdo->prepare($sql);
-        $stm->execute([':id' => $id]);
-        return $stm->fetch(PDO::FETCH_ASSOC);
+    public function getAll(): array
+    {
+        return $this->listar([], 1000, 0);
     }
 
-    //obtener la temporada activa
-    public function getActiva(){
-        $sql = "SELECT * FROM tb_temporadas t WHERE t.es_actual = 1 LIMIT 1";
-        $stm = $this->pdo->prepare($sql);
-        $stm->execute();        
-        return $stm->fetch(PDO::FETCH_ASSOC);
+    public function getById($id): ?array
+    {
+        $stmt = $this->pdo->prepare("
+            SELECT t.*,
+                   o.nombre AS organismo_nombre,
+                   l.nombre AS liga_propietaria_nombre
+            FROM tb_temporadas t
+            LEFT JOIN tb_organismos o ON o.id = t.organismo_id
+            LEFT JOIN tb_ligas l ON l.id = t.liga_propietaria_id
+            WHERE t.id = :id
+        ");
+        $stmt->execute([':id' => (int) $id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
-    //obtener temporada por estado (activa, inactiva, borrador)
-    public function getByEstado($estado){
-        $sql = "SELECT * FROM tb_temporadas t WHERE t.estado = :estado";
-        $stm = $this->pdo->prepare($sql);
-        $stm->execute([':estado'=> $estado]);
-        return $stm->fetchAll(PDO::FETCH_ASSOC);
+    public function getActiva(?string $tipo = null, ?int $propietarioId = null): ?array
+    {
+        $sql = "SELECT * FROM tb_temporadas WHERE es_actual = 1";
+        $params = [];
+
+        if ($tipo !== null && $propietarioId !== null) {
+            $sql .= $tipo === 'organismo'
+                ? " AND ambito_tipo = 'organismo' AND organismo_id = :propietario"
+                : " AND ambito_tipo = 'liga' AND liga_propietaria_id = :propietario";
+            $params[':propietario'] = $propietarioId;
+        }
+
+        $sql .= " ORDER BY id DESC LIMIT 1";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
-    //crear nueva temporada
-    public function crear($data){
-        $sql = "INSERT INTO tb_temporadas(temporada, fecha_inicio, fecha_fin, estado, es_actual, flexibilidad_fin, observaciones)
-         VALUES(:temporada, :fecha_inicio, :fecha_fin, :estado, :es_actual, :flexibilidad_fin, :observaciones)";
-       $stm = $this->pdo->prepare($sql);
-       return $stm->execute([
-            ':temporada' => $data['temporada'],
+    public function getByEstado($estado): array
+    {
+        $stmt = $this->pdo->prepare("SELECT * FROM tb_temporadas WHERE estado = :estado");
+        $stmt->execute([':estado' => $estado]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function crear(array $data): bool
+    {
+        $tipo = $data['ambito_tipo'] ?? 'organismo';
+        $organismoId = $tipo === 'organismo' ? (int) ($data['organismo_id'] ?? 0) : null;
+        $ligaId = $tipo === 'liga' ? (int) ($data['liga_propietaria_id'] ?? 0) : null;
+
+        if (!in_array($tipo, ['organismo', 'liga'], true)
+            || ($tipo === 'organismo' && $organismoId <= 0)
+            || ($tipo === 'liga' && $ligaId <= 0)) {
+            throw new InvalidArgumentException('Selecciona un propietario válido para la temporada.');
+        }
+
+        $stmt = $this->pdo->prepare("
+            INSERT INTO tb_temporadas (
+                ambito_tipo, organismo_id, liga_propietaria_id,
+                temporada, fecha_inicio, fecha_fin, estado, es_actual,
+                flexibilidad_fin, observaciones
+            ) VALUES (
+                :ambito_tipo, :organismo_id, :liga_propietaria_id,
+                :temporada, :fecha_inicio, :fecha_fin, 'borrador', 0,
+                :flexibilidad_fin, :observaciones
+            )
+        ");
+
+        return $stmt->execute([
+            ':ambito_tipo' => $tipo,
+            ':organismo_id' => $organismoId ?: null,
+            ':liga_propietaria_id' => $ligaId ?: null,
+            ':temporada' => trim((string) $data['temporada']),
             ':fecha_inicio' => $data['fecha_inicio'],
             ':fecha_fin' => $data['fecha_fin'],
-            ':estado' => $data['estado'],
-            ':es_actual' => $data['es_actual'] ?? 0,
-            ':flexibilidad_fin' => $data['flexibilidad_fin'] ?? 0,
+            ':flexibilidad_fin' => (int) ($data['flexibilidad_fin'] ?? 0),
             ':observaciones' => $data['observaciones'] ?? null
-       ]);  
-    }
-
-    //actualizar temporada
-     public function actualizar($id, $data) {
-        $sql = "UPDATE tb_temporadas SET
-                    temporada = :temporada,
-                    fecha_inicio = :fecha_inicio,
-                    fecha_fin = :fecha_fin,
-                    estado = :estado,
-                    observaciones = :observaciones
-                WHERE id = :id";
-
-        $stmt = $this->pdo->prepare($sql);
-        return $stmt->execute([
-            ':temporada'    => $data['temporada'],
-            ':fecha_inicio' => $data['fecha_inicio'],
-            ':fecha_fin'    => $data['fecha_fin'],
-            ':estado'       => $data['estado'],
-            ':observaciones'  => $data['observaciones'] ?? null,
-            ':id'           => $id
         ]);
     }
 
-    //eliminar una temporada
-    public function eliminar($id){
-        $sql = "DELETE FROM tb_temporadas WHERE id = :id AND estado = 'borrador'";
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute(['id'    => $id]);
+    public function actualizar($id, array $data): bool
+    {
+        $stmt = $this->pdo->prepare("
+            UPDATE tb_temporadas
+            SET temporada = :temporada,
+                fecha_inicio = :fecha_inicio,
+                fecha_fin = :fecha_fin,
+                observaciones = :observaciones
+            WHERE id = :id
+              AND estado IN ('borrador', 'planeada')
+        ");
+
+        return $stmt->execute([
+            ':temporada' => trim((string) $data['temporada']),
+            ':fecha_inicio' => $data['fecha_inicio'],
+            ':fecha_fin' => $data['fecha_fin'],
+            ':observaciones' => $data['observaciones'] ?? null,
+            ':id' => (int) $id
+        ]);
+    }
+
+    public function eliminar($id): bool
+    {
+        $stmt = $this->pdo->prepare("
+            DELETE FROM tb_temporadas
+            WHERE id = :id AND estado IN ('borrador', 'planeada')
+        ");
+        $stmt->execute([':id' => (int) $id]);
         return $stmt->rowCount() > 0;
     }
-    
-    /* =========================
-       REGLAS DE NEGOCIO
-    ========================= */
 
-    // Activar una temporada (cierra la activa anterior)
-    public function activar($id) {
-        try{
-            $this->pdo->beginTransaction();
+    public function activar($id): bool
+    {
+        $this->pdo->beginTransaction();
 
-            // Cerrar cualquier temporada activa
-            $stmt = $this->pdo->prepare("
+        try {
+            $lock = $this->pdo->prepare("
+                SELECT ambito_tipo, organismo_id, liga_propietaria_id, estado
+                FROM tb_temporadas
+                WHERE id = :id
+                FOR UPDATE
+            ");
+            $lock->execute([':id' => (int) $id]);
+            $temporada = $lock->fetch(PDO::FETCH_ASSOC);
+
+            if (!$temporada || !in_array($temporada['estado'], ['borrador', 'planeada'], true)) {
+                throw new InvalidArgumentException('Solo se pueden activar temporadas planeadas.');
+            }
+
+            $where = $temporada['ambito_tipo'] === 'organismo'
+                ? "ambito_tipo = 'organismo' AND organismo_id = :propietario"
+                : "ambito_tipo = 'liga' AND liga_propietaria_id = :propietario";
+
+            $propietarioId = $temporada['ambito_tipo'] === 'organismo'
+                ? (int) $temporada['organismo_id']
+                : (int) $temporada['liga_propietaria_id'];
+
+            $finalizar = $this->pdo->prepare("
                 UPDATE tb_temporadas
                 SET estado = 'finalizada', es_actual = 0
-                WHERE es_actual = 1
+                WHERE {$where} AND es_actual = 1
             ");
+            $finalizar->execute([':propietario' => $propietarioId]);
 
-            $stmt->execute();
+            $activar = $this->pdo->prepare("
+                UPDATE tb_temporadas
+                SET estado = 'activa', es_actual = 1
+                WHERE id = :id
+            ");
+            $activar->execute([':id' => (int) $id]);
 
-            // Activar la nueva
-            $sql = "UPDATE tb_temporadas 
-                    SET estado = 'activa', es_actual = 1 
-                    WHERE id = :id";
-            $stmt = $this->pdo->prepare($sql);
-
-            $stmt->execute([':id' => $id]);
             $this->pdo->commit();
             return true;
-        }catch(Exception $e){
-            $this->pdo->rollBack();
+        } catch (Throwable $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
             throw $e;
         }
-
     }
 
-    // Cerrar una temporada específica
-    public function cerrar($id) {
-        $sql = "UPDATE tb_temporadas 
-                SET estado = 'cerrada', es_actual=0 
-                WHERE id = :id
-                AND estado = 'finalizada'";
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([':id' => $id]);
+    public function cerrar($id): bool
+    {
+        $stmt = $this->pdo->prepare("
+            UPDATE tb_temporadas
+            SET estado = 'cerrada', es_actual = 0
+            WHERE id = :id AND estado = 'finalizada'
+        ");
+        $stmt->execute([':id' => (int) $id]);
         return $stmt->rowCount() > 0;
     }
 
-    //finalizar una temporada especifica
-    public function finalizarTemporada($id){
-        $sql = "UPDATE tb_temporadas 
-                SET estado = 'finalizada' 
-                WHERE id = :id";
-        $stm = $this->pdo->prepare($sql);
-        return $stm->execute([':id' => $id]);
+    public function finalizarTemporada($id): bool
+    {
+        $stmt = $this->pdo->prepare("
+            UPDATE tb_temporadas
+            SET estado = 'finalizada', es_actual = 0
+            WHERE id = :id AND estado = 'activa'
+        ");
+        $stmt->execute([':id' => (int) $id]);
+        return $stmt->rowCount() > 0;
     }
 
-    public function cerrarTemporadaActiva(){
-        $sql = "UPDATE tb_temporadas t SET estado = 'cerrada' WHERE t.estado = 'activa'";
-        $this->pdo->query($sql);
-    }
+    public function existeNombre($nombre, $ignoredId = null, ?string $tipo = null, ?int $propietarioId = null): bool
+    {
+        $sql = "SELECT COUNT(*) FROM tb_temporadas WHERE temporada = :temporada";
+        $params = [':temporada' => trim((string) $nombre)];
 
-    public function finalizarTemporadaActiva(){
-        $sql = "UPDATE tb_temporadas t SET estado = 'finalizada' WHERE t.estado = 'activa'";
-        $this->pdo->query($sql);
-    }
+        if ($ignoredId !== null) {
+            $sql .= " AND id <> :id";
+            $params[':id'] = (int) $ignoredId;
+        }
 
-    // Validar que no exista una temporada con el mismo nombre
-    public function existeNombre($temporada, $ignoredId = null) {
-        $sql = "SELECT COUNT(*) 
-                FROM tb_temporadas 
-                WHERE temporada = :temporada";
-            
-        $params = [':temporada' => $temporada];
-
-        if($ignoredId !== null){
-            $sql.=" AND id != :id";
-            $params[':id'] = $ignoredId;
+        if ($tipo === 'organismo' && $propietarioId !== null) {
+            $sql .= " AND ambito_tipo = 'organismo' AND organismo_id = :propietario";
+            $params[':propietario'] = $propietarioId;
+        } elseif ($tipo === 'liga' && $propietarioId !== null) {
+            $sql .= " AND ambito_tipo = 'liga' AND liga_propietaria_id = :propietario";
+            $params[':propietario'] = $propietarioId;
         }
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($params);
-        return $stmt->fetchColumn() > 0;
+        return (int) $stmt->fetchColumn() > 0;
     }
 
-    //LISTA DE TEMPORADAS CON FILTROS
-    public function listar($filtros = [], $limit = 10, $offset = 0)
+    public function listar(array $filtros = [], int $limit = 10, int $offset = 0): array
     {
-        $sql = "SELECT * FROM tb_temporadas t WHERE 1=1";
-
+        $where = ['1 = 1'];
         $params = [];
 
-        if(!empty($filtros['estado'])){
-            $sql .= " AND t.estado = :estado";
+        if (!empty($filtros['estado'])) {
+            $where[] = 't.estado = :estado';
             $params[':estado'] = $filtros['estado'];
         }
-
-        if(!empty($filtros['buscar'])){
-            $sql .= " AND t.temporada LIKE :buscar";
-            $params[':buscar'] = "%".$filtros['buscar']."%";
+        if (!empty($filtros['buscar'])) {
+            $where[] = 't.temporada LIKE :buscar';
+            $params[':buscar'] = '%' . $filtros['buscar'] . '%';
+        }
+        if (!empty($filtros['ambito_tipo'])) {
+            $where[] = 't.ambito_tipo = :ambito_tipo';
+            $params[':ambito_tipo'] = $filtros['ambito_tipo'];
+        }
+        if (!empty($filtros['propietario_id'])) {
+            $column = ($filtros['ambito_tipo'] ?? '') === 'liga' ? 't.liga_propietaria_id' : 't.organismo_id';
+            $where[] = $column . ' = :propietario_id';
+            $params[':propietario_id'] = (int) $filtros['propietario_id'];
         }
 
-        $sql .= " ORDER BY t.temporada ASC LIMIT :limit OFFSET :offset";
-
+        $sql = "
+            SELECT t.*,
+                   COALESCE(o.nombre, l.nombre) AS propietario_nombre
+            FROM tb_temporadas t
+            LEFT JOIN tb_organismos o ON o.id = t.organismo_id
+            LEFT JOIN tb_ligas l ON l.id = t.liga_propietaria_id
+            WHERE " . implode(' AND ', $where) . "
+            ORDER BY t.fecha_inicio DESC, t.id DESC
+            LIMIT :limit OFFSET :offset
+        ";
         $stmt = $this->pdo->prepare($sql);
-
-        foreach($params as $k=>$v){
-            $stmt->bindValue($k,$v);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value, is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR);
         }
-
-        
-        $stmt->bindValue(':limit',(int)$limit,PDO::PARAM_INT);
-        $stmt->bindValue(':offset',(int)$offset,PDO::PARAM_INT);
-
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
-
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    //CONTAR NUMERO DE TORNEOS BASADO EN FILTROS
-    public function contar($filtros =[]){
-        $sql = "SELECT COUNT(*) total FROM tb_temporadas t WHERE 1 = 1";
-
+    public function contar(array $filtros = []): int
+    {
+        $where = ['1 = 1'];
         $params = [];
 
-        if(!empty($filtros['estado'])){
-            $sql .= " AND t.estado = :estado";
+        if (!empty($filtros['estado'])) {
+            $where[] = 'estado = :estado';
             $params[':estado'] = $filtros['estado'];
         }
-        
+        if (!empty($filtros['buscar'])) {
+            $where[] = 'temporada LIKE :buscar';
+            $params[':buscar'] = '%' . $filtros['buscar'] . '%';
+        }
+        if (!empty($filtros['ambito_tipo'])) {
+            $where[] = 'ambito_tipo = :ambito_tipo';
+            $params[':ambito_tipo'] = $filtros['ambito_tipo'];
+        }
+        if (!empty($filtros['propietario_id'])) {
+            $column = ($filtros['ambito_tipo'] ?? '') === 'liga' ? 'liga_propietaria_id' : 'organismo_id';
+            $where[] = $column . ' = :propietario_id';
+            $params[':propietario_id'] = (int) $filtros['propietario_id'];
+        }
 
-        $stm = $this->pdo->prepare($sql);
-        $stm->execute($params);
-        return $stm->fetch(PDO::FETCH_ASSOC)['total'];
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM tb_temporadas WHERE " . implode(' AND ', $where));
+        $stmt->execute($params);
+        return (int) $stmt->fetchColumn();
     }
-
 }
-
-?>
