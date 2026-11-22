@@ -242,6 +242,31 @@ class Equipo{
 
 
 
+
+    /**
+     * Registra la entidad base de un equipo.
+     * La afiliación a clubes y la participación en ligas se gestionan
+     * por separado y no forman parte de este registro.
+     */
+    public function crearEntidad(array $data): int
+    {
+        $sql = "
+            INSERT INTO tb_equipos (nombre, siglas, observaciones)
+            VALUES (:nombre, :siglas, :observaciones)
+        ";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            ':nombre' => trim($data['nombre']),
+            ':siglas' => ($data['siglas'] ?? '') !== '' ? trim($data['siglas']) : null,
+            ':observaciones' => ($data['observaciones'] ?? '') !== ''
+                ? trim($data['observaciones'])
+                : null
+        ]);
+
+        return (int) $this->pdo->lastInsertId();
+    }
+
 }
 
 ?>
