@@ -1,0 +1,78 @@
+/* LIGAS: cabecera, identidad y acciones */
+.card.liga-header {
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    border: none;
+    border-radius: 14px;
+    padding: 24px;
+    color: #e5e7eb;
+}
+
+.card.liga-header .liga-title { color: #ffffff; }
+.card.liga-header .liga-siglas { color: #cbd5e1; }
+.card.liga-header .liga-info-list { color: #e2e8f0; }
+.card.liga-header .liga-address { color: #cbd5e1; }
+
+.liga-logo-wrapper {
+    width: 120px;
+    height: 120px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f4f6f8;
+    border-radius: 14px;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .06), 0 5px 15px rgba(0, 0, 0, .20);
+}
+
+.liga-logo { width: 100%; height: 100%; object-fit: contain; }
+
+.liga-title-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.liga-info-list div {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.liga-info-list i {
+    width: 17px;
+    color: var(--accent);
+    text-align: center;
+}
+
+.liga-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.liga-address i { color: var(--accent); }
+
+.liga-header .liga-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 16px;
+    color: #ffffff;
+    background: #1e40af;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 8px;
+    font-weight: 600;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.liga-header .liga-actions .btn:hover {
+    color: #ffffff;
+    background: #2563eb;
+    transform: translateY(-1px);
+}
+
+.liga-header .liga-actions .btn:focus-visible {
+    outline: 2px solid #93c5fd;
+    outline-offset: 3px;
+}
