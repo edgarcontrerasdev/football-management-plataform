@@ -1,0 +1,127 @@
+<?php
+
+declare(strict_types=1);
+
+require_once ROOT_PATH . '/app/models/Organismo.php';
+
+class OrganismosController
+{
+    private Organismo $organismoModel;
+
+    public function __construct(PDO $db)
+    {
+        $this->organismoModel = new Organismo($db);
+    }
+
+    private function verificarAcceso(): void
+    {
+        if (!in_array(Auth::role(), ['ADMIN', 'SUPERVISOR'], true)) {
+            http_response_code(403);
+            view('403.php');
+            exit;
+        }
+    }
+
+    public function index(): void
+    {
+        $this->verificarAcceso();
+
+        $filtros = [
+            'estado' => trim((string) ($_GET['estado'] ?? '')),
+            'tipo' => trim((string) ($_GET['tipo'] ?? '')),
+            'buscar' => trim((string) ($_GET['buscar'] ?? ''))
+        ];
+
+        $pagina = max(1, (int) ($_GET['p'] ?? 1));
+        $limite = 10;
+        $total = $this->organismoModel->contar($filtros);
+        $pagination = Pagination::paginate($total, $limite);
+        $offset = $pagination['offset'] ?? (($pagina - 1) * $limite);
+
+        $organismos = $this->organismoModel->listar($filtros, $limite, $offset);
+        $metricas = $this->organismoModel->metricas();
+
+        $kpis = [
+            ['title' => 'Organismos registrados', 'value' => $metricas['total'], 'icon' => 'fas fa-sitemap', 'class' => 'info'],
+            ['title' => 'Organismos activos', 'value' => $metricas['activos'], 'icon' => 'fas fa-check-circle', 'class' => 'success'],
+            ['title' => 'Organismos inactivos', 'value' => $metricas['inactivos'], 'icon' => 'fas fa-ban', 'class' => 'danger']
+        ];
+
+        $toolbox = [
+            'create' => 'index.php?page=organismos&action=crear',
+            'filters' => [
+                ['type' => 'select', 'name' => 'estado', 'label' => 'Todos los estados', 'default' => '', 'options' => ['activo' => 'Activos', 'inactivo' => 'Inactivos']],
+                ['type' => 'select', 'name' => 'tipo', 'label' => 'Todos los tipos', 'default' => '', 'options' => ['asociacion' => 'Asociación', 'federacion' => 'Federación', 'comite' => 'Comité', 'otro' => 'Otro']],
+                ['type' => 'search', 'name' => 'buscar', 'placeholder' => 'Buscar organismo...']
+            ]
+        ];
+
+        $tableData = TableService::make($organismos, 'organismos');
+        $columns = $tableData['columns'];
+        $rows = $tableData['rows'];
+        $tableTitle = 'Catálogo de organismos';
+
+        if (isset($_GET['ajax'])) {
+            include ROOT_PATH . '/admin/views/components/table-content.php';
+            return;
+        }
+
+        view('pages.organismos.index.php', compact(
+            'organismos', 'filtros', 'columns', 'rows', 'toolbox',
+            'pagination', 'kpis', 'metricas', 'tableTitle'
+        ));
+    }
+
+    public function crear(): void
+    {
+        $this->verificarAcceso();
+        $error = $_SESSION['organismo_error'] ?? null;
+        unset($_SESSION['organismo_error']);
+        $old = $_SESSION['organismo_old'] ?? [];
+        unset($_SESSION['organismo_old']);
+        view('pages.organismos.create.php', compact('error', 'old'));
+    }
+
+    public function store(): void
+    {
+        $this->verificarAcceso();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: index.php?page=organismos');
+            exit;
+        }
+
+        $data = [
+            'nombre' => trim((string) ($_POST['nombre'] ?? '')),
+            'siglas' => trim((string) ($_POST['siglas'] ?? '')),
+            'tipo' => trim((string) ($_POST['tipo'] ?? '')),
+            'alcance_territorial' => trim((string) ($_POST['alcance_territorial'] ?? '')),
+            'descripcion' => trim((string) ($_POST['descripcion'] ?? '')),
+            'correo' => trim((string) ($_POST['correo'] ?? '')),
+            'telefono' => trim((string) ($_POST['telefono'] ?? '')),
+            'sitio_web' => trim((string) ($_POST['sitio_web'] ?? '')),
+            'fecha_creacion' => trim((string) ($_POST['fecha_creacion'] ?? ''))
+        ];
+
+        $_SESSION['organismo_old'] = $data;
+
+        if ($data['nombre'] === '' || $data['tipo'] === '') {
+            $_SESSION['organismo_error'] = 'El nombre y el tipo de organismo son obligatorios.';
+            header('Location: index.php?page=organismos&action=crear');
+            exit;
+        }
+
+        try {
+            $this->organismoModel->crear($data);
+            unset($_SESSION['organismo_old']);
+            $_SESSION['success'] = 'El organismo se registró correctamente.';
+            header('Location: index.php?page=organismos');
+            exit;
+        } catch (Throwable $e) {
+            error_log('Error al registrar organismo: ' . $e->getMessage());
+            $_SESSION['organismo_error'] = 'No fue posible registrar el organismo.';
+            header('Location: index.php?page=organismos&action=crear');
+            exit;
+        }
+    }
+}
