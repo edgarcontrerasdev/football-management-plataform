@@ -57,6 +57,7 @@ class ClubesController
         ];
 
         $toolbox = [
+            'create' => 'index.php?page=clubes&action=crear',
             'filters' => [
                 [
                     'type' => 'select',
