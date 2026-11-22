@@ -96,11 +96,11 @@
     <li><a href="index.php?page=afiliaciones">Afiliaciones</a></li>
     <li><a href="index.php?page=estadisticas">Estadísticas</a></li>
     <li class="dropdown">
-      <a href="#">Ligas </a>
-      <ul class="submenu">
+      <a href="#" aria-haspopup="true" aria-controls="submenu-ligas">Ligas</a>
+      <ul class="submenu" id="submenu-ligas">
         <li class="dropdown">
-          <a href="#">Libres</a>
-          <ul class="submenu">
+          <a href="#" aria-haspopup="true" aria-controls="submenu-libres">Libres</a>
+          <ul class="submenu" id="submenu-libres">
             <li><a href="index.php?page=liga">Primera Amateur</a></li>
             <li><a href="index.php?page=liga">Primera Fuerza</a></li>
             <li><a href="index.php?page=liga">Primera Especial</a></li>
