@@ -94,5 +94,77 @@ $escudoRuta = ASSETS . '/img/equipos/' . rawurlencode($escudoNombre);
                 </div>
             </div>
         </div>
+
+        <div class="row g-4 mt-1">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h5 class="mb-3">Clubes relacionados</h5>
+                        <?php if (empty($clubes)): ?>
+                            <p class="text-muted mb-0">Este equipo no tiene relaciones con clubes registradas.</p>
+                        <?php else: ?>
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Club</th>
+                                            <th>Inicio</th>
+                                            <th>Fin</th>
+                                            <th>Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($clubes as $club): ?>
+                                            <tr>
+                                                <td><?= htmlspecialchars($club['nombre'], ENT_QUOTES, 'UTF-8') ?></td>
+                                                <td><?= !empty($club['fecha_inicio']) ? htmlspecialchars(date('d/m/Y', strtotime($club['fecha_inicio'])), ENT_QUOTES, 'UTF-8') : '-' ?></td>
+                                                <td><?= !empty($club['fecha_fin']) ? htmlspecialchars(date('d/m/Y', strtotime($club['fecha_fin'])), ENT_QUOTES, 'UTF-8') : 'Actual' ?></td>
+                                                <td><?= htmlspecialchars($club['estado'] ?? '-', ENT_QUOTES, 'UTF-8') ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h5 class="mb-3">Participación en ligas y temporadas</h5>
+                        <?php if (empty($participaciones)): ?>
+                            <p class="text-muted mb-0">Este equipo no tiene participaciones en ligas registradas.</p>
+                        <?php else: ?>
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Liga</th>
+                                            <th>Temporada</th>
+                                            <th>Participación</th>
+                                            <th>Documentación</th>
+                                            <th>Registro</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($participaciones as $participacion): ?>
+                                            <tr>
+                                                <td><?= htmlspecialchars($participacion['liga'], ENT_QUOTES, 'UTF-8') ?></td>
+                                                <td><?= htmlspecialchars($participacion['temporada'], ENT_QUOTES, 'UTF-8') ?></td>
+                                                <td><?= htmlspecialchars($participacion['estado_participacion'] ?? '-', ENT_QUOTES, 'UTF-8') ?></td>
+                                                <td><?= htmlspecialchars($participacion['estado_documentacion'] ?? '-', ENT_QUOTES, 'UTF-8') ?></td>
+                                                <td><?= htmlspecialchars($participacion['numero_registro'] ?? '-', ENT_QUOTES, 'UTF-8') ?></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
     <?php endif; ?>
 </div>
