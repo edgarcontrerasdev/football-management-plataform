@@ -118,25 +118,3 @@
 
 </div>
 
-<style>
-    .modulo-card {
-        transition: all .2s ease;
-    }
-
-    .modulo-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(0,0,0,.12);
-    }
-
-    .modulo-card.modulo-ok {
-        border-left: 4px solid var(--success);
-    }
-
-    .modulo-card.modulo-pendiente {
-        border-left: 4px solid var(--warning);
-    }
-
-    .modulo-card.modulo-bloqueado {
-    border-left: 4px solid #6c757d;
-}
-</style>
