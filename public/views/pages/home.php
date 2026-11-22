@@ -74,35 +74,5 @@
     </div>
   </div>
 </div>
-<script>
-  // --- BUSCADOR ---
-  const btnSearch = document.getElementById('btnSearch');
-  const modalSearch = document.getElementById('modalSearch');
-  const closeSearch = document.getElementById('closeSearch');
 
-  btnSearch.addEventListener('click', ()=>{
-    modalSearch.classList.add('active');
-  });
-  closeSearch.addEventListener('click', ()=>{
-    modalSearch.classList.remove('active');
-  });
-  window.addEventListener('click', e=>{
-    if(e.target === modalSearch) modalSearch.classList.remove('active');
-  });
-
-  // --- LOGIN ---
-  const btnLogin = document.getElementById('btnLogin');
-  const modalLogin = document.getElementById('modalLogin');
-  const closeLogin = document.getElementById('closeLogin');
-
-  btnLogin.addEventListener('click', ()=>{
-    modalLogin.classList.add('active');
-  });
-  closeLogin.addEventListener('click', ()=>{
-    modalLogin.classList.remove('active');
-  });
-  window.addEventListener('click', e=>{
-    if(e.target === modalLogin) modalLogin.classList.remove('active');
-  });
-</script>
 </div>
