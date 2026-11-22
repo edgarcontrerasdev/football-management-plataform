@@ -114,6 +114,30 @@ class Club
         return $club ?: null;
     }
 
+    public function obtenerEquipos(int $clubId): array
+    {
+        $sql = "
+            SELECT
+                e.id,
+                e.nombre,
+                e.siglas,
+                e.escudo,
+                ce.fecha_inicio,
+                ce.fecha_fin,
+                ce.estado AS estado_relacion,
+                ce.observaciones
+            FROM tb_club_equipos ce
+            INNER JOIN tb_equipos e ON e.id = ce.equipo_id
+            WHERE ce.club_id = :club_id
+            ORDER BY ce.fecha_inicio DESC, ce.id DESC
+        ";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([':club_id' => $clubId]);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function crear(array $data): int
     {
         $sql = "INSERT INTO tb_clubes (nombre, siglas, logo, estado, observaciones)
