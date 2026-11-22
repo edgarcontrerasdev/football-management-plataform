@@ -130,4 +130,25 @@ class Club
         return (int) $this->pdo->lastInsertId();
     }
 
+    public function actualizar(int $id, array $data): bool
+    {
+        $sql = "UPDATE tb_clubes
+                SET nombre = :nombre,
+                    siglas = :siglas,
+                    logo = :logo,
+                    estado = :estado,
+                    observaciones = :observaciones
+                WHERE id = :id";
+        $stmt = $this->pdo->prepare($sql);
+
+        return $stmt->execute([
+            ':nombre' => trim((string) $data['nombre']),
+            ':siglas' => ($data['siglas'] ?? '') !== '' ? trim((string) $data['siglas']) : null,
+            ':logo' => $data['logo'] ?? null,
+            ':estado' => $data['estado'],
+            ':observaciones' => ($data['observaciones'] ?? '') !== '' ? trim((string) $data['observaciones']) : null,
+            ':id' => $id
+        ]);
+    }
+
 }
