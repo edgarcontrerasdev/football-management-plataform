@@ -1,7 +1,7 @@
 <?php if (!empty($data['errors'])): ?>
     <div class="alert alert-danger">
         <strong>Ocurrieron errores:</strong>
-        <ul style="margin:0;">
+        <ul class="user-form-errors-list">
             <?php foreach ($data['errors'] as $error): ?>
                 <li><?= htmlspecialchars($error); ?></li>
             <?php endforeach; ?>
