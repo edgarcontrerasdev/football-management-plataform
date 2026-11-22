@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css?family=Kanit:300,400,500,500i,600,900%7CRoboto:400,900">
     
     <link rel="stylesheet" href="/afec/public/assets/css/public.css">
+    <link rel="stylesheet" href="/afec/public/assets/css/public-header.css">
     
     <!-- Stylesheets-->
    
