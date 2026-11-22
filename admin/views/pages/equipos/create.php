@@ -15,12 +15,6 @@
     </div>
 </div>
 
-<?php if (!empty($success)): ?>
-    <div class="alert alert-success" role="alert">
-        El equipo se registró correctamente. El siguiente paso será completar sus relaciones y datos de temporada.
-    </div>
-<?php endif; ?>
-
 <?php if (!empty($error)): ?>
     <div class="alert alert-danger" role="alert">
         <?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?>
@@ -90,21 +84,23 @@
                             <i class="fa-solid fa-image me-2"></i>Escudo del equipo
                         </h6>
 
-                        <div class="equipo-crest-preview-wrap">
+                        <label for="escudo" class="equipo-crest-picker" title="Cambiar escudo">
                             <img
                                 id="equipoCrestPreview"
                                 src="<?= ASSETS ?>/img/equipos/default.png"
                                 alt="Vista previa del escudo del equipo"
                             >
-                        </div>
-
-                        <label for="escudo" class="form-label mt-3">Seleccionar imagen</label>
+                            <span class="equipo-crest-overlay">
+                                <i class="fa-solid fa-camera"></i>
+                                <small>Cambiar escudo</small>
+                            </span>
+                        </label>
                         <input
                             type="file"
                             id="escudo"
                             name="escudo"
-                            class="form-control"
                             accept="image/png,image/jpeg,image/webp"
+                            hidden
                         >
                         <small class="form-text text-muted d-block mt-2">
                             Opcional. Formatos PNG, JPG o WEBP. Tamaño máximo: 2 MB.
