@@ -547,3 +547,13 @@
   opacity: 1;
   visibility: visible;
 }
+
+
+/* Restablece la apariencia del control de búsqueda semántico */
+.public-site #btnSearch {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  line-height: normal;
+}
