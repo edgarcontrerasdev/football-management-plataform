@@ -1,4 +1,5 @@
 
+<div class="users-list-page">
 <h3 class="users-title">Usuarios del sistema</h3>
 
 <div class="wrap-toolbar">
@@ -42,17 +43,9 @@
     </a>
 </div>
 
-<div id="loader" style="display:none; text-align:center; padding:20px;">
+<div id="loader" class="users-loader">
        <!-- Overlay loader -->
-    <div id="loader-overlay" style="
-        display:none;
-        position:absolute;
-        top:0; left:0; right:0; bottom:0;
-        background: rgba(255,255,255,0.7);
-        z-index:10;
-        text-align:center;
-        padding-top:50px;
-    ">
+    <div id="loader-overlay" class="users-loader-overlay">
         <div class="spinner"></div>
     </div>
 </div>
@@ -131,7 +124,7 @@
                 <?php endforeach; ?>
                 <?php else: ?>
                 <tr>
-                <td colspan="5" style="text-align:center;">No hay resultados</td>
+                <td colspan="5" class="users-empty-cell">No hay resultados</td>
                 </tr>
                 <?php endif; ?>
             </tbody>
@@ -158,235 +151,7 @@
 </div>
 
 
-<style>
 
-    :root{
-        /* 🎨 Colores principales */
-        --primary: #1e40af;        /* Azul royal */
-        --primary-dark: #1e3a8a;
-        --primary-light: #3b82f6;
-
-        /* Estados */
-        --success: #16a34a;
-        --danger:  #dc2626;
-        --warning: #f59e0b;
-        --info:    #0ea5e9;
-
-        /* 🧱 Fondo y superficies */
-        --bg-white:      #f8fafc;        /* Fondo general del sistema */
-        --card:    #ffffff;        /* Cards, tablas, modales */
-        --border:  #e5e7eb;
-
-        /* 📝 Texto */
-        --text:        #1f2937;
-        --text-muted: #6b7280;
-    }
-
-    body{
-        background-color: var(--bg);
-        color:var(--text);
-    }
-    .btn{
-        padding: 6px 14px;
-        border-radius: 6px;
-        font-size: 14px;
-        border: none;
-        cursor: pointer;
-    }
-
-    .btn-primary{
-        background: var(--primary);
-        color: #fff;
-    }
-
-    .btn-secondary{
-        background: var(--secondary);
-        color: #fff;
-    }
-
-    .btn-danger{
-        background: var(--danger);
-        color: #fff;
-    }
-
-    .btn-warning{
-        background: var(--warning);
-        color: #000;
-    }
-
-    .switch{
-        position: relative;
-        display: inline-block;
-        width: 44px;
-        height: 24px;
-    }
-
-    .switch input{
-        opacity: 0;
-        width: 0;
-        height: 0;
-    }
-
-    .slider{
-        position: absolute;
-        cursor: pointer;
-        inset: 0;
-        background: #ccc;
-        border-radius: 34px;
-        transition: .3s;
-    }
-
-    .slider::before{
-        position: absolute;
-        content: "";
-        height: 18px;
-        width: 18px;
-        left: 3px;
-        bottom: 3px;
-        background: white;
-        border-radius: 50%;
-        transition: .3s;
-    }
-
-    input:checked + .slider{
-        background: #2ecc71;
-    }
-
-    input:checked + .slider::before{
-        transform: translateX(20px);
-    }
-
-    table{
-        table-layout: fixed;
-        width:100%;
-    }
-
-    .status-label {
-        font-weight: bold;
-        padding: 2px 8px;
-        border-radius: 12px;
-        color: white;
-        font-size: 0.9em;
-    }
-
-    .user-status{
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 90px;           /* 🔑 MISMO TAMAÑO */
-        height: 28px;
-        font-size: 12px;
-        font-weight: 600;
-        border-radius: 20px;
-        color: #fff;
-        letter-spacing: .5px;
-        transition: all .25s ease;
-    }
-
-    .user-status.active{
-        background: var(--success);
-        box-shadow: 0 0 0 1px rgba(46,204,113,.5);
-    }
-
-    .user-status.inactive{
-        background: var(--danger);
-        box-shadow: 0 0 0 1px rgba(231,76,60,.5);
-    }
-
-    .btn-icon{
-        width: 34px;
-        height: 34px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 8px;
-        border: 1px solid transparent;
-        transition: all .2s ease;
-    }
-
-    .btn-icon svg{
-        width: 16px;
-        height: 16px;
-    }
-
-    /* Edit */
-    .btn-icon.edit{
-        background: #f1f3f5;
-        color: #2c3e50;
-    }
-
-    .btn-icon.edit:hover{
-        background: var(--primary-dark);
-        color: #fff;
-    }
-
-    .btn-create{
-        background: #0d6efd;
-        color: #fff;
-        border-radius: 8px;
-        padding: 8px 14px;
-        display: flex;
-        gap: 6px;
-        align-items: center;
-    }
-
-        
-
-    .user-cell {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .user-avatar {
-        width: 42px;
-        height: 42px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 2px solid #e5e5e5;
-    }
-
-    .user-info {
-        display: flex;
-        flex-direction: column;
-        line-height: 1.2;
-    }
-
-    .user-name {
-        font-weight: 600;
-        font-size: 14px;
-        color: #212529;
-    }
-
-    .user-alias {
-        font-size: 14px;
-        color: #6c757d;
-    }
-
-    /* Spinner */
-    .spinner {
-        border: 4px solid #f3f3f3;
-        border-top: 4px solid #3498db;
-        border-radius: 50%;
-        width: 36px;
-        height: 36px;
-        animation: girar 1s linear infinite;
-        margin: auto;
-    }
-    @keyframes girar { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }
-
-    .skeleton {
-        display: inline-block;
-        height: 16px;
-        width: 100%;
-        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-        background-size: 200% 100%;
-        animation: shimmer 1.5s infinite;
-    }
-    @keyframes shimmer { 0% { background-position: -200% 0;} 100% { background-position: 200% 0;} }
-
-
-</style>
 
 <script>
     document.addEventListener('change', function (e) {
