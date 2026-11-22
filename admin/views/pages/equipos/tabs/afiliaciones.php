@@ -24,7 +24,7 @@
         <input type="text" class="form-control form-control-sm"
                placeholder="Buscar afiliado...">
 
-        <select class="form-select form-select-sm" style="max-width:200px">
+        <select class="form-select form-select-sm" class="form-select form-select-sm equipo-afiliaciones-filter">
             <option value="">Todos</option>
             <option value="pendiente">Pendientes</option>
             <option value="aprobada">Aprobados</option>
