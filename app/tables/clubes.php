@@ -23,5 +23,17 @@ return [
         'type' => 'date',
         'field' => 'created_at',
         'title' => 'REGISTRADO'
+    ],
+    [
+        'type'    => 'actions',
+        'title'   => 'ACCIONES',
+        'actions' => [
+            [
+                'icon'  => 'eye',
+                'url'   => 'index.php?page=clubes&action=detalles&id={id}',
+                'title' => 'Ver club',
+                'class' => ''
+            ]
+        ]
     ]
 ];
