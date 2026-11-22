@@ -193,9 +193,15 @@ class LigasController
         $temporadaActual = $this->temporadaModel->getActiva();
 
         $totalEquipos = 0;
+        $equiposLiga = [];
 
         if ($temporadaActual) {
             $totalEquipos = $this->equipoModel->contarPorLiga(
+                $id,
+                (int) $temporadaActual['id']
+            );
+
+            $equiposLiga = $this->ligaModel->listarEquiposPorTemporada(
                 $id,
                 (int) $temporadaActual['id']
             );
@@ -233,7 +239,8 @@ class LigasController
             [
                 'liga' => $liga,
                 'kpis' => $kpis,
-                'temporadaActual' => $temporadaActual
+                'temporadaActual' => $temporadaActual,
+                'equiposLiga' => $equiposLiga
             ]
         );
     }
