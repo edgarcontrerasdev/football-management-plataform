@@ -118,8 +118,9 @@ class TemporadasController{
         $fecha_inicio  = $_POST['fecha_inicio'] ?? '';
         $fecha_fin     = $_POST['fecha_fin'] ?? '';
         $observaciones   = $_POST['observaciones'] ?? null;
-        $ambitoTipo = $_POST['ambito_tipo'] ?? '';
-        $propietarioId = (int) ($_POST['propietario_id'] ?? 0);
+        $propietario = trim((string) ($_POST['propietario'] ?? ''));
+        [$ambitoTipo, $propietarioValor] = array_pad(explode(':', $propietario, 2), 2, '');
+        $propietarioId = (int) $propietarioValor;
 
         // Campos obligatorios
         if ($temporada === '') {
