@@ -6,6 +6,11 @@ return [
         'title' => 'TEMPORADA'
     ],
     [
+        'type' => 'text',
+        'field' => 'propietario_nombre',
+        'title' => 'PROPIETARIO'
+    ],
+    [
         'type' => 'status',
         'field' => 'estado',
         'title' => 'ESTADO',
