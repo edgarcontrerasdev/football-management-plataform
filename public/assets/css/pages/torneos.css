@@ -245,20 +245,20 @@
         border-radius: 50%;
         width: 36px;
         height: 36px;
-        animation: girar 1s linear infinite;
+        animation: torneos-girar 1s linear infinite;
         margin: auto;
     }
 
-    @keyframes girar { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }
+    @keyframes torneos-girar { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }
 .torneos-page .skeleton {
         display: inline-block;
         height: 16px;
         width: 100%;
         background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
         background-size: 200% 100%;
-        animation: shimmer 1.5s infinite;
+        animation: torneos-shimmer 1.5s infinite;
     }
-    @keyframes shimmer { 0% { background-position: -200% 0;} 100% { background-position: 200% 0;} }
+    @keyframes torneos-shimmer { 0% { background-position: -200% 0;} 100% { background-position: 200% 0;} }
 
     /* estilos para filas vacias */
 .torneos-page .empty-state
@@ -295,17 +295,17 @@
         font-size:14px;
     }
 .torneos-page .empty-state{
-        animation: fadeIn .35s ease;
+        animation: torneos-fade-in .35s ease;
     }
 
-    @keyframes fadeIn{
+    @keyframes torneos-fade-in{
         from{ opacity:0; transform:translateY(10px); }
         to{ opacity:1; transform:none; }
     }
 
 /* Estilos del asistente y detalle de torneos */
 
-@keyframes fadeUp {
+@keyframes torneos-fade-up {
         from {
             opacity: 0;
             transform: translateY(20px);
@@ -317,7 +317,7 @@
     }
 
 .torneo-create-page .wizard-animado {
-    animation: fadeUp 1.2s ease-out;
+    animation: torneos-fade-up 1.2s ease-out;
 }
 
 .torneo-create-page .torneo-welcome-image {
@@ -334,7 +334,7 @@
     box-shadow: 0 10px 30px rgba(0,0,0,0.25);
 }
 
-@keyframes popEstado {
+@keyframes torneos-pop-estado {
         0% {
             transform: scale(1);
             box-shadow: 0 0 0 rbga(0, 0, 0, 0);
@@ -458,7 +458,7 @@
         
 
     .estado-animado {
-        animation: popEstado .35s ease;
+        animation: torneos-pop-estado .35s ease;
     }
 
     .leyenda-estados {
