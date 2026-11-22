@@ -11,6 +11,7 @@
     
     <link rel="stylesheet" href="/afec/public/assets/css/public.css">
     <link rel="stylesheet" href="/afec/public/assets/css/public-header.css">
+    <link rel="stylesheet" href="/afec/public/assets/css/home.css">
     
     <!-- Stylesheets-->
    
