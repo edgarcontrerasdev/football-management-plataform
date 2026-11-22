@@ -44,3 +44,27 @@
 .kpi-card.warning{ border: 3px solid var(--warning); }
 .kpi-card.danger{  border: 3px solid var(--danger); }
 .kpi-card.info{   border:3px solid var(--info); }
+
+/* Variante de KPI utilizada en el panel del equipo */
+.kpi-card--dashboard {
+    position: relative;
+    padding: 14px 16px;
+}
+
+.kpi-card--dashboard.success { border-left: 3px solid var(--success); }
+.kpi-card--dashboard.warning { border-left: 3px solid var(--warning); }
+.kpi-card--dashboard.danger  { border-left: 3px solid var(--danger); }
+
+.kpi-card--dashboard .kpi-icon {
+    position: absolute;
+    right: 14px;
+    top: 14px;
+    font-size: 26px;
+}
+
+/* Variante de KPI del detalle de torneo */
+.kpi-card--detail.success { border-left: 3px solid var(--success); }
+.kpi-card--detail.warning { border-left: 3px solid var(--warning); }
+.kpi-card--detail.danger  { border-left: 3px solid var(--danger); }
+.kpi-card--detail.info    { border-left: 3px solid var(--info); }
+.kpi-card--detail.primary { border-left: 3px solid var(--primary); }
