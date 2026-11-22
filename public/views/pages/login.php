@@ -60,7 +60,7 @@
         <!-- placeholder logo: uses uploaded image if available -->
         <img id="logo" src="../public/assets/img/logos/logo.png" alt="Logo (placeholder)">
       </div>
-      <div class="intro-brand-copy">ASOCIACIÓN DE FÚTBOL DEL ESTADO DE COLIMA<br><small style="opacity:.8">Sistema Integral de Gestión Deportiva</small></div>
+      <div class="intro-brand-copy">ASOCIACIÓN DE FÚTBOL DEL ESTADO DE COLIMA<br><small class="intro-brand-subtitle">Sistema Integral de Gestión Deportiva</small></div>
     </div>
   </div>
 </div>
