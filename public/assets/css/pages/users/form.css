@@ -136,3 +136,9 @@
     .form-column .btn + .btn{
         margin-left: 10px;
     }
+
+
+/* Lista de errores del formulario de usuarios */
+.user-form-errors-list {
+    margin: 0;
+}
