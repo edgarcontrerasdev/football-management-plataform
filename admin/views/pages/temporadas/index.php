@@ -130,6 +130,8 @@
 
 
 
+</div>
+
 <script>
 
     document.addEventListener('DOMContentLoaded',function(e){
@@ -251,6 +253,3 @@
         });
     });
 
-</div>
-
-</script>
