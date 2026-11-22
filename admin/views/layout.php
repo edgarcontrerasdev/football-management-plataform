@@ -22,16 +22,6 @@
 
 <style>
 
-    /* Reset / base */
-    *{box-sizing:border-box;}
-
-    html,body{
-        height:100%; 
-        margin:0; 
-        font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; 
-        background: var(--bg); color:#eaf5ff;
-    }
-
     /* small niceties */
     a { color:inherit; }
 
