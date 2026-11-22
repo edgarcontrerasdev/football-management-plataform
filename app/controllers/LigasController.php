@@ -190,7 +190,19 @@ class LigasController
             exit;
         }
 
-        $temporadaActual = $this->temporadaModel->getActiva();
+        // La liga utiliza la temporada de su organismo gestor; si es independiente,
+        // utiliza exclusivamente su propia temporada.
+        $organismoGestor = null;
+        foreach (($liga['organismos'] ?? []) as $organismo) {
+            if ((int) ($organismo['es_gestor'] ?? 0) === 1) {
+                $organismoGestor = $organismo;
+                break;
+            }
+        }
+
+        $temporadaActual = $organismoGestor
+            ? $this->temporadaModel->getActiva('organismo', (int) $organismoGestor['id'])
+            : $this->temporadaModel->getActiva('liga', $id);
 
         $totalEquipos = 0;
         $equiposLiga = [];
