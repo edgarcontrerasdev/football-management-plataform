@@ -1,0 +1,41 @@
+/* Página pública: error 404 */
+.public-site .not-found-page .error-404 {
+    font-family: 'Roboto', 'Arial Narrow', Arial, sans-serif;
+    background: #161616;
+    border: 3px solid #1e90ff;
+    border-radius: 6px;
+    width: 90%;
+    margin: 15px auto;
+    padding: 20px;
+}
+
+.public-site .not-found-page .error-code {
+    font-size: 110px;
+    font-weight: 800;
+    color: #1e90ff;
+    letter-spacing: 6px;
+    margin-bottom: 10px;
+}
+
+.public-site .not-found-page .error-404 h1,
+.public-site .not-found-page .error-404 h3,
+.public-site .not-found-page .error-404 p {
+    margin-bottom: 10px;
+}
+
+.public-site .not-found-page .btn-back-home {
+    background: #1e90ff;
+    color: #fff;
+    font-weight: 600;
+    border-radius: 4px;
+    transition: .25s;
+    padding: 10px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.public-site .not-found-page .btn-back-home:hover {
+    background: #0d6efd;
+    padding-left: 28px;
+    padding-right: 28px;
+}
