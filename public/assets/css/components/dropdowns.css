@@ -1,0 +1,11 @@
+/* Menús desplegables del panel */
+.dropdown-menu {
+    background: #f0f4f7;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    overflow: hidden;
+}
+
+.dropdown-item:hover {
+    background: rgba(11,62,166,0.15);
+}
