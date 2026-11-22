@@ -523,3 +523,27 @@
     max-width: 300px;
   }
 }
+
+
+/* Accesibilidad: foco visible para navegación con teclado */
+.public-site .menu-principal a:focus-visible,
+.public-site .submenu a:focus-visible,
+.public-site .glass-logo:focus-visible,
+.public-site .social-btn:focus-visible,
+.public-site .icon-wrapper a:focus-visible,
+.public-site .btn-search:focus-visible,
+.public-site .btn-login-form:focus-visible,
+.public-site .search-input:focus-visible,
+.public-site .input-login:focus-visible {
+  outline: 3px solid #00ffd0;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Permite abrir los submenús también al navegar con teclado */
+.public-site .menu-principal li:focus-within > .submenu,
+.public-site .submenu li:focus-within > .submenu {
+  display: block;
+  opacity: 1;
+  visibility: visible;
+}
