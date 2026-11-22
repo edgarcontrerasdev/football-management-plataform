@@ -147,6 +147,68 @@ class Equipo{
         ]);
     }
 
+
+    /**
+     * Historial de clubes relacionados con el equipo.
+     */
+    public function obtenerClubes(int $equipoId): array
+    {
+        $sql = "
+            SELECT
+                c.id,
+                c.nombre,
+                ce.fecha_inicio,
+                ce.fecha_fin,
+                ce.estado,
+                ce.observaciones
+            FROM tb_club_equipos ce
+            INNER JOIN tb_clubes c ON c.id = ce.club_id
+            WHERE ce.equipo_id = :equipo_id
+            ORDER BY ce.fecha_inicio DESC, ce.id DESC
+        ";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([':equipo_id' => $equipoId]);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Participaciones del equipo por liga y temporada.
+     */
+    public function obtenerParticipacionesLigas(int $equipoId): array
+    {
+        $sql = "
+            SELECT
+                l.id AS liga_id,
+                l.nombre AS liga,
+                t.id AS temporada_id,
+                t.temporada,
+                lt.estado AS estado_liga_temporada,
+                le.estado_participacion,
+                le.estado_documentacion,
+                le.numero_registro,
+                le.fecha_solicitud,
+                le.fecha_alta,
+                le.fecha_baja,
+                le.motivo_baja
+            FROM tb_liga_equipos le
+            INNER JOIN tb_liga_temporadas lt
+                ON lt.id = le.liga_temporada_id
+            INNER JOIN tb_ligas l
+                ON l.id = lt.liga_id
+            INNER JOIN tb_temporadas t
+                ON t.id = lt.temporada_id
+            WHERE le.equipo_id = :equipo_id
+            ORDER BY t.fecha_inicio DESC, l.nombre ASC
+        ";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([':equipo_id' => $equipoId]);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     // Listado de entidades equipo. La participación en ligas y temporadas
     // se consulta desde sus relaciones, no desde tb_equipos.
     public function listar($filtros = [], $limit = 10, $offset = 0)
