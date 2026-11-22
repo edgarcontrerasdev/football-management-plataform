@@ -1,0 +1,39 @@
+/* ================= MAIN CONTENT AREA ================= */
+    .main {
+        margin-left: 260px;
+        padding: 88px 28px 28px 28px; /* leave space for header */
+        transition: margin-left .28s ease;
+    }
+
+    .main.collapsed { margin-left: 80px; }
+
+    /* "box" that visually separates content from frame */
+    .content-frame {
+        background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+        border-radius: 14px;
+        padding: 22px;
+        box-shadow: 0 10px 40px rgba(2,8,20,0.6);
+        border: 1px solid rgba(255,255,255,0.03);
+    }
+
+    /* Breadcrumb / path area (distinguida) */
+    .breadcrumbs {
+    display:flex; align-items:center; gap:12px;
+    padding:10px 0 18px 0; color:var(--muted);
+    border-bottom: 1px dashed rgba(255,255,255,0.03);
+    margin-bottom:14px;
+    }
+
+    .breadcrumbs .crumb { font-weight:600; color:#eaf5ff; }
+
+    /* Example content grid */
+    .grid {
+        display:grid;
+        grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+        gap:18px;
+    }
+
+/* Responsive: área de contenido */
+@media (max-width: 900px) {
+    .main { margin-left: 0; padding: 88px 16px 16px 16px; }
+}
