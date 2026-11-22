@@ -5,6 +5,11 @@
 
 @import url('pages/ligas.css');
 
+/* Estructura del panel administrativo */
+@import url('layout/header.css');
+@import url('layout/sidebar.css');
+@import url('layout/main.css');
+
 :root
 {
 
