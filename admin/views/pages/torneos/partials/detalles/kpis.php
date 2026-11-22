@@ -31,29 +31,18 @@ $kpisTorneo = [
 
     <?php foreach ($kpisTorneo as $kpi): ?>
         <div class="col-md-3">
-            <div class="kpi-card <?= $kpi['tipo']; ?>">
+            <div class="kpi-card kpi-card--detail <?= $kpi['tipo']; ?>">
                 <span class="kpi-title">
                     <?= htmlspecialchars($kpi['titulo']); ?>
                 </span>
 
-                <h3>
+                <h3 class="kpi-value">
                     <?= htmlspecialchars($kpi['valor']); ?>
                 </h3>
 
-                <i class="<?= htmlspecialchars($kpi['icono']); ?>"></i>
+                <i class="kpi-icon <?= htmlspecialchars($kpi['icono']); ?>"></i>
             </div>
         </div>
     <?php endforeach; ?>
 
 </div>
-
-<style>
-
-    .kpi-card.primary {
-    border-left: 3px solid var(--primary);
-}
-
-.kpi-card.info {
-    border-left: 3px solid var(--info);
-}
-</style>
