@@ -100,6 +100,17 @@ class ClubesController
         ]);
     }
 
+    public function detalles(int $id): void
+    {
+        $this->verificarAcceso();
+
+        $club = $this->clubModel->obtenerPorId($id);
+
+        view('pages.clubes.detalle.php', [
+            'club' => $club
+        ]);
+    }
+
     private function verificarAcceso(): void
     {
         if (!in_array(Auth::role(), ['ADMIN', 'SUPERVISOR'], true)) {
