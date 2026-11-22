@@ -9,7 +9,7 @@
     </div>
     <div class="d-flex gap-2">
        
-        <select class="form-select form-select-sm" style="width:180px">
+        <select class="form-select form-select-sm" class="form-select form-select-sm equipo-plantilla-filter">
             <option value="">Todos</option>
             <option>Jugadores</option>
             <option>DT</option>
