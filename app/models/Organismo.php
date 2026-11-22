@@ -198,7 +198,7 @@ class Organismo
     public function obtenerLigas(int $organismoId): array
     {
         $stmt = $this->pdo->prepare("
-            SELECT l.id, l.nombre, l.siglas, l.estado AS estado_liga,
+            SELECT lo.id AS relacion_id, l.id, l.nombre, l.siglas, l.estado AS estado_liga,
                    lo.tipo_relacion, lo.es_gestor, lo.fecha_inicio,
                    lo.fecha_fin, lo.estado AS estado_relacion
             FROM tb_liga_organismos lo
@@ -232,6 +232,11 @@ class Organismo
     {
         $this->pdo->beginTransaction();
         try {
+            $orgCheck = $this->pdo->prepare("SELECT id FROM tb_organismos WHERE id = :id AND estado = 'activo'");
+            $orgCheck->execute([':id' => $organismoId]);
+            if (!$orgCheck->fetchColumn()) {
+                throw new InvalidArgumentException('El organismo no existe o está inactivo.');
+            }
             $lock = $this->pdo->prepare("SELECT id FROM tb_ligas WHERE id = :id AND estado = 'activo' FOR UPDATE");
             $lock->execute([':id' => $ligaId]);
             if (!$lock->fetchColumn()) {
