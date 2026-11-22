@@ -94,11 +94,13 @@ class TemporadasController{
 
         $errors = $_SESSION['errors'] ?? [];
         $old    = $_SESSION['old'] ?? [];
+        $propietarios = $this->temporadaModel->listarPropietarios();
         unset($_SESSION['errors'], $_SESSION['old']);
 
         view('pages.temporadas.create.php',[
             'errors'    => $errors,
-            'old'       => $old
+            'old'       => $old,
+            'propietarios' => $propietarios
         ]);
 
     }
@@ -116,6 +118,8 @@ class TemporadasController{
         $fecha_inicio  = $_POST['fecha_inicio'] ?? '';
         $fecha_fin     = $_POST['fecha_fin'] ?? '';
         $observaciones   = $_POST['observaciones'] ?? null;
+        $ambitoTipo = $_POST['ambito_tipo'] ?? '';
+        $propietarioId = (int) ($_POST['propietario_id'] ?? 0);
 
         // Campos obligatorios
         if ($temporada === '') {
@@ -142,8 +146,12 @@ class TemporadasController{
             }
         }
 
-        //Nombre único
-        if ($temporada !== '' && $this->temporadaModel->existeNombre($temporada)) {
+        // Validar propietario y nombre dentro del ámbito.
+        if (!in_array($ambitoTipo, ['organismo', 'liga'], true) || $propietarioId <= 0) {
+            $errors[] = 'Selecciona el organismo o liga propietaria de la temporada';
+        }
+
+        if ($temporada !== '' && $propietarioId > 0 && $this->temporadaModel->existeNombre($temporada, null, $ambitoTipo, $propietarioId)) {
             $errors[] = 'Ya existe una temporada con ese nombre';
         }
   
@@ -162,7 +170,10 @@ class TemporadasController{
             'fecha_inicio'  => $fecha_inicio,
             'fecha_fin'     => $fecha_fin,
             'estado'        => 'borrador',
-            'observaciones'   => $observaciones
+            'observaciones'   => $observaciones,
+            'ambito_tipo' => $ambitoTipo,
+            'organismo_id' => $ambitoTipo === 'organismo' ? $propietarioId : null,
+            'liga_propietaria_id' => $ambitoTipo === 'liga' ? $propietarioId : null
         ]);
 
         //si ocurrio un error al intentar guardar 
@@ -213,6 +224,7 @@ class TemporadasController{
 
         $errors = $_SESSION['errors'] ?? [];
         $old    = $_SESSION['old'] ?? [];
+        $propietarios = $this->temporadaModel->listarPropietarios();
 
         unset($_SESSION['errors'], $_SESSION['old']);
 
@@ -220,7 +232,8 @@ class TemporadasController{
             'temporada' => $temporada,
             'errors'    => $errors,
             'old'       => $old,
-            'modo'      => 'edit'
+            'modo'      => 'edit',
+            'propietarios' => $propietarios
         ]);
     }
 
@@ -260,7 +273,10 @@ class TemporadasController{
         }
 
         //Nombre único
-        if ($temporada !== '' && $this->temporadaModel->existeNombre($temporada, $id)) {
+        if ($temporada !== '' && $this->temporadaModel->existeNombre(
+            $temporada, $id, $temporadaActual['ambito_tipo'],
+            (int) ($temporadaActual['organismo_id'] ?: $temporadaActual['liga_propietaria_id'])
+        )) {
             $errors[] = 'Ya existe una temporada con ese nombre';
         }
 
@@ -308,10 +324,7 @@ class TemporadasController{
         }
 
         try{
-            //primero cerrarmos la temporada activa
-            $this->temporadaModel->finalizarTemporadaActiva();
-
-            //activamos la temporada con el id solicitado
+            // La activación solo finaliza la temporada anterior del mismo propietario.
             $this->temporadaModel->activar($id);
 
             flashSuccess('Temporada activada correctamente. La temporada activa anterior pasó a finalizada.');
