@@ -330,34 +330,50 @@
             }
         }
      
-        // Vista para crear equipo
-        public function create() {
-            $this->ligaModel = new Liga($this->db);
+        // Vista para crear equipo como entidad independiente.
+        public function create()
+        {
+            $error = $_SESSION['equipo_error'] ?? null;
+            unset($_SESSION['equipo_error']);
 
-            $ligas = $this->ligaModel->all();
+            $success = isset($_GET['created']) && $_GET['created'] === '1';
 
-            $viewPath = ROOT_PATH.'/admin/views/pages/equipos/create.php';
-            if(!file_exists($viewPath)){
-                $viewPath = ROOT_PATH.'/admin/views/404.php';
-            }
-
-            include ROOT_PATH.'/admin/views/layout.php';
+            view('pages.equipos.create.php', [
+                'error' => $error,
+                'success' => $success
+            ]);
         }
 
-        // Guardar nuevo equipo
-        public function store() {
-            if($_SERVER['REQUEST_METHOD'] === 'POST') 
-            {
-                $data = $_POST;
+        // Registrar únicamente la entidad base del equipo.
+        public function store()
+        {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                header('Location: index.php?page=equipos&action=create');
+                exit;
+            }
 
-                if(empty($data['nombre'])) {
-                    $error = "El nombre del equipo es obligatorio";
-                    require 'views/ligas/create.php';
-                    return;
-                }
+            $nombre = trim((string) ($_POST['nombre'] ?? ''));
 
-                $equipoId = $this->equipoModel->crear($data);
-                header("Location: index.php?page=equipos&action=detalles&id=".$equipoId);
+            if ($nombre === '') {
+                $_SESSION['equipo_error'] = 'El nombre del equipo es obligatorio.';
+                header('Location: index.php?page=equipos&action=create');
+                exit;
+            }
+
+            try {
+                $equipoId = $this->equipoModel->crearEntidad([
+                    'nombre' => $nombre,
+                    'siglas' => $_POST['siglas'] ?? '',
+                    'observaciones' => $_POST['observaciones'] ?? ''
+                ]);
+
+                header('Location: index.php?page=equipos&action=create&created=1&id=' . $equipoId);
+                exit;
+            } catch (PDOException $e) {
+                error_log('Error al registrar equipo: ' . $e->getMessage());
+                $_SESSION['equipo_error'] = 'No fue posible registrar el equipo. Intenta nuevamente.';
+                header('Location: index.php?page=equipos&action=create');
+                exit;
             }
         }
 
