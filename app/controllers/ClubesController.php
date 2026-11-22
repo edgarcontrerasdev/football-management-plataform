@@ -227,4 +227,152 @@ class ClubesController
         }
     }
 
+
+    public function editar($id): void
+    {
+        $this->verificarAcceso();
+
+        $id = (int) $id;
+        $club = $this->clubModel->obtenerPorId($id);
+
+        if (!$club) {
+            http_response_code(404);
+            view('pages.clubes.detalle.php', ['club' => null]);
+            return;
+        }
+
+        $old = $_SESSION['club_edit_old'] ?? [];
+        unset($_SESSION['club_edit_old']);
+
+        $error = $_SESSION['club_edit_error'] ?? null;
+        unset($_SESSION['club_edit_error']);
+
+        view('pages.clubes.edit.php', [
+            'club' => $club,
+            'old' => $old,
+            'error' => $error
+        ]);
+    }
+
+    public function actualizar($id): void
+    {
+        $this->verificarAcceso();
+
+        $id = (int) $id;
+        $club = $this->clubModel->obtenerPorId($id);
+
+        if (!$club) {
+            http_response_code(404);
+            header('Location: index.php?page=clubes');
+            exit;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: index.php?page=clubes&action=editar&id=' . $id);
+            exit;
+        }
+
+        $nombre = trim((string) ($_POST['nombre'] ?? ''));
+        $siglas = trim((string) ($_POST['siglas'] ?? ''));
+        $estado = strtolower(trim((string) ($_POST['estado'] ?? '')));
+        $observaciones = trim((string) ($_POST['observaciones'] ?? ''));
+
+        $_SESSION['club_edit_old'] = [
+            'nombre' => $nombre,
+            'siglas' => $siglas,
+            'estado' => $estado,
+            'observaciones' => $observaciones
+        ];
+
+        $volver = 'index.php?page=clubes&action=editar&id=' . $id;
+
+        if ($nombre === '' || !in_array($estado, ['activo', 'inactivo'], true)) {
+            $_SESSION['club_edit_error'] = $nombre === ''
+                ? 'El nombre del club es obligatorio.'
+                : 'Selecciona un estado válido para el club.';
+            header('Location: ' . $volver);
+            exit;
+        }
+
+        $nombreLogo = $club['logo'] ?? null;
+        $rutaNuevoLogo = null;
+        $archivo = $_FILES['logo'] ?? null;
+
+        if ($archivo && $archivo['error'] !== UPLOAD_ERR_NO_FILE) {
+            if ($archivo['error'] !== UPLOAD_ERR_OK) {
+                $_SESSION['club_edit_error'] = 'No se pudo recibir el archivo del logo.';
+                header('Location: ' . $volver);
+                exit;
+            }
+
+            if ($archivo['size'] > 2 * 1024 * 1024) {
+                $_SESSION['club_edit_error'] = 'El logo no debe superar los 2 MB.';
+                header('Location: ' . $volver);
+                exit;
+            }
+
+            $finfo = new finfo(FILEINFO_MIME_TYPE);
+            $mime = $finfo->file($archivo['tmp_name']);
+            $formatos = [
+                'image/jpeg' => 'jpg',
+                'image/png' => 'png',
+                'image/webp' => 'webp'
+            ];
+
+            if (!isset($formatos[$mime]) || @getimagesize($archivo['tmp_name']) === false) {
+                $_SESSION['club_edit_error'] = 'El archivo debe ser una imagen JPG, PNG o WEBP válida.';
+                header('Location: ' . $volver);
+                exit;
+            }
+
+            $directorio = ROOT_PATH . '/public/assets/img/clubes/';
+            if (!is_dir($directorio) && !mkdir($directorio, 0755, true) && !is_dir($directorio)) {
+                $_SESSION['club_edit_error'] = 'No está disponible la carpeta para guardar logos.';
+                header('Location: ' . $volver);
+                exit;
+            }
+
+            $nombreLogo = bin2hex(random_bytes(16)) . '.' . $formatos[$mime];
+            $rutaNuevoLogo = $directorio . $nombreLogo;
+
+            if (!move_uploaded_file($archivo['tmp_name'], $rutaNuevoLogo)) {
+                $_SESSION['club_edit_error'] = 'No fue posible guardar el archivo del logo.';
+                header('Location: ' . $volver);
+                exit;
+            }
+        }
+
+        try {
+            $this->clubModel->actualizar($id, [
+                'nombre' => $nombre,
+                'siglas' => $siglas,
+                'logo' => $nombreLogo,
+                'estado' => $estado,
+                'observaciones' => $observaciones
+            ]);
+
+            unset($_SESSION['club_edit_old']);
+
+            if ($rutaNuevoLogo && !empty($club['logo'])) {
+                $logoAnterior = ROOT_PATH . '/public/assets/img/clubes/' . basename($club['logo']);
+                if (is_file($logoAnterior)) {
+                    @unlink($logoAnterior);
+                }
+            }
+
+            $_SESSION['success'] = 'La información del club se actualizó correctamente.';
+            header('Location: index.php?page=clubes&action=detalles&id=' . $id);
+            exit;
+        } catch (Throwable $e) {
+            if ($rutaNuevoLogo && is_file($rutaNuevoLogo)) {
+                @unlink($rutaNuevoLogo);
+            }
+
+            error_log('Error al actualizar club: ' . $e->getMessage());
+            $_SESSION['club_edit_error'] = 'No fue posible actualizar el club. Intenta nuevamente.';
+            header('Location: ' . $volver);
+            exit;
+        }
+    }
+
 }
