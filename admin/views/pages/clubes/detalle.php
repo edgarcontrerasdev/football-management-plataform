@@ -114,6 +114,58 @@ $claseEstado = $estadoClub === 'activo' ? 'success' : 'secondary';
                     <span class="badge bg-light text-dark"><?= count($equipos ?? []) ?> equipos</span>
                 </div>
 
+                <?php if (!empty($errorAsignacion)): ?>
+                    <div class="alert alert-danger" role="alert">
+                        <?= htmlspecialchars($errorAsignacion, ENT_QUOTES, 'UTF-8') ?>
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($estadoClub === 'activo'): ?>
+                    <div class="border rounded-3 p-3 mb-4">
+                        <h6 class="fw-bold mb-3">
+                            <i class="fa-solid fa-link me-2"></i>Vincular un equipo
+                        </h6>
+
+                        <?php if (!empty($equiposDisponibles)): ?>
+                            <form action="index.php?page=clubes&action=asignarEquipo&id=<?= (int) $club['id'] ?>" method="POST">
+                                <div class="row g-3">
+                                    <div class="col-lg-5">
+                                        <label for="equipo_id" class="form-label">Equipo <span class="text-danger">*</span></label>
+                                        <select name="equipo_id" id="equipo_id" class="form-select" required>
+                                            <option value="">Selecciona un equipo</option>
+                                            <?php foreach ($equiposDisponibles as $equipoDisponible): ?>
+                                                <option value="<?= (int) $equipoDisponible['id'] ?>">
+                                                    <?= htmlspecialchars($equipoDisponible['nombre'], ENT_QUOTES, 'UTF-8') ?>
+                                                    <?= !empty($equipoDisponible['siglas']) ? ' (' . htmlspecialchars($equipoDisponible['siglas'], ENT_QUOTES, 'UTF-8') . ')' : '' ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <div class="col-lg-3">
+                                        <label for="fecha_inicio" class="form-label">Fecha de inicio <span class="text-danger">*</span></label>
+                                        <input type="date" name="fecha_inicio" id="fecha_inicio" class="form-control" value="<?= htmlspecialchars(date('Y-m-d'), ENT_QUOTES, 'UTF-8') ?>" required>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <label for="observaciones_asignacion" class="form-label">Observaciones</label>
+                                        <input type="text" name="observaciones" id="observaciones_asignacion" class="form-control" maxlength="500" placeholder="Opcional">
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-end mt-3">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fa-solid fa-plus me-1"></i>Vincular equipo
+                                    </button>
+                                </div>
+                            </form>
+                        <?php else: ?>
+                            <p class="text-muted small mb-0">No hay equipos disponibles para vincular. Los equipos que ya pertenecen a otro club no aparecen en esta lista.</p>
+                        <?php endif; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="alert alert-secondary">
+                        Este club está inactivo. No es posible vincular nuevos equipos.
+                    </div>
+                <?php endif; ?>
+
                 <?php if (empty($equipos)): ?>
                     <p class="text-muted mb-0">Este club todavía no tiene equipos relacionados.</p>
                 <?php else: ?>
