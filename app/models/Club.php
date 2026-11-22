@@ -141,7 +141,7 @@ class Club
                 WHERE id = :id";
         $stmt = $this->pdo->prepare($sql);
 
-        return $stmt->execute([
+        $actualizado = $stmt->execute([
             ':nombre' => trim((string) $data['nombre']),
             ':siglas' => ($data['siglas'] ?? '') !== '' ? trim((string) $data['siglas']) : null,
             ':logo' => $data['logo'] ?? null,
@@ -149,6 +149,12 @@ class Club
             ':observaciones' => ($data['observaciones'] ?? '') !== '' ? trim((string) $data['observaciones']) : null,
             ':id' => $id
         ]);
+
+        if (!$actualizado) {
+            throw new RuntimeException('No fue posible actualizar el club en la base de datos.');
+        }
+
+        return true;
     }
 
 }
