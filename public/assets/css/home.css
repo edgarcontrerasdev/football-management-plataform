@@ -133,29 +133,6 @@
   background: #ffaa00;
 }
 
-/* Navegación */
-.public-site .home-page .nav {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(0,0,0,0.5);
-  color: #fff;
-  border: none;
-  font-size: 2rem;
-  padding: 10px 15px;
-  cursor: pointer;
-  border-radius: 5px;
-  z-index: 3;
-  transition: background 0.3s;
-}
-
-.public-site .home-page .nav:hover {
-  background: rgba(0,0,0,0.8);
-}
-
-.public-site .home-page .nav.prev { left: 10px; }
-.public-site .home-page .nav.next { right: 10px; }
-
 /* Indicadores */
 .public-site .home-page .dots {
   position: absolute;
