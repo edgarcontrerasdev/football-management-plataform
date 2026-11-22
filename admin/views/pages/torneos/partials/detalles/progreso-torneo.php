@@ -72,26 +72,3 @@ $pasos = [
     </div>
 </div>
 
-<style>
-    .config-progress-card .card-body {
-    padding: 14px 16px;
-}
-
-.config-progress-bar {
-    height: 7px;
-}
-
-.config-step-list .config-step-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 7px 10px;
-    font-size: 13px;
-}
-
-.config-step-item .badge {
-    min-width: 90px;
-    font-size: 11px;
-    padding: 5px 8px;
-}
-</style>
