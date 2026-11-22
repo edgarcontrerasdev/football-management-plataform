@@ -135,10 +135,12 @@ class OrganismosController
             view('pages.organismos.detalle.php', ['organismo' => null, 'ligas' => []]);
             return;
         }
+        unset($_SESSION['organismo_relacion_error']);
         view('pages.organismos.detalle.php', [
             'organismo' => $organismo,
             'ligas' => $this->organismoModel->obtenerLigas($id),
-            'ligasDisponibles' => $this->organismoModel->listarLigasDisponibles($id)
+            'ligasDisponibles' => $this->organismoModel->listarLigasDisponibles($id),
+            'errorRelacion' => $_SESSION['organismo_relacion_error'] ?? null
         ]);
     }
 
@@ -204,6 +206,73 @@ class OrganismosController
             header('Location: index.php?page=organismos&action=editar&id=' . $id);
             exit;
         }
+    }
+
+
+    public function vincularLiga($id): void
+    {
+        $this->verificarAcceso();
+        $organismoId = (int) $id;
+        $url = 'index.php?page=organismos&action=detalles&id=' . $organismoId;
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . $url);
+            exit;
+        }
+
+        $ligaId = (int) ($_POST['liga_id'] ?? 0);
+        $data = [
+            'tipo_relacion' => trim((string) ($_POST['tipo_relacion'] ?? '')),
+            'es_gestor' => isset($_POST['es_gestor']) ? 1 : 0,
+            'fecha_inicio' => trim((string) ($_POST['fecha_inicio'] ?? '')),
+            'referencia' => trim((string) ($_POST['referencia'] ?? '')),
+            'observaciones' => trim((string) ($_POST['observaciones'] ?? ''))
+        ];
+        $tipos = ['gestion', 'afiliacion', 'colaboracion', 'otro'];
+        if ($ligaId <= 0 || !in_array($data['tipo_relacion'], $tipos, true)
+            || !preg_match('/^\\d{4}-\\d{2}-\\d{2}$/', $data['fecha_inicio'])
+            || !checkdate((int) substr($data['fecha_inicio'], 5, 2), (int) substr($data['fecha_inicio'], 8, 2), (int) substr($data['fecha_inicio'], 0, 4))) {
+            $_SESSION['organismo_relacion_error'] = 'Verifica la liga, el tipo de relación y la fecha de inicio.';
+            header('Location: ' . $url);
+            exit;
+        }
+        try {
+            $this->organismoModel->vincularLiga($organismoId, $ligaId, $data);
+            $_SESSION['success'] = 'La liga se vinculó correctamente al organismo.';
+        } catch (Throwable $e) {
+            error_log('Error al vincular liga con organismo: ' . $e->getMessage());
+            $_SESSION['organismo_relacion_error'] = $e instanceof InvalidArgumentException
+                ? $e->getMessage()
+                : 'No fue posible vincular la liga. Intenta nuevamente.';
+        }
+        header('Location: ' . $url);
+        exit;
+    }
+
+    public function finalizarRelacion($id): void
+    {
+        $this->verificarAcceso();
+        $organismoId = (int) $id;
+        $relacionId = (int) ($_POST['relacion_id'] ?? 0);
+        $fechaFin = trim((string) ($_POST['fecha_fin'] ?? ''));
+        $url = 'index.php?page=organismos&action=detalles&id=' . $organismoId;
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || $relacionId <= 0
+            || !preg_match('/^\\d{4}-\\d{2}-\\d{2}$/', $fechaFin)
+            || !checkdate((int) substr($fechaFin, 5, 2), (int) substr($fechaFin, 8, 2), (int) substr($fechaFin, 0, 4))) {
+            $_SESSION['organismo_relacion_error'] = 'Indica una fecha de finalización válida.';
+            header('Location: ' . $url);
+            exit;
+        }
+        try {
+            $this->organismoModel->finalizarRelacion($organismoId, $relacionId, $fechaFin);
+            $_SESSION['success'] = 'La relación con la liga se finalizó. El historial se conservó.';
+        } catch (Throwable $e) {
+            error_log('Error al finalizar relación de organismo: ' . $e->getMessage());
+            $_SESSION['organismo_relacion_error'] = $e instanceof InvalidArgumentException
+                ? $e->getMessage()
+                : 'No fue posible finalizar la relación.';
+        }
+        header('Location: ' . $url);
+        exit;
     }
 
 }
