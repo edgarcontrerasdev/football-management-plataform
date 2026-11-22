@@ -1,7 +1,7 @@
 <div class="container mt-4">
 
     <h3><?= htmlspecialchars($temporada['temporada']) ?></h3>
-    <p class="text-muted" style="color:gold">Detalle de temporada</p>
+    <p class="text-muted" class="temporada-detail-subtitle">Detalle de temporada</p>
 
     <table class="table table-bordered mt-3">
         <tr>
