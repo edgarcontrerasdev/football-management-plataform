@@ -227,4 +227,75 @@ class Organismo
         $stmt->execute([':organismo_id' => $organismoId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    public function vincularLiga(int $organismoId, int $ligaId, array $data): void
+    {
+        $this->pdo->beginTransaction();
+        try {
+            $lock = $this->pdo->prepare("SELECT id FROM tb_ligas WHERE id = :id AND estado = 'activo' FOR UPDATE");
+            $lock->execute([':id' => $ligaId]);
+            if (!$lock->fetchColumn()) {
+                throw new InvalidArgumentException('La liga seleccionada no existe o está inactiva.');
+            }
+
+            $stmt = $this->pdo->prepare("
+                SELECT id FROM tb_liga_organismos
+                WHERE liga_id = :liga_id AND organismo_id = :organismo_id AND estado = 'activo'
+                LIMIT 1 FOR UPDATE
+            ");
+            $stmt->execute([':liga_id' => $ligaId, ':organismo_id' => $organismoId]);
+            if ($stmt->fetchColumn()) {
+                throw new InvalidArgumentException('Esta liga ya tiene una relación vigente con el organismo.');
+            }
+
+            $esGestor = !empty($data['es_gestor']) ? 1 : 0;
+            if ($esGestor === 1) {
+                $cerrar = $this->pdo->prepare("
+                    UPDATE tb_liga_organismos
+                    SET estado = 'inactivo', fecha_fin = :fecha_fin, es_gestor = 0
+                    WHERE liga_id = :liga_id AND es_gestor = 1 AND estado = 'activo'
+                ");
+                $cerrar->execute([':fecha_fin' => $data['fecha_inicio'], ':liga_id' => $ligaId]);
+            }
+
+            $insert = $this->pdo->prepare("
+                INSERT INTO tb_liga_organismos
+                    (liga_id, organismo_id, tipo_relacion, es_gestor, fecha_inicio, estado, referencia, observaciones)
+                VALUES
+                    (:liga_id, :organismo_id, :tipo_relacion, :es_gestor, :fecha_inicio, 'activo', :referencia, :observaciones)
+            ");
+            $insert->execute([
+                ':liga_id' => $ligaId,
+                ':organismo_id' => $organismoId,
+                ':tipo_relacion' => $data['tipo_relacion'],
+                ':es_gestor' => $esGestor,
+                ':fecha_inicio' => $data['fecha_inicio'],
+                ':referencia' => $data['referencia'] ?: null,
+                ':observaciones' => $data['observaciones'] ?: null
+            ]);
+            $this->pdo->commit();
+        } catch (Throwable $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    public function finalizarRelacion(int $organismoId, int $relacionId, string $fechaFin): void
+    {
+        $stmt = $this->pdo->prepare("
+            UPDATE tb_liga_organismos
+            SET estado = 'inactivo', fecha_fin = :fecha_fin, es_gestor = 0
+            WHERE id = :id AND organismo_id = :organismo_id AND estado = 'activo'
+        ");
+        $stmt->execute([
+            ':fecha_fin' => $fechaFin,
+            ':id' => $relacionId,
+            ':organismo_id' => $organismoId
+        ]);
+        if ($stmt->rowCount() === 0) {
+            throw new InvalidArgumentException('La relación no existe o ya fue finalizada.');
+        }
+    }
 }
