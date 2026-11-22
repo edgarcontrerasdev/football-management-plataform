@@ -7,6 +7,7 @@
         'partidos' => 0
     ];
 ?>
+<div class="dashboard-page">
 <div class="grid charts-grid">
 
     <div class="card">
@@ -27,33 +28,7 @@
 </div>
 
 
-<style>
 
-    .charts-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 20px;
-        margin-top: 25px;
-    }
-
-    .charts-grid .card.full {
-        grid-column: 1 / -1;
-    }
-
-    .card {
-        background: #111;
-        padding: 16px;
-        border-radius: 10px;
-        box-shadow: 0 0 10px rgba(0,0,0,.4);
-    }
-
-    .card h6 {
-        color: gold;
-        margin-bottom: 10px;
-        font-weight: 600;
-    }
-
-</style>
 
 
 <?php startSection('scripts') ?>
