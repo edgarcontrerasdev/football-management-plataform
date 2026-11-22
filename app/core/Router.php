@@ -44,6 +44,11 @@ class Router
             'permission' => null
         ],
 
+        'organismos' => [
+            'controller' => 'OrganismosController',
+            'permission' => null
+        ],
+
 
         'users' => [
             'controller' => 'UsersController',
