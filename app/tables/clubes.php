@@ -2,9 +2,11 @@
 
 return [
     [
-        'type' => 'text',
-        'field' => 'nombre',
-        'title' => 'CLUB'
+        'type'       => 'image',
+        'textField'  => 'nombre',
+        'title'      => 'CLUB',
+        'folder'     => 'clubes',
+        'imageField' => 'logo'
     ],
     [
         'type' => 'text',
