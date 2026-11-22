@@ -1,0 +1,65 @@
+/* ================= HEADER FULL WIDTH ================= */
+    .header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 68px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        z-index: 40;
+        background: linear-gradient(180deg, rgba(217,226,232,0.95), rgba(217,226,232,0.85));
+        box-shadow: 0 6px 30px rgba(2,8,20,0.6);
+        border-bottom: 3px solid var(--royal);
+        color: var(--royal);
+    }
+
+    /* header left - logo + title */
+    .header .left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .header .logo {
+        width: 56px; height: 56px;
+        border-radius: 8px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.2));
+        display:flex; align-items:center; justify-content:center;
+        overflow: hidden;
+        border: 1px solid rgba(11,62,166,0.08);
+        box-shadow: 0 6px 18px rgba(11,62,166,0.08);
+    }
+
+    .header .logo img { width: 90%; height: auto; display:block; }
+
+    /* header center - page title (optional) */
+    .header .center {
+        display:flex;
+        align-items:center;
+        gap:12px;
+        color: var(--royal);
+        font-weight:700;
+    }
+
+    /* header right - controls */
+    .header .right {
+        display:flex;
+        align-items:center;
+        gap:14px;
+        color: var(--royale);
+    }
+
+    .icon-btn {
+        background: transparent;
+        border: none;
+        font-size: 18px;
+        padding: 8px;
+        border-radius: 8px;
+        cursor: pointer;
+        color: inherit;
+    }
+
+    .icon-btn:hover { background: rgba(11,62,166,0.08); }
