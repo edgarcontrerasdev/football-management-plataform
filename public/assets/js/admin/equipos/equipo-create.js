@@ -1,6 +1,39 @@
 (function () {
     'use strict';
 
+    const form = document.getElementById('formCreateEquipo');
+    let submissionConfirmed = false;
+
+    if (form) {
+        form.addEventListener('submit', function (event) {
+            if (submissionConfirmed) return;
+
+            event.preventDefault();
+
+            if (typeof Swal === 'undefined') {
+                submissionConfirmed = window.confirm('¿Deseas registrar este equipo?');
+                if (submissionConfirmed) form.requestSubmit();
+                return;
+            }
+
+            Swal.fire({
+                icon: 'question',
+                title: '¿Registrar equipo?',
+                text: 'Se guardarán los datos del equipo y el escudo seleccionado.',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, registrar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#0033ff',
+                reverseButtons: true
+            }).then(function (result) {
+                if (!result.isConfirmed) return;
+
+                submissionConfirmed = true;
+                form.requestSubmit();
+            });
+        });
+    }
+
     const input = document.getElementById('escudo');
     const picker = document.querySelector('.equipo-crest-picker');
     const preview = document.getElementById('equipoCrestPreview');
