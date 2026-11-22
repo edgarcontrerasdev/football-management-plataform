@@ -42,7 +42,7 @@ $partidos = [
         <small class="text-muted">Estadísticas por torneo</small>
     </div>
 
-    <div style="width:250px">
+    <div class="equipo-deportivo-select-wrap">
         <select class="form-select form-select-sm" id="torneoSelect">
 
             <?php foreach($torneos as $t): ?>
