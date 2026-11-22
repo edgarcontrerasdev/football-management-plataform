@@ -257,7 +257,7 @@ class Organismo
             if ($esGestor === 1) {
                 $cerrar = $this->pdo->prepare("
                     UPDATE tb_liga_organismos
-                    SET estado = 'inactivo', fecha_fin = :fecha_fin, es_gestor = 0
+                    SET estado = 'inactivo', fecha_fin = :fecha_fin
                     WHERE liga_id = :liga_id AND es_gestor = 1 AND estado = 'activo'
                 ");
                 $cerrar->execute([':fecha_fin' => $data['fecha_inicio'], ':liga_id' => $ligaId]);
@@ -293,6 +293,7 @@ class Organismo
             UPDATE tb_liga_organismos
             SET estado = 'inactivo', fecha_fin = :fecha_fin, es_gestor = 0
             WHERE id = :id AND organismo_id = :organismo_id AND estado = 'activo'
+              AND (fecha_inicio IS NULL OR fecha_inicio <= :fecha_fin)
         ");
         $stmt->execute([
             ':fecha_fin' => $fechaFin,
