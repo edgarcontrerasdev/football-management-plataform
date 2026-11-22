@@ -1,0 +1,14 @@
+/* Insignias del panel administrativo */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 110px;
+    height: 28px;
+    font-size: 12px;
+    border-radius: 20px;
+}
+
+.badge i {
+    font-size: 11px;
+}
