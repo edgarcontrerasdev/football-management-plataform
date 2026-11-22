@@ -23,7 +23,7 @@
 
 ?>
 
-    <div class="equipos-detalle-page">
+    <div class="equipos-detalle-page"> data-equipo-id="<?= (int) $equipo['id'] ?>"
 
 <!-- ===== HEADER DEL EQUIPO ===== -->
     <div class="card header-dark shadow-sm border-0 mb-3 p-3">
@@ -297,178 +297,12 @@
 
 
 <?php startSection('scripts') ?>
-    
     <script src="<?= ASSETS ?>/js/core/formHandler.js"  > </script>
     <script src="<?= ASSETS ?>/js/core/modalManager.js" > </script>
     <script src="<?= ASSETS ?>/js/equipos/direccion.js" > </script>
     <script src="<?= ASSETS ?>/js/equipos/contacto.js"  > </script>
     <script src="<?= ASSETS ?>/js/equipos/generales.js" > </script>
-        
-    <script>
-        let escudoOriginal = document.getElementById('escudoPreview').src;
-        let archivoEscudo = null;
-        let bloqueado = false;
-
-        document.querySelector('.escudo-overlay').addEventListener('click', () => {
-            if (bloqueado) return;
-            document.getElementById('inputEscudo').click();
-        });
-
-        document.getElementById('inputEscudo').addEventListener('change', e => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            bloqueado = true;
-            archivoEscudo = file;
-
-            const reader = new FileReader();
-            reader.onload = e => {
-                const img = document.getElementById('escudoPreview');
-                img.src = e.target.result;
-                img.classList.add('animate__animated', 'animate__pulse');
-
-                document.querySelector('.escudo-actions').classList.remove('d-none');
-            };
-            reader.readAsDataURL(file);
-        });
-
-        document.getElementById('btnCancelarEscudo').addEventListener('click', () => {
-            document.getElementById('escudoPreview').src = escudoOriginal;
-            document.querySelector('.escudo-actions').classList.add('d-none');
-            document.getElementById('inputEscudo').value = '';
-            archivoEscudo = null;
-            bloqueado = false;
-        });
-
-
-    
-    </script>
-
-    <script>
-        document.getElementById('btnConfirmarEscudo').addEventListener('click', () => {
-            if (!archivoEscudo) return;
-
-            Swal.fire({
-                title: '¿Guardar nuevo escudo?',
-                text: 'El escudo del equipo sera actualizado',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'Sí, guardar',
-                cancelButtonText: 'Cancelar',
-                confirmButtonColor: '#0d6efd'
-            }).then(result => {
-
-                if (!result.isConfirmed) return;
-
-                const data = new FormData();
-                data.append('equipo_id', <?= $equipo['id'] ?>);
-                data.append('escudo', archivoEscudo);
-
-                Swal.fire({
-                    title: 'Guardando escudo...',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
-
-                fetch('index.php?page=equipos&action=guardarEscudo', {
-                    method: 'POST',
-                    body: data
-                })
-                .then(res => res.json())
-                .then(res => {
-
-                    if (!res.success) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: res.message || 'No se pudo guardar el escudo'
-                        });
-                        return;
-                    }
-
-                    escudoOriginal = document.getElementById('escudoPreview').src;
-                    archivoEscudo = null;
-                    bloqueado = false;
-
-                    document.querySelector('.escudo-actions').classList.add('d-none');
-
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Escudo actualizado',
-                        text: 'El escudo se guardó correctamente',
-                        timer: 1800,
-                        showConfirmButton: false
-                    });
-                })
-                .catch(() => {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error de comunicación',
-                        text: 'No se pudo contactar al servidor'
-                    });
-                });
-            });
-        });
-    </script>
-
-    <script>
-        document.getElementById('btnNuevaAfiliacion').addEventListener('click', () => {
-            new bootstrap.Modal(document.getElementById('modalBuscarAfiliado')).show();
-        });
-
-        document.getElementById('inputBusqueda').addEventListener('keyup', function() {
-
-            let valor = this.value;
-
-            if(valor.length < 5) return;
-
-            fetch(`index.php?page=afiliaciones&action=buscar&term=${valor}`)
-            .then(res => res.json())
-            .then(res => {
-
-                let contenedor = document.getElementById('resultadoBusqueda');
-
-                if(!res.encontrado){
-                    contenedor.innerHTML = `
-                        <div class="alert alert-warning">
-                            No existe afiliado
-                            <br>
-                            <button class="btn btn-sm btn-primary mt-2" onclick="crearNuevo('${valor}')">
-                                Crear nuevo
-                            </button>
-                        </div>
-                        `;
-                        return;
-                }
-
-                if(res.ya_afiliado){
-                    contenedor.innerHTML = `
-                        <div class="alert alert-danger">
-                            Ya está afiliado en esta temporada
-                        </div>
-                        `;
-                        return;
-                }
-
-                contenedor.innerHTML = `
-                    <div class="card p-2">
-                        <strong>${res.nombre}</strong>
-                        <br>
-                        <small>${res.curp}</small>
-
-                        <button class="btn btn-success btn-sm mt-2"
-                            onclick="afiliar(${res.id})">
-                            Afiliar a equipo
-                        </button>
-                    </div>
-                    `;
-
-            });
-
-        });
-    </script>
+    <script src="<?= ASSETS ?>/js/admin/equipos/equipo-detail.js"></script>
 
 <?php endSection('scripts') ?>
 </div>
