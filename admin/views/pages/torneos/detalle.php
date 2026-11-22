@@ -1,4 +1,4 @@
-<div class="torneo-detalle-page"> data-torneo-id="<?= (int) $torneo['id'] ?>"
+<div class="torneo-detalle-page" data-torneo-id="<?= (int) $torneo['id'] ?>">
 
 <div class="container-fluid py-4">
 
