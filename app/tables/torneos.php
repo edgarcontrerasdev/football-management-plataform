@@ -45,7 +45,7 @@ return [
             ],
             [
                 'icon'  => 'trash',
-                'url'   => '#',
+                'url'   => 'index.php?page=torneos&action=eliminar&id={id}',
                 'title' => 'eliminar',
                 'class' => 'btn-delete'
             ]
