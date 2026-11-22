@@ -291,7 +291,7 @@ class Organismo
     {
         $stmt = $this->pdo->prepare("
             UPDATE tb_liga_organismos
-            SET estado = 'inactivo', fecha_fin = :fecha_fin, es_gestor = 0
+            SET estado = 'inactivo', fecha_fin = :fecha_fin
             WHERE id = :id AND organismo_id = :organismo_id AND estado = 'activo'
               AND (fecha_inicio IS NULL OR fecha_inicio <= :fecha_fin)
         ");
