@@ -1,0 +1,5 @@
+/* Encabezados reutilizables de páginas administrativas */
+.users-title {
+    color: var(--warning);
+    margin-bottom: 10px;
+}
