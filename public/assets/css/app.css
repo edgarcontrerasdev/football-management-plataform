@@ -9,6 +9,8 @@
 @import url('pages/users/list.css');
 @import url('pages/dashboard.css');
 @import url('pages/temporadas/context.css');
+@import url('pages/temporadas/list.css');
+@import url('pages/temporadas/show.css');
 @import url('pages/equipos.css');
 @import url('components/buttons.css');
 @import url('components/toolbox.css');
