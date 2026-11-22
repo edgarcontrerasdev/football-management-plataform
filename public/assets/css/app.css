@@ -22,6 +22,7 @@
 @import url('pages/ligas/tabs.css');
 @import url('pages/ligas/placeholders.css');
 @import url('pages/torneos.css');
+@import url('pages/errors.css');
 
 /* Componentes reutilizables del panel */
 @import url('components/dropdowns.css');
