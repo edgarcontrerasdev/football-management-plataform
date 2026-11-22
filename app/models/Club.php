@@ -97,4 +97,21 @@ class Club
             'inactivos' => (int) ($row['inactivos'] ?? 0)
         ];
     }
+
+    public function crear(array $data): int
+    {
+        $sql = "INSERT INTO tb_clubes (nombre, siglas, logo, estado, observaciones)
+                VALUES (:nombre, :siglas, :logo, :estado, :observaciones)";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            ':nombre' => trim($data['nombre']),
+            ':siglas' => ($data['siglas'] ?? '') !== '' ? trim($data['siglas']) : null,
+            ':logo' => $data['logo'] ?? null,
+            ':estado' => 'activo',
+            ':observaciones' => ($data['observaciones'] ?? '') !== '' ? trim($data['observaciones']) : null
+        ]);
+
+        return (int) $this->pdo->lastInsertId();
+    }
+
 }
