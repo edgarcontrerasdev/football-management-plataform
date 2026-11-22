@@ -25,27 +25,10 @@
                 exit;
             }
 
-            // 🔹 Ligas
-            $this->ligaModel = new Liga($this->db);
-            $ligas = $this->ligaModel->all();
-
-            $ligasSelect = [];
-
-            $estados = [
-                ''              => 'Todos',
-                'activo'        =>  'Activo',
-                'inactivo'      =>  'Inactivo',
-                'suspendido'    => 'Suspendido'
-            ];
-
-            foreach($ligas as $liga){
-                $ligasSelect[$liga['id']] = $liga['nombre'];
-            }
-
-            // 🔹 Filtros
+            // El listado general muestra entidades equipo.
+            // Los filtros de liga y estado pertenecen a sus relaciones,
+            // no a la tabla base tb_equipos.
             $filtros = [
-                'estado' => $_GET['estado'] ?? null,
-                'liga'   => $_GET['liga'] ?? null,
                 'buscar' => $_GET['buscar'] ?? null
             ];
 
@@ -63,24 +46,11 @@
             // 🔹Configuracion del Toolbox
             $toolbox = [
                 'create' => 'index.php?page=equipos&action=create',
-                'filters'=>[
+                'filters' => [
                     [
-                        'type'=>'select',
-                        'name'=>'liga',
-                        'label'=>'Selecciona liga',
-                        'options'=>$ligasSelect
-                    ],
-                    [
-                        'type'=>'select',
-                        'name'=>'estado',
-                        'label'=>null,
-                        'options'=>$estados,
-                        'default' => 1
-                    ],
-                    [
-                        'type'=>'search',
-                        'name'=>'buscar',
-                        'placeholder'=>'Buscar equipo'
+                        'type' => 'search',
+                        'name' => 'buscar',
+                        'placeholder' => 'Buscar equipo'
                     ]
                 ]
             ];
@@ -99,7 +69,6 @@
             // 🔥 VISTA
             view('pages.equipos.index.php',[
                 'equipos'   => $equipos,
-                'ligas'     => $ligas,
                 'columns'   => $columns,
                 'rows'      => $rows,
                 'toolbox'   => $toolbox,
