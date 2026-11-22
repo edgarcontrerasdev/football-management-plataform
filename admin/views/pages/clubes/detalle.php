@@ -103,5 +103,55 @@ $claseEstado = $estadoClub === 'activo' ? 'success' : 'secondary';
                 </div>
             </div>
         </div>
+
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-body p-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                    <div>
+                        <h5 class="mb-1">Equipos del club</h5>
+                        <p class="text-muted small mb-0">Equipos vinculados a este club y su historial de pertenencia.</p>
+                    </div>
+                    <span class="badge bg-light text-dark"><?= count($equipos ?? []) ?> equipos</span>
+                </div>
+
+                <?php if (empty($equipos)): ?>
+                    <p class="text-muted mb-0">Este club todavía no tiene equipos relacionados.</p>
+                <?php else: ?>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Equipo</th>
+                                    <th>Inicio</th>
+                                    <th>Fin</th>
+                                    <th>Estado</th>
+                                    <th class="text-end">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($equipos as $equipo): ?>
+                                    <tr>
+                                        <td>
+                                            <div class="fw-semibold"><?= htmlspecialchars($equipo['nombre'], ENT_QUOTES, 'UTF-8') ?></div>
+                                            <?php if (!empty($equipo['siglas'])): ?>
+                                                <small class="text-muted"><?= htmlspecialchars($equipo['siglas'], ENT_QUOTES, 'UTF-8') ?></small>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td><?= !empty($equipo['fecha_inicio']) ? htmlspecialchars(date('d/m/Y', strtotime($equipo['fecha_inicio'])), ENT_QUOTES, 'UTF-8') : '-' ?></td>
+                                        <td><?= !empty($equipo['fecha_fin']) ? htmlspecialchars(date('d/m/Y', strtotime($equipo['fecha_fin'])), ENT_QUOTES, 'UTF-8') : 'Actual' ?></td>
+                                        <td><?= htmlspecialchars($equipo['estado_relacion'] ?? '-', ENT_QUOTES, 'UTF-8') ?></td>
+                                        <td class="text-end">
+                                            <a href="index.php?page=equipos&action=detalles&id=<?= (int) $equipo['id'] ?>" class="btn btn-sm btn-outline-primary">
+                                                <i class="fa-solid fa-eye me-1"></i> Ver equipo
+                                            </a>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
     <?php endif; ?>
 </div>
