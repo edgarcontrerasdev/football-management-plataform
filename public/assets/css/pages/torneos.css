@@ -350,7 +350,7 @@
     }
 
 @scope (.torneo-detalle-page) {
-.torneo-detalle-page {
+:scope {
         /* Radios */
         --radius-sm: 8px;
         --radius-md: 12px;
@@ -385,7 +385,7 @@
         --text-muted: #6b7280;
     }
 
-    .torneo-detalle-page {
+    :scope {
         background-color: var(--bg);
         color:var(--text);
     }
