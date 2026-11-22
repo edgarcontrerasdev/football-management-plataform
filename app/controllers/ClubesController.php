@@ -105,9 +105,13 @@ class ClubesController
         $this->verificarAcceso();
 
         $club = $this->clubModel->obtenerPorId((int) $id);
+        $equipos = $club
+            ? $this->clubModel->obtenerEquipos((int) $id)
+            : [];
 
         view('pages.clubes.detalle.php', [
-            'club' => $club
+            'club' => $club,
+            'equipos' => $equipos
         ]);
     }
 
