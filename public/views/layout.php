@@ -25,6 +25,7 @@
 
     <!-- Dependencia de estilos existente; se conserva por compatibilidad -->
     <link rel="stylesheet" href="//code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    <script src="/afec/public/assets/js/public-navigation.js" defer></script>
 </head>
 <body class="public-site">
 
