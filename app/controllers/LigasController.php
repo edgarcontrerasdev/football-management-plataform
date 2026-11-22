@@ -1,298 +1,243 @@
 <?php
 
-require_once __DIR__.'../../core/Auth.php';
+declare(strict_types=1);
 
-require_once __DIR__.'../../models/Liga.php';
+require_once ROOT_PATH . '/app/models/Liga.php';
+require_once ROOT_PATH . '/app/models/Equipo.php';
+require_once ROOT_PATH . '/app/models/Temporada.php';
+require_once ROOT_PATH . '/app/services/AuthorizationService.php';
 
-
-class LigasController 
+class LigasController
 {
-
     private PDO $db;
-    private $ligaModel;
 
-    public function __construct(PDO $db) {
+    private Liga $ligaModel;
+    private Equipo $equipoModel;
+    private Temporada $temporadaModel;
+
+    private AuthorizationService $authorization;
+
+    public function __construct(PDO $db)
+    {
         $this->db = $db;
+
         $this->ligaModel = new Liga($db);
+        $this->equipoModel = new Equipo($db);
+        $this->temporadaModel = new Temporada($db);
+
+        $this->authorization = new AuthorizationService($db);
     }
 
-    /* ============ LISTADOS ============ */
+    /**
+     * Listado de ligas respetando alcance.
+     */
 
-    // Listar todas las ligas
-    public function index() {
-        if(!Auth::check()){
-            header("Location: /afec/public/index.php?page=login");
-            exit;
-        }
-        
-        //para filtro en tolbox
-         $estados = [
-                ''              => 'Todos',
-                'activo'        =>  'Activa',
-                'inactivo'      =>  'Inactiva',
-                'suspendido'    =>  'Suspendida'
-        ];
+    public function index(): void
+    {
+        $scopeIds = $this->authorization ->getScopedEntityIds('liga');
 
-        //filtros
         $filtros = [
-                'estado'    => $_GET['estado'] ?? null,
-                'buscar'    => $_GET['buscar'] ?? null
+            'estado' => trim( (string) ($_GET['estado'] ?? '')),
+            'buscar' => trim( (string) ($_GET['buscar'] ?? '')
+            )
         ];
 
-        //paginacion
-        $total = $this->ligaModel->contar($filtros);
-        $pagination = Pagination::paginate($total, 10);
+        $pagina = max(1, (int) ($_GET['pagina'] ?? 1));
+        $limite = 10;
 
-        //datos
-        $ligas = $this->ligaModel->listar(
-            $filtros, 
-            $pagination['limit'], 
-            $pagination['offset']
-        );
+        $total =
+            $this->ligaModel
+                ->contar(
+                    $filtros,
+                    $scopeIds
+                );
 
-        //toolbox
+        $pagination =
+            Pagination::paginate(
+                $total,
+                $limite
+            );
+
+        /*
+         * Permitimos que el helper determine
+         * la página actual cuando existe.
+         */
+        $offset =$pagination['offset'] ?? (($pagina - 1) * $limite);
+
+        $ligas =
+            $this->ligaModel
+                ->listar(
+                    $filtros,
+                    $scopeIds,
+                    $limite,
+                    $offset
+                );
+
+        $metricas = $this->ligaModel ->metricas($scopeIds);
+
+        //creamos la kpis correspondientes
+        $kpis = [
+            [
+            'title' => 'Ligas registradas',
+            'value' => $metricas['total'] ?? 0,
+            'icon'  => 'fas fa-flag',
+            'class' => 'info'
+            ],
+            [
+            'title' => 'Ligas activas',
+            'value' => $metricas['activas'] ?? 0,
+            'icon'  => 'fas fa-check-circle',
+            'class' => 'success'
+            ],
+            [
+            'title' => 'Ligas inactivas',
+            'value' => $metricas['inactivas'] ?? 0,
+            'icon'  => 'fas fa-ban',
+            'class' => 'danger'
+            ]
+        ];
+
+        //creamos el toolbox
         $toolbox = [
-            'create' => 'index.php?page=ligas&action=create',
+            'create' => 'index.php?page=ligas&action=crear',
             'filters' => [
                 [
-                    'type'=>'select',
-                    'name'=>'estado',
-                    'label'=>null,
-                    'options'=>$estados,
-                    'default' => ''
+                    'type' => 'select',
+                    'name' => 'estado',
+                    'label' => 'Estado',
+                    'default' => '',
+                    'options' => [
+                        'activo' => 'Activas',
+                        'inactivo' => 'Inactivas'
+                    ]
                 ],
                 [
-                    'type' =>'search',
-                    'name' =>'buscar',
-                    'placeholder' => 'buscar liga'
+                    'type' => 'search',
+                    'name' => 'buscar',
+                    'placeholder' => 'Buscar liga...'
                 ]
-            ],
+            ]
         ];
 
-        $tableData = TableService::make($ligas,'ligas');
-        $columns = $tableData['columns'];
-        $rows = $tableData['rows'];
+        //creamos la tabla final con el listado de ligas
+        //y los filtros en caso de ser necesarios
 
+        $tableData  = TableService::make($ligas, 'ligas');
+        $tableTitle = 'Listado de ligas';
+        $columns    = $tableData['columns'];
+        $rows       = $tableData['rows']; 
+        
+        //comprobamos si se mando algo por ajax y lo mostramos
         if(isset($_GET['ajax'])){
             include ROOT_PATH.'/admin/views/components/table-content.php';
             return; 
         }
-     
-        view('pages.ligas.index.php',[
+
+        //VISTA
+        view(
+            'pages.ligas.index.php',
+            [
                 'ligas'         => $ligas,
+                'filtros'       => $filtros,
                 'columns'       => $columns,
                 'rows'          => $rows,
                 'toolbox'       => $toolbox,
-                'pagination'    => $pagination
+                'pagination'    => $pagination,
+                'kpis'          => $kpis,
+                'metricas'      => $metricas,
+                'scopeIds'      => $scopeIds,
+                'tableTitle' => $tableTitle,
+                'alcanceGlobal' => $scopeIds === null
             ]
         );
     }
 
-    // Listar ligas por estado (activa, inactiva, suspendida)
-    public function porEstado($estado) {
-        $ligas = $this->ligaModel->getByEstado($estado);
-        require 'views/ligas/index.php';
-    }
-
-    /* ======== CREAR / EDITAR ============ */
-
-    // Vista para crear liga
-    public function create() {
-        $viewPath = ROOT_PATH.'/admin/views/pages/ligas/create.php';
-        if(!file_exists($viewPath)){
-            $viewPath = ROOT_PATH.'/admin/views/404.php';
-        }
-
-        include ROOT_PATH.'/admin/views/layout.php';
-    }
-
-    // Guardar nueva liga
-    public function store() {
-        if($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $data = $_POST;
-
-            if(empty($data['nombre'])) {
-                $error = "El nombre de la liga es obligatorio";
-                require 'views/ligas/create.php';
-                return;
-            }
-
-            $ligaId = $this->ligaModel->crear($data);
-            header("Location: index.php?page=ligas&action=detalles&id=".$ligaId);
-        }
-    }
-
-    // Vista para editar liga
-    public function edit($id) {
-        $liga = $this->ligaModel->getById($id);
-        $viewPath = ROOT_PATH.'/admin/views/pages/ligas/edit.php';
-        if(!file_exists($viewPath)){
-            $viewPath = ROOT_PATH.'/admin/views/404.php';
-        }
-
-        include ROOT_PATH.'/admin/views/layout.php';
-    }
-
-    // Actualizar liga
-    public function update($id) {
-        if($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $data = $_POST;
-            $this->ligaModel->actualizar($id, $data);
-            header("Location: index.php?page=ligas");
-        }
-    }
-
-    /* ================ DETALLE / RESUMEN ================ */
-
-    // Ver detalle de liga
-    public function detalles($id) {
-
-        $liga = $this->ligaModel->getById($id);
-        $directivos = $this->ligaModel->getDirectivos($id);
-        $documentos = $this->ligaModel->getDocumentos($id);
-        $resumen = $this->ligaModel->getResumen($id);
-
-        $viewPath = ROOT_PATH.'/admin/views/pages/ligas/detalle.php';
-        if(!file_exists($viewPath)){
-            $viewPath = ROOT_PATH.'/admin/views/404.php';
-        }
-
-        // 👇 estas variables quedan disponibles para la vista
-        include ROOT_PATH.'/admin/views/layout.php';
-    }
-
-    /* ================ DIRECTIVOS ============= */
-
-    public function addDirectivo() {
-        if($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $liga_id = $_POST['liga_id'];
-            $afiliado_id = $_POST['afiliado_id'];
-            $rol = $_POST['rol'];
-
-            $this->ligaModel->addDirectivo($liga_id, $afiliado_id, $rol);
-            header("Location: index.php?c=ligas&a=detalle&id=$liga_id");
-        }
-    }
-
-    /* =============== DOCUMENTOS ================ */
-
-    public function addDocumento() {
-        if($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $liga_id = $_POST['liga_id'];
-            $tipo = $_POST['tipo'];
-            $archivo = $_FILES['archivo']['name'];
-
-            // Mover archivo a carpeta uploads/ligas
-            $rutaDestino = "uploads/ligas/$archivo";
-            move_uploaded_file($_FILES['archivo']['tmp_name'], $rutaDestino);
-
-            $this->ligaModel->addDocumento($liga_id, $tipo, $archivo);
-            header("Location: index.php?c=ligas&a=detalle&id=$liga_id");
-        }
-    }
-
-    /* ============ ELIMINAR LIGA ================ */
-
-    public function delete($id) {
-        // Aquí podrías implementar lógica de seguridad o verificación de relaciones  
-    }
-
-    /* ============== AGREGAR DIRECCION A LA LIGA =========== */
-    public function guardarDireccion()
+    public function miLiga(): void
     {
-        header('Content-Type: application/json');
+        $scopeIds = $this->authorization->getScopedEntityIds('liga');
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
-            $ligaId = $_POST['liga_id'] ?? null;
-
-            if (!$ligaId) {
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'ID de liga no recibido'
-                ]);
-                exit;
-            }
-
-            $direccion = [
-                'calle' => $_POST['calle'] ?? null,
-                'colonia' => $_POST['colonia'] ?? null,
-                'codigo_postal' => $_POST['codigo_postal'] ?? null,
-                'ciudad' => $_POST['ciudad'] ?? null,
-                'estado_direccion' => $_POST['estado_direccion'] ?? null,
-                'pais' => $_POST['pais'] ?? null,
-            ];
-
-            $success = $this->ligaModel->guardarDireccion($ligaId, $direccion);
-
-            if ($success) {
-                $direccionTexto = trim(implode(', ', array_filter($direccion)));
-
-                echo json_encode([
-                    'success' => true,
-                    'direccion' => $direccionTexto
-                ]);
-            } else {
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'No se pudo guardar la dirección'
-                ]);
-            }
+        // El usuario no tiene ninguna liga asignada.
+        if (empty($scopeIds)) {
+            http_response_code(403);
+            view('403.php');
             exit;
         }
 
+        // Por ahora utilizamos la primera liga autorizada.
+        $ligaId = (int) $scopeIds[0];
+
+        $this->detalle($ligaId);
     }
 
-    /* ========== FUNCION PARA GUARDAR/ACTUALIZAR EL ESCUDO ====== */
-    public function guardarEscudo()
+    /**
+     * Detalle de una liga.
+     */
+
+   public function detalle($id): void
     {
-        header('Content-Type: application/json; charset=utf-8');
+        $id = (int) $id;
 
-        if (!isset($_FILES['escudo'], $_POST['liga_id'])) {
-            echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
-            exit;
-        }
+        $scopeIds = $this->authorization->getScopedEntityIds('liga');
 
-        $ligaId = (int) $_POST['liga_id'];
-        $archivo = $_FILES['escudo'];
+        $liga = $this->ligaModel->getById(
+            $id,
+            $scopeIds
+        );
 
-        $liga = $this->ligaModel->getById($ligaId);
         if (!$liga) {
-            echo json_encode(['success' => false, 'message' => 'Liga no encontrada']);
+            http_response_code(403);
+            view('403.php');
             exit;
         }
 
-        $carpeta = ROOT_PATH . '/public/assets/img/ligas/';
-        $extension = strtolower(pathinfo($archivo['name'], PATHINFO_EXTENSION));
-        $nuevoNombre = 'liga_' . $ligaId . '_' . time() . '.' . $extension;
-        $rutaNueva = $carpeta . $nuevoNombre;
+        $temporadaActual = $this->temporadaModel->getActiva();
 
-        if (!move_uploaded_file($archivo['tmp_name'], $rutaNueva)) {
-            echo json_encode(['success' => false, 'message' => 'No se pudo guardar el escudo']);
-            exit;
+        $totalEquipos = 0;
+
+        if ($temporadaActual) {
+            $totalEquipos = $this->equipoModel->contarPorLiga(
+                $id,
+                (int) $temporadaActual['id']
+            );
         }
 
-        if (!file_exists($rutaNueva)) {
-            echo json_encode(['success' => false, 'message' => 'El archivo no se guardó correctamente']);
-            exit;
-        }
+        $kpis = [
+            [
+                'title' => 'Equipos registrados',
+                'value' => $totalEquipos,
+                'icon'  => 'fas fa-users',
+                'class' => 'info'
+            ],
+            [
+                'title' => 'Jugadores registrados',
+                'value' => 0,
+                'icon'  => 'fas fa-user',
+                'class' => 'success'
+            ],
+            [
+                'title' => 'Pendientes',
+                'value' => 0,
+                'icon'  => 'fas fa-clock',
+                'class' => 'warning'
+            ],
+            [
+                'title' => 'Rechazados',
+                'value' => 0,
+                'icon'  => 'fas fa-times-circle',
+                'class' => 'danger'
+            ]
+        ];
 
-        if (!$this->ligaModel->actualizarEscudo($ligaId, $nuevoNombre)) {
-            @unlink($rutaNueva);
-            echo json_encode(['success' => false, 'message' => 'Error al actualizar base de datos']);
-            exit;
-        }
-
-        if (!empty($liga['escudo']) && $liga['escudo'] !== 'default.png' && $liga['escudo'] !== $nuevoNombre) {
-            $rutaAnterior = $carpeta . $liga['escudo'];
-            if (file_exists($rutaAnterior)) {
-                @unlink($rutaAnterior);
-            }
-        }
-
-        echo json_encode(['success' => true, 'escudo' => $nuevoNombre]);
-        exit;
+        view(
+            'pages.ligas.detalle.php',
+            [
+                'liga' => $liga,
+                'kpis' => $kpis,
+                'temporadaActual' => $temporadaActual
+            ]
+        );
     }
 
 }
+
 ?>

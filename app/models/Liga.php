@@ -1,248 +1,362 @@
 <?php
 
-class Liga {
+declare(strict_types=1);
 
-    private $pdo;
+class Liga
+{
+    private PDO $pdo;
 
-    public function __construct($pdo){
+    public function __construct(PDO $pdo)
+    {
         $this->pdo = $pdo;
     }
 
-    /* =========================
-       CONSULTAS GENERALES
-    ========================= */
-
-    //Contar registros
-    public function contar($filtros = []){
-        $sql = "SELECT COUNT(*) total FROM tb_ligas l WHERE 1=1";
+    /**
+     * Lista todas las ligas.
+     *
+     * $scopeIds:
+     * - null = global
+     * - []   = ninguna
+     * - [ids] = ligas autorizadas
+     */
+    
+    public function listar(
+        array $filtros = [],
+        ?array $scopeIds = null,
+        int $limit = 10,
+        int $offset = 0
+    ): array {
+        $where = ["1 = 1"];
         $params = [];
 
-        if(!empty($filtros['estado'])){
-            $sql .= ' AND l.estado = :estado';
-            $params[':estado']  = $filtros['estado'];
+        $estado = trim((string) ($filtros['estado'] ?? ''));
+        $buscar = trim((string) ($filtros['buscar'] ?? ''));
+
+        if ($estado !== '') {
+            $where[] = "l.estado = :estado";
+            $params[':estado'] = $estado;
         }
 
-        if(!empty($filtros['buscar'])){
-            $sql.=' AND l.nombre LIKE :buscar'; 
-            $params[':buscar'] = $filtros['buscar'];
+        if ($buscar !== '') 
+        {
+            $where[] = "
+            (
+                l.nombre LIKE :buscar_nombre
+                OR l.siglas LIKE :buscar_siglas
+                OR l.municipio LIKE :buscar_municipio
+            )
+            ";
+
+            $valorBuscar = '%' . $buscar . '%';
+
+            $params[':buscar_nombre'] = $valorBuscar;
+            $params[':buscar_siglas'] = $valorBuscar;
+            $params[':buscar_municipio'] = $valorBuscar;
         }
 
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute($params);
+        /*
+         * null = alcance global.
+         */
+        if ($scopeIds !== null) {
 
-        return $stmt->fetch(PDO::FETCH_ASSOC)['total'];
-        
-    }
+            /*
+             * [] = ningún alcance.
+             */
+            if ($scopeIds === []) {
+                $where[] = "1 = 0";
 
-    //listar ligas con filtros
-    public function listar($filtros = [], $limit = 10, $offset = 0)
-    {
-        $sql = "SELECT 
+            } else {
+
+                $placeholders = [];
+
+                foreach ($scopeIds as $index => $id) {
+                    $placeholder = ":scope_$index";
+                    $placeholders[] = $placeholder;
+                    $params[$placeholder] = (int) $id;
+                }
+
+                $where[] =
+                    "l.id IN (" .
+                    implode(', ', $placeholders) .
+                    ")";
+            }
+        }
+
+        $whereSql = implode(' AND ', $where);
+
+        $sql = "
+            SELECT
                 l.id,
-                l.nombre AS liga,
+                l.nombre,
+                l.siglas,
                 l.estado,
-                l.fecha_creacion,
-                l.escudo
-                FROM tb_ligas l
-                WHERE 1=1";
+                l.logo,
+                l.correo,
+                l.telefono,
+                l.municipio,
+                l.estado_republica,
 
-        $params = [];
+                (
+                    SELECT COUNT(*)
+                    FROM tb_liga_organismos lo
+                    WHERE lo.liga_id = l.id
+                      AND lo.estado = 'activo'
+                ) AS organismos_relacionados
 
-        if(!empty($filtros['estado'])){
-            $sql .= " AND l.estado = :estado";
-            $params[':estado'] = $filtros['estado'];
-        }
+            FROM tb_ligas l
 
-        if(!empty($filtros['buscar'])){
-            $sql .= " AND l.nombre LIKE :buscar";
-            $params[':buscar'] = "%".$filtros['buscar']."%";
-        }
+            WHERE {$whereSql}
 
-        $sql .= " ORDER BY l.nombre ASC LIMIT :limit OFFSET :offset";
+            ORDER BY l.nombre ASC
+
+            LIMIT :limit
+            OFFSET :offset
+        ";
+
+        $params[':limit'] = $limit;
+        $params[':offset'] = $offset;
 
         $stmt = $this->pdo->prepare($sql);
 
-        foreach($params as $k=>$v){
-            $stmt->bindValue($k,$v);
-        }
+        foreach ($params as $key => $value) {
 
-        $stmt->bindValue(':limit',(int)$limit,PDO::PARAM_INT);
-        $stmt->bindValue(':offset',(int)$offset,PDO::PARAM_INT);
+            if ($key === ':limit' || $key === ':offset') {
+                $stmt->bindValue($key, $value, PDO::PARAM_INT);
+            } elseif (is_int($value)) {
+                $stmt->bindValue($key, $value, PDO::PARAM_INT);
+            } else {
+                $stmt->bindValue($key, $value);
+            }
+        }
 
         $stmt->execute();
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Cuenta ligas respetando filtros y alcance.
+     */
+    public function contar(
+        array $filtros = [],
+        ?array $scopeIds = null
+    ): int {
+        $where = ["1 = 1"];
+        $params = [];
 
-    // Obtener todas las ligas
-    public function all() {
-        $sql = "SELECT * FROM tb_ligas ORDER BY nombre ASC";
-        $stmt = $this->pdo->query($sql);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $estado = trim((string) ($filtros['estado'] ?? ''));
+        $buscar = trim((string) ($filtros['buscar'] ?? ''));
+
+        if ($estado !== '') {
+            $where[] = "l.estado = :estado";
+            $params[':estado'] = $estado;
+        }
+
+        if ($buscar !== '') {
+            $where[] = "
+                (
+                    l.nombre LIKE :buscar_nombre
+                    OR l.siglas LIKE :buscar_siglas
+                    OR l.municipio LIKE :buscar_municipio
+                )
+            ";
+
+            $valorBuscar = '%' . $buscar . '%';
+
+            $params[':buscar_nombre'] = $valorBuscar;
+            $params[':buscar_siglas'] = $valorBuscar;
+            $params[':buscar_municipio'] = $valorBuscar;
+        }
+
+        if ($scopeIds !== null) {
+
+            if ($scopeIds === []) {
+                return 0;
+            }
+
+            $placeholders = [];
+
+            foreach ($scopeIds as $index => $id) {
+                $placeholder = ":scope_$index";
+                $placeholders[] = $placeholder;
+                $params[$placeholder] = (int) $id;
+            }
+
+            $where[] =
+                "l.id IN (" .
+                implode(', ', $placeholders) .
+                ")";
+        }
+
+        $whereSql = implode(' AND ', $where);
+
+        $sql = "
+            SELECT COUNT(*)
+            FROM tb_ligas l
+            WHERE {$whereSql}
+        ";
+
+        $stmt = $this->pdo->prepare($sql);
+
+        foreach ($params as $key => $value) {
+
+            if (is_int($value)) {
+                $stmt->bindValue($key, $value, PDO::PARAM_INT);
+            } else {
+                $stmt->bindValue($key, $value);
+            }
+        }
+
+        $stmt->execute();
+
+        return (int) $stmt->fetchColumn();
     }
 
-    
-    // Obtener liga por ID
-    public function getById($id) {
-        $sql = "SELECT * FROM tb_ligas WHERE id = :id";
+    /**
+     * Obtiene una liga respetando el alcance.
+     */
+    public function getById(
+        int $id,
+        ?array $scopeIds = null
+    ): ?array {
+
+        if ($scopeIds !== null) {
+
+            if ($scopeIds === []) {
+                return null;
+            }
+
+            if (!in_array($id, $scopeIds, true)) {
+                return null;
+            }
+        }
+
+        $sql = "
+            SELECT
+                l.id,
+                l.nombre,
+                l.siglas,
+                l.estado,
+                l.logo,
+                l.correo,
+                l.telefono,
+                l.direccion,
+                l.colonia,
+                l.municipio,
+                l.estado_republica,
+                l.codigo_postal,
+                l.latitud,
+                l.longitud,
+                l.redes_sociales,
+                l.notas,
+                l.created_at
+            FROM tb_ligas l
+            WHERE l.id = :id
+            LIMIT 1
+        ";
+
         $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([':id' => $id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
 
-    // Obtener ligas por estado
-    public function getByEstado($estado) {
-        $sql = "SELECT * FROM tb_ligas WHERE estado = :estado ORDER BY nombre ASC";
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([':estado' => $estado]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    /* =========================
-       CREAR / ACTUALIZAR
-    ========================= */
-
-    // Crear nueva liga
-    public function crear($data)
-    {
-        $sql = "INSERT INTO tb_ligas(
-                    nombre, estado, logo, contacto_email, contacto_telefono,
-                    calle, colonia, codigo_postal, ciudad, estado_direccion, pais,
-                    latitud, longitud, redes_sociales, notas
-                ) VALUES(
-                    :nombre, :estado, :logo, :contacto_email, :contacto_telefono,
-                    :calle, :colonia, :codigo_postal, :ciudad, :estado_direccion, :pais,
-                    :latitud, :longitud, :redes_sociales, :notas
-                )";
-
-        $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
-            ':nombre' => $data['nombre'],
-            ':estado' => $data['estado'] ?? 'activa',
-            ':logo' => $data['logo'] ?? null,
-            ':contacto_email' => $data['contacto_email'] ?? null,
-            ':contacto_telefono' => $data['contacto_telefono'] ?? null,
-            ':calle' => $data['calle'] ?? null,
-            ':colonia' => $data['colonia'] ?? null,
-            ':codigo_postal' => $data['codigo_postal'] ?? null,
-            ':ciudad' => $data['ciudad'] ?? null,
-            ':estado_direccion' => $data['estado_direccion'] ?? null,
-            ':pais' => $data['pais'] ?? null,
-            ':latitud' => $data['latitud'] ?? null,
-            ':longitud' => $data['longitud'] ?? null,
-            ':redes_sociales' => $data['redes_sociales'] ?? null,
-            ':notas' => $data['notas'] ?? null
-        ]);
-
-        return $this->pdo->lastInsertId(); 
-    }
-
-    // Actualizar liga
-    public function actualizar($id, $data){
-        $sql = "UPDATE tb_ligas SET
-                    nombre = :nombre,
-                    estado = :estado,
-                    logo = :logo,
-                    contacto_email = :contacto_email,
-                    contacto_telefono = :contacto_telefono,
-                    calle = :calle,
-                    colonia = :colonia,
-                    codigo_postal = :codigo_postal,
-                    ciudad = :ciudad,
-                    estado_direccion = :estado_direccion,
-                    pais = :pais,
-                    latitud = :latitud,
-                    longitud = :longitud,
-                    redes_sociales = :redes_sociales,
-                    notas = :notas,
-                    fecha_modificacion = NOW()
-                WHERE id = :id";
-        $stmt = $this->pdo->prepare($sql);
-        return $stmt->execute([
-            ':nombre' => $data['nombre'],
-            ':estado' => $data['estado'],
-            ':logo' => $data['logo'] ?? null,
-            ':contacto_email' => $data['contacto_email'] ?? null,
-            ':contacto_telefono' => $data['contacto_telefono'] ?? null,
-            ':calle' => $data['calle'] ?? null,
-            ':colonia' => $data['colonia'] ?? null,
-            ':codigo_postal' => $data['codigo_postal'] ?? null,
-            ':ciudad' => $data['ciudad'] ?? null,
-            ':estado_direccion' => $data['estado_direccion'] ?? null,
-            ':pais' => $data['pais'] ?? null,
-            ':latitud' => $data['latitud'] ?? null,
-            ':longitud' => $data['longitud'] ?? null,
-            ':redes_sociales' => $data['redes_sociales'] ?? null,
-            ':notas' => $data['notas'] ?? null,
             ':id' => $id
         ]);
+
+        $liga = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$liga) {
+            return null;
+        }
+
+        $stmtOrganismos = $this->pdo->prepare("
+            SELECT
+                o.id,
+                o.nombre,
+                o.siglas,
+                lo.tipo_relacion,
+                lo.es_gestor,
+                lo.estado
+            FROM tb_liga_organismos lo
+            INNER JOIN tb_organismos o
+                ON o.id = lo.organismo_id
+            WHERE lo.liga_id = :liga_id
+              AND lo.estado = 'activo'
+            ORDER BY o.nombre ASC
+        ");
+
+        $stmtOrganismos->execute([
+            ':liga_id' => $id
+        ]);
+
+        $liga['organismos'] =
+            $stmtOrganismos->fetchAll(PDO::FETCH_ASSOC);
+
+        return $liga;
     }
 
-    public function guardarDireccion($liga_id, $data)
+    /**
+     * Compatibilidad para consultas generales existentes.
+     */
+    public function all(): array
     {
-        $sql = "UPDATE tb_ligas SET
-                calle = :calle,
-                colonia = :colonia,
-                codigo_postal = :codigo_postal,
-                ciudad = :ciudad,
-                estado_direccion = :estado_direccion,
-                pais = :pais
-            WHERE id = :liga_id";
+        return $this->listar([], null, 1000, 0);
+    }
+
+    /**
+     * Métricas básicas del módulo.
+     */
+    public function metricas(?array $scopeIds = null): array
+    {
+        if ($scopeIds === []) {
+            return [
+                'total' => 0,
+                'activas' => 0,
+                'inactivas' => 0
+            ];
+        }
+
+        $where = '';
+        $params = [];
+
+        if ($scopeIds !== null) {
+
+            $placeholders = [];
+
+            foreach ($scopeIds as $index => $id) {
+                $placeholder = ":m_scope_$index";
+                $placeholders[] = $placeholder;
+                $params[$placeholder] = (int) $id;
+            }
+
+            $where = "
+                WHERE l.id IN (" .
+                implode(', ', $placeholders) .
+                ")
+            ";
+        }
+
+        $sql = "
+            SELECT
+                COUNT(*) AS total,
+                SUM(l.estado = 'activo') AS activas,
+                SUM(l.estado <> 'activo') AS inactivas
+            FROM tb_ligas l
+            {$where}
+        ";
 
         $stmt = $this->pdo->prepare($sql);
 
-        return $stmt->execute([
-            ':calle' => $data['calle'] ?? null,
-            ':colonia' => $data['colonia'] ?? null,
-            ':codigo_postal' => $data['codigo_postal'] ?? null,
-            ':ciudad' => $data['ciudad'] ?? null,
-            ':estado_direccion' => $data['estado_direccion'] ?? null,
-            ':pais' => $data['pais'] ?? null,
-            ':liga_id' => $liga_id
-        ]);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value, PDO::PARAM_INT);
+        }
+
+        $stmt->execute();
+
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return [
+            'total'     => (int) ($row['total'] ?? 0),
+            'activas'   => (int) ($row['activas'] ?? 0),
+            'inactivas' => (int) ($row['inactivas'] ?? 0)
+        ];
     }
-
-    public function actualizarEscudo($liga_id, $escudo){
-        $sql = "UPDATE tb_ligas SET escudo = :escudo WHERE id= :liga_id";
-        $stm = $this->pdo->prepare($sql);
-        return $stm->execute([
-            ':liga_id' => $liga_id,
-            ':escudo' => $escudo
-        ]);
-    }
-
-    /* ============ DIRECTIVOS ========== */
-
-    // Obtener directivos de la liga
-    public function getDirectivos($liga_id){
-       
-    }
-
-    // Agregar directivo
-    public function addDirectivo($liga_id, $afiliado_id, $rol){
-      
-    }
-
-    /* ============ DOCUMENTOS ================ */
-
-    // Obtener documentos
-    public function getDocumentos($liga_id){
-       
-    }
-
-    // Agregar documento
-    public function addDocumento($liga_id, $tipo, $archivo){
-        
-    }
-
-    /* =========================
-       RESUMEN / HISTORICO
-    ========================= */
-
-    public function getResumen($liga_id){
-    
-    }
-
 }
-?>

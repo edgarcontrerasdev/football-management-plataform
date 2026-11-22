@@ -21,7 +21,7 @@
                 </p>
 
                 <p><strong>Registro:</strong> 
-                    <?= date('d/m/Y', strtotime($liga['fecha_creacion'])) ?>
+                    <?= date('d/m/Y', strtotime($liga['created_at'])) ?? 'No definido' ?>
                 </p>
 
                 <p><strong>Estado:</strong> 
@@ -49,13 +49,13 @@
 
                 <p><strong>Email:</strong> 
                     <span id="emailContacto">
-                        <?= $liga['contacto_email'] ?? 'No registrado' ?>
+                        <?= $liga['correo'] ?? 'No registrado' ?>
                     </span>
                 </p>
 
                 <p><strong>Teléfono:</strong> 
                     <span id="telefonoContacto">
-                        <?= $liga['contacto_telefono'] ?? 'No registrado' ?>
+                        <?= $liga['telefono'] ?? 'No registrado' ?>
                     </span>
                 </p>
 

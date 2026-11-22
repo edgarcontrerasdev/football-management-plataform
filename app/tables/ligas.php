@@ -1,49 +1,44 @@
+```php
 <?php
 
 return [
 
     [
-        'type' => 'image',
-        'textField' => 'liga',
-        'title' => 'LIGA',
-        'folder' => 'ligas',
-        'imageField' => 'escudo'
+        'type'       => 'image',
+        'textField'  => 'nombre',
+        'title'      => 'LIGA',
+        'folder'     => 'ligas',
+        'imageField' => 'logo'
     ],
 
     [
-        'type'      => 'status',
-        'field'     => 'estado',
-        'title'     => 'ESTADO',
-        'source'    => 'general'
+        'type'  => 'text',
+        'field' => 'siglas',
+        'title' => 'SIGLAS'
     ],
 
     [
-        'type' => 'date',
-        'field' => 'fecha_creacion',
-        'title' => 'FECHA DE ALTA'
+        'type'  => 'text',
+        'field' => 'municipio',
+        'title' => 'MUNICIPIO'
     ],
 
     [
-        'type' => 'actions',
-        'title' => 'ACCIONES',
+        'type'   => 'status',
+        'field'  => 'estado',
+        'title'  => 'ESTADO',
+        'source' => 'general'
+    ],
+
+    [
+        'type'    => 'actions',
+        'title'   => 'ACCIONES',
         'actions' => [
             [
-                'icon'      => 'eye',
-                'url'       => 'index.php?page=ligas&action=detalles&id={id}',
-                'title'     => 'Ver',
-                'class'     =>  ''
-            ],
-            [
-                'icon'      => 'pencil',
-                'url'       => 'index.php?page=ligas&action=edit&id={id}',
-                'title'     => 'Editar',
-                'class'     => 'btn-edit'
-            ],
-            [
-                'icon'      => 'trash',
-                'url'       => '#',
-                'title'     => 'Eliminar',
-                'class'     => 'btn-delete'
+                'icon'  => 'eye',
+                'url'   => 'index.php?page=ligas&action=detalle&id={id}',
+                'title' => 'Ver liga',
+                'class' => ''
             ]
         ]
     ]

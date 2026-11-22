@@ -1,42 +1,23 @@
 
-    <h3 class="users-title">Ligas</h3>
+     <!-- CABEZERA DE LA VISTA --> 
 
+    <div class="page-header mb-4">
+        <div>
+            <h3 class="page-title mb-1">Ligas</h3>
+            <p class="page-details mb-0">
+                Catálogo y administración de ligas
+            </p>
+        </div>
+    </div>
     
     <!-- KPIS CON INFO RELEVANTE -->
-    <div class="row g-3 mb-4">
 
-        <div class="col-md-3">
-            <div class="kpi-card success">
-                <span class="kpi-title">TOTAL AFILIADOS A LIGA</span>
-                <h3><?php echo '1,200'; ?></h3>
-                <i class="bi bi-people"></i>
+    <div class="row g-3 mb-4 justify-content-start">
+        <?php foreach ($kpis as $kpi): ?>
+            <div class="col-12 col-sm-6 col-lg-4">
+                <?php require 'views/components/kpis.php'; ?>
             </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="kpi-card info">
-                <span class="kpi-title">Cuerpo Tecnico Registrados</span>
-                <h3><?= $kpis['dt'] ?? 0 ?></h3>
-                <i class="bi bi-person-badge"></i>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="kpi-card warning">
-                <span class="kpi-title">CREDENCIAELES PENDIENTES</span>
-                <h3><?= $kpis['pendientes'] ?? 80 ?></h3>
-                <i class="bi bi-clock"></i>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="kpi-card danger">
-                <span class="kpi-title">AFILIACIONES RECHAZADAS</span>
-                <h3><?= $kpis['rechazados'] ?? 25 ?></h3>
-                <i class="bi bi-x-circle"></i>
-            </div>
-        </div>
-
+        <?php endforeach; ?>
     </div>
 
 
@@ -49,17 +30,17 @@
 <style>
 
     .table-avatar{
-    display:flex;
-    align-items:center;
-    gap:10px;
+        display:flex;
+        align-items:center;
+        gap:10px;
     }
 
     .avatar{
-    width:36px;
-    height:36px;
-    border-radius:50%;
-    object-fit:cover;
-    border:1px solid #ddd;
+        width:36px;
+        height:36px;
+        border-radius:50%;
+        object-fit:cover;
+        border:1px solid #ddd;
     }
 
     :root{
@@ -88,6 +69,7 @@
         background-color: var(--bg);
         color:var(--text);
     }
+
     .btn{
         padding: 6px 14px;
         border-radius: 6px;
@@ -234,9 +216,16 @@
     }
 
 
-    .users-title{
-        color: var(--warning);
-        margin-bottom: 10px;
+    .page-title{
+         color: var(--primary);
+        font-weight: 700;
+        font-size: 24px;
+        margin: 0;
+    }
+
+    .page-details{
+        color: var(--text-muted);
+        font-size: 14px;
     }
         
 

@@ -52,6 +52,28 @@ class Equipo{
         return $stm->fetchAll(PDO::FETCH_ASSOC);
     }
 
+   public function contarPorLiga(int $ligaId, int $temporadaId): int
+    {
+        $sql = "
+            SELECT COUNT(*) AS total
+            FROM tb_liga_equipos le
+            INNER JOIN tb_liga_temporadas lt
+                ON lt.id = le.liga_temporada_id
+            WHERE lt.liga_id = :ligaId
+            AND lt.temporada_id = :temporadaId
+            AND le.estado_participacion = 'activo'
+        ";
+
+        $stmt = $this->pdo->prepare($sql);
+
+        $stmt->execute([
+            ':ligaId'      => $ligaId,
+            ':temporadaId' => $temporadaId
+        ]);
+
+        return (int) $stmt->fetchColumn();
+    }
+
     public function getByTorneo($torneoId){
         $sql = "SELECT * FROM tb_torneo_equipos te WHERE te.torneo_id = :torneoId";
         $stm = $this->pdo->prepare($sql);

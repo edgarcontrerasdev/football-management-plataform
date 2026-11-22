@@ -27,7 +27,7 @@
         <select name="<?= $filter['name'] ?>" class="select-filter">
 
             <?php if(isset($filter['label'])): ?>
-                <option value="" disabled <?= $currentValue === '' ? 'selected' : '' ?>>
+                <option value="" <?= $currentValue === '' ? 'selected' : '' ?>>
                     <?= $filter['label'] ?>
                 </option>
             <?php endif; ?>

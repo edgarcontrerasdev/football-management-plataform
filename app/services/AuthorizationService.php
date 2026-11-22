@@ -112,6 +112,78 @@
 
         }
 
+        /**
+        * Devuelve los IDs de las entidades a las que el usuario
+        * tiene alcance activo.
+        *
+        * Retorna:
+        * - null  = alcance global
+        * - []    = usuario sin alcances
+        * - [1,5] = entidades autorizadas
+        */
+
+        public function getScopedEntityIds(
+            string $tipoEntidad,
+            ?int $organismoId = null
+        ): ?array {
+            $user = Auth::user();
+
+            if (!$user) {
+                return [];
+            }
+
+            /*
+            * ADMIN tiene alcance global.
+            */
+            if (($user['rol_clave'] ?? null) === 'ADMIN') {
+                return null;
+            }
+
+            $sql = "
+                SELECT ua.entidad_id
+                FROM tb_usuario_alcances ua
+                WHERE ua.usuario_id = :usuario_id
+                AND ua.tipo_entidad = :tipo_entidad
+                AND ua.estado = 'activo'
+
+                AND (
+                        ua.fecha_inicio IS NULL
+                        OR ua.fecha_inicio <= :fecha_inicio_actual
+                    )
+
+                AND (
+                        ua.fecha_fin IS NULL
+                        OR ua.fecha_fin >= :fecha_fin_actual
+                    )
+            ";
+
+            $params = [
+                ':usuario_id'          => (int) $user['id'],
+                ':tipo_entidad'        => $tipoEntidad,
+                ':fecha_inicio_actual' => date('Y-m-d'),
+                ':fecha_fin_actual'    => date('Y-m-d')
+            ];
+
+            if ($organismoId !== null) {
+                $sql .= "
+                    AND ua.organismo_id = :organismo_id
+                ";
+
+                $params[':organismo_id'] = $organismoId;
+            }
+
+            $sql .= "
+                ORDER BY ua.entidad_id ASC
+            ";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute($params);
+
+            $ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+            return array_map('intval', $ids);
+        }
+
         public function can(
             string $permission,
             ?string $tipoEntidad = null,

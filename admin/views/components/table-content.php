@@ -5,8 +5,7 @@
         <div class="card-body p-0">
             <div class="mb-3 mt-3">
                 <i class="fas fa-list"></i>
-                <span>Listado de equipos</span>
-            </div>
+                <span><?= $tableTitle ?? 'Listado' ?></span>            </div>
             
             <?php include ROOT_PATH.'/admin/views/components/table.php'; ?>
 

@@ -51,7 +51,7 @@ class Router
 
         'liga' => [
             'controller' => 'LigasController',
-            'permission' => 'ligas.ver'
+            'permission' => 'liga.ver'
         ],
 
         'equipo' => [
@@ -76,7 +76,13 @@ class Router
 
         $this->page = $_GET['page'] ?? null;
 
-        $this->action = $_GET['action'] ?? 'index';
+        if (isset($_GET['action'])) {
+            $this->action = $_GET['action'];
+        } elseif ($this->page === 'liga') {
+            $this->action = 'miLiga';
+        } else {
+            $this->action = 'index';
+        }
     }
 
     /**
@@ -163,17 +169,11 @@ class Router
         /*
          * Rol inexistente o inactivo.
          */
-        if (
-            empty($freshUser['rol_clave']) ||
-            strtolower((string) $freshUser['rol_estado']) !== 'activo'
+        if (empty($freshUser['rol_clave']) || strtolower((string) $freshUser['rol_estado']) !== 'activo'
         ) {
 
             Auth::logout();
-
-            header(
-                'Location: /afec/public/index.php?page=login&error=rol'
-            );
-
+            header('Location: /afec/public/index.php?page=login&error=rol');
             exit;
         }
 
@@ -185,7 +185,7 @@ class Router
         $this->user = Auth::user();
 
         $this->rol = Auth::role();
-
+       
         /*
          * ---------------------------------------------------------
          * PÁGINA POR DEFECTO
@@ -195,6 +195,14 @@ class Router
         if (!$this->page) {
 
             $this->page = $this->defaultPageByRole();
+
+            /*
+            * Cuando la página se determina automáticamente,
+            * también debemos determinar su acción correspondiente.
+            */
+            if (!isset($_GET['action']) && $this->page === 'liga') {
+                $this->action = 'miLiga';
+            }
         }
 
         /*
@@ -221,10 +229,8 @@ class Router
          * ---------------------------------------------------------
          */
 
-       if (
-            $route['permission'] !== null &&
-            !$this->authorization->hasPermission($route['permission'])
-        ) {
+       if ($route['permission'] !== null && !$this->authorization->hasPermission($route['permission'])) 
+        {
             $this->forbiddenPage();
             return;
         }
@@ -358,7 +364,7 @@ class Router
     {
         return match ($this->rol) {
 
-            'LIGA' => 'ligas',
+            'LIGA' => 'liga',
 
             'EQUIPO' => 'equipos',
 
@@ -369,8 +375,6 @@ class Router
         };
     }
 
-    
-
     /**
      * Página 403.
      */
@@ -378,17 +382,7 @@ class Router
     {
         http_response_code(403);
 
-        $errorFile = ROOT_PATH . '/admin/views/404.php';
-
-        if (file_exists($errorFile)) {
-
-            include_once $errorFile;
-
-        } else {
-
-            echo '<h2>ERROR 403</h2>';
-            echo '<p>No tienes permisos para acceder a este recurso.</p>';
-        }
+        view('403.php');
 
         exit;
     }
@@ -403,7 +397,7 @@ class Router
 
         http_response_code($status);
 
-        $errorFile = ROOT_PATH . '/admin/views/404.php';
+        $errorFile = ROOT_PATH . '/admin/views/403.php';
 
         if (file_exists($errorFile)) {
 
