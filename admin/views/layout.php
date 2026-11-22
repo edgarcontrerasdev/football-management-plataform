@@ -36,7 +36,7 @@
 
         <div class="left">
             <button id="btnToggle" class="icon-btn" title="Ocultar menú" aria-label="Ocultar menú">
-                <i class="fas fa-bars" style="font-size:25px;"></i>
+                <i class="fas fa-bars header-menu-icon"></i>
             </button>
 
             <div class="logo" aria-hidden="true">
@@ -45,28 +45,28 @@
             </div>
 
             <div class="center">
-                <div style="font-weight:800; color:var(--royal)">AFEC</div>
-                <div style="font-size:12px; color:#0f2a46; margin-left:8px;">Panel Administrativo</div>
+                <div class="header-brand-name">AFEC</div>
+                <div class="header-brand-subtitle">Panel Administrativo</div>
             </div>
         </div>
 
         <div class="right">
 
-            <div style="display:flex; align-items:center; gap:12px;">
+            <div class="header-user-area">
         
-            <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(180deg,#fff,#f0f4f7); display:flex;align-items:center;justify-content:center; box-shadow:0 8px 20px rgba(11,62,166,0.06);">
-                <img style="border-radius:50%" src="/afec/public/assets/img/avatars/<?= htmlspecialchars($avatar) ?>" 
+            <div class="header-avatar-frame">
+                <img class="header-avatar-image" src="/afec/public/assets/img/avatars/<?= htmlspecialchars($avatar) ?>" 
                     alt="Avatar" class="user-avatar" width="50"  height="50">
             </div>
 
             
-            <div style="display:flex; align-items:center; gap:10px; padding-left:12px;">
+            <div class="header-user-controls">
 
-            <div style="text-align:right; font-size:13px;">
-                <div style="font-weight:700; color:#07203a">
+            <div class="header-user-details">
+                <div class="header-user-name">
                     <?= htmlspecialchars(Auth::user()['usuario']); ?>
                 </div>
-                <div style="font-size:12px; color:#3b4f6b;">
+                <div class="header-user-email">
                     <?php echo htmlspecialchars(Auth::user()['usuario']).'@afec.mx'; ?>
                 </div>
             </div>
@@ -122,7 +122,7 @@
         <div class="content-frame">
             <!-- Breadcrumbs / esta area indica el mapa de navegacion -->
             <div class="breadcrumbs" id="breadcrumbs">
-                <div style="font-size:13px; color:var(--muted)">Usted está en:</div>
+                <div class="breadcrumbs-label">Usted está en:</div>
                 <div class="crumb" id="crumb-current"> </div>
             </div>
 
@@ -255,7 +255,7 @@
 
             //mostrar loader
             wrapper.innerHTML = `
-                <div style="padding:40px;text-align:center;">
+                <div class="table-ajax-loader">
                     <div class="spinner"></div>
                     <p>Cargando...</p>
                 </div>
@@ -302,9 +302,9 @@
             // 🔥 Loader
             function showLoader(){
                 wrapper.innerHTML = `
-                    <div style="padding:40px;text-align:center; color:#fff">
+                    <div class="table-ajax-loader table-ajax-loader--light">
                         <div class="spinner"></div>
-                        <p style="text-color:#fff">Cargando...</p>
+                        <p>Cargando...</p>
                     </div>
                 `;
             }
