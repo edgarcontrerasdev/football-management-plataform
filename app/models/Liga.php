@@ -359,4 +359,40 @@ class Liga
             'inactivas' => (int) ($row['inactivas'] ?? 0)
         ];
     }
+
+    /**
+     * Lista los equipos participantes de una liga en una temporada.
+     */
+    public function listarEquiposPorTemporada(int $ligaId, int $temporadaId): array
+    {
+        $sql = "
+            SELECT
+                le.id AS liga_equipo_id,
+                le.equipo_id,
+                COALESCE(NULLIF(et.nombre_mostrado, ''), e.nombre) AS nombre,
+                COALESCE(NULLIF(et.siglas, ''), e.siglas) AS siglas,
+                le.numero_registro,
+                le.estado_participacion,
+                le.estado_documentacion
+            FROM tb_liga_temporadas lt
+            INNER JOIN tb_liga_equipos le
+                ON le.liga_temporada_id = lt.id
+            INNER JOIN tb_equipos e
+                ON e.id = le.equipo_id
+            LEFT JOIN tb_equipo_temporadas et
+                ON et.equipo_id = e.id
+               AND et.temporada_id = lt.temporada_id
+            WHERE lt.liga_id = :liga_id
+              AND lt.temporada_id = :temporada_id
+            ORDER BY nombre ASC
+        ";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([
+            ':liga_id' => $ligaId,
+            ':temporada_id' => $temporadaId
+        ]);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
