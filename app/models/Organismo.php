@@ -174,6 +174,7 @@ class Organismo
                 telefono = :telefono,
                 sitio_web = :sitio_web,
                 logo = :logo,
+                fecha_creacion = :fecha_creacion,
                 fecha_modificacion = NOW()
             WHERE id = :id
         ");
@@ -189,6 +190,7 @@ class Organismo
             ':telefono' => trim((string) ($data['telefono'] ?? '')) ?: null,
             ':sitio_web' => trim((string) ($data['sitio_web'] ?? '')) ?: null,
             ':logo' => $data['logo'] ?? null,
+            ':fecha_creacion' => trim((string) ($data['fecha_creacion'] ?? '')) ?: null,
             ':id' => $id
         ]);
     }
