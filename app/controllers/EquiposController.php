@@ -80,11 +80,23 @@
         public function detalles($id) {
 
             $equipo = $this->equipoModel->getById($id);
-            //$directivos = $this->ligaModel->getDirectivos($id);
-            //$documentos = $this->ligaModel->getDocumentos($id);
-            //$resumen = $this->ligaModel->getResumen($id);
-            view('pages.equipos.detalle.php',[
-                'equipo'        => $equipo
+
+            if (!$equipo) {
+                view('pages.equipos.detalle.php', [
+                    'equipo' => null,
+                    'clubes' => [],
+                    'participaciones' => []
+                ]);
+                return;
+            }
+
+            $clubes = $this->equipoModel->obtenerClubes((int) $id);
+            $participaciones = $this->equipoModel->obtenerParticipacionesLigas((int) $id);
+
+            view('pages.equipos.detalle.php', [
+                'equipo' => $equipo,
+                'clubes' => $clubes,
+                'participaciones' => $participaciones
             ]);
            
         }
