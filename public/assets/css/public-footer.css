@@ -36,3 +36,50 @@
 .public-site .public-footer__links a:hover {
     text-decoration: underline;
 }
+
+
+/* Adaptación del pie de página para tabletas y móviles */
+@media (max-width: 768px) {
+    .public-site .public-footer__inner {
+        flex-direction: column;
+        align-items: center;
+        gap: 14px;
+        text-align: center;
+    }
+
+    .public-site .public-footer__links {
+        flex-wrap: wrap;
+        justify-content: center;
+        row-gap: 8px;
+        column-gap: 18px;
+    }
+
+    .public-site .public-footer__links a {
+        padding: 5px 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .public-site .public-footer {
+        padding: 18px 14px;
+    }
+
+    .public-site .public-footer__brand strong {
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    .public-site .public-footer__copyright {
+        font-size: 12px;
+        line-height: 1.5;
+    }
+
+    .public-site .public-footer__links {
+        font-size: 13px;
+        column-gap: 14px;
+    }
+
+    .public-site .public-footer__links a {
+        overflow-wrap: anywhere;
+    }
+}
