@@ -56,6 +56,6 @@
             <?php endforeach; ?>
         <?php else: ?>
             <tr>
-                <td colspan="7" style="text-align:center;">No hay usuarios registrados.</td>
+                <td colspan="7" class="users-empty-cell">No hay usuarios registrados.</td>
             </tr>
         <?php endif; ?>
