@@ -20,7 +20,7 @@
 
   <!-- IZQUIERDA: Logo -->
   <div class="logo-wrapper">
-    <img src="/../afec/public/assets/img/logo.png" alt="Logo" class="logo-header">
+    <img src="/../afec/public/assets/img/logo.png" alt="AFEC - Asociación de Fútbol del Estado de Colima" class="logo-header">
     <span class="logo-text">AFEC - Asociación de Futbol del Estado de Colima</span>
   </div>
   
@@ -42,19 +42,19 @@
 <!-- MODAL BUSCADOR -->
 <div id="modalSearch" class="modal-cortina">
   <div class="modal-search-content">
-    <span class="close" id="closeSearch">&times;</span>
-    <input type="text" placeholder="Buscar..." class="search-input">
+    <button type="button" class="close" id="closeSearch" aria-label="Cerrar buscador">&times;</button>
+    <input type="text" placeholder="Buscar..." class="search-input" aria-label="Texto de búsqueda">
     <button class="btn-search">Buscar</button>
   </div>
 </div>
 
 <!-- MODAL LOGIN -->
 <div id="modalLogin" class="modal-centro">
-  <div class="modal-login-content">
-    <span class="close" id="closeLogin">&times;</span>
-    <h3>Iniciar sesión</h3>
-    <input type="text" placeholder="Usuario" class="input-login">
-    <input type="password" placeholder="Contraseña" class="input-login">
+  <div class="modal-login-content" role="dialog" aria-modal="true" aria-labelledby="loginModalTitle">
+    <button type="button" class="close" id="closeLogin" aria-label="Cerrar inicio de sesión">&times;</button>
+    <h3 id="loginModalTitle">Iniciar sesión</h3>
+    <input type="text" placeholder="Usuario" class="input-login" aria-label="Usuario">
+    <input type="password" placeholder="Contraseña" class="input-login" aria-label="Contraseña">
     <button class="btn-login-form">Entrar</button>
   </div>
 </div>
@@ -78,7 +78,7 @@
 
   <!-- Logo central -->
   <div class="header-center">
-    <img src="/../afec/public/assets/img/logo.png" alt="Logo Principal" class="logo-central">
+    <img src="/../afec/public/assets/img/logo.png" alt="Logotipo de AFEC" class="logo-central">
   </div>
 
   <!-- Buscador e íconos sociales -->
@@ -88,7 +88,7 @@
   
 </header>
 
-<nav class="header-nivel3">
+<nav class="header-nivel3" aria-label="Navegación principal">
   <ul class="menu-principal">
     <li><a href="index.php?page=home"><i class="fas fa-home"></i></a></li>
     <li><a href="index.php?page=liga">Torneos</a></li>
