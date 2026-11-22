@@ -63,3 +63,30 @@
     }
 
     .icon-btn:hover { background: rgba(11,62,166,0.08); }
+
+
+/* Identidad y controles del usuario en el encabezado */
+.header-menu-icon { font-size: 25px; }
+.header-brand-name { font-weight: 800; color: var(--royal); }
+.header-brand-subtitle { font-size: 12px; color: #0f2a46; margin-left: 8px; }
+.header-user-area { display: flex; align-items: center; gap: 12px; }
+.header-avatar-frame {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #fff, #f0f4f7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 20px rgba(11, 62, 166, .06);
+}
+.header-avatar-image { border-radius: 50%; }
+.header-user-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-left: 12px;
+}
+.header-user-details { text-align: right; font-size: 13px; }
+.header-user-name { font-weight: 700; color: #07203a; }
+.header-user-email { font-size: 12px; color: #3b4f6b; }
