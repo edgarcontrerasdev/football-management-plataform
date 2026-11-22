@@ -557,3 +557,10 @@
   font: inherit;
   line-height: normal;
 }
+
+/* Apertura explícita de submenús mediante toque o activación del enlace */
+.public-site .dropdown.open > .submenu {
+  display: block;
+  opacity: 1;
+  visibility: visible;
+}
