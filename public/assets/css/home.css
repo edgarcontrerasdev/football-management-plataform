@@ -1,0 +1,413 @@
+.public-site .home-page {
+    font-family: 'Bebas', sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #f5f5f5;
+    overflow-x: hidden;
+  }
+
+  .public-site .home-page .sponsor {
+    width: 100px;
+    text-align: center;
+  }
+
+  .public-site .home-page .sponsor img {
+    width: 100%;
+    object-fit: contain;
+    filter: grayscale(50%);
+    transition: filter 0.3s, transform 0.3s;
+  }
+
+  .public-site .home-page .sponsor img:hover {
+    filter: grayscale(0%);
+    transform: scale(1.05);
+  }
+
+
+.public-site .home-page .slider-wrapper {
+  width: 95%;
+  max-width: 1400px;
+  margin: 40px auto;
+  position: relative;
+}
+
+.public-site .home-page .slider {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #111;
+  height: 300px;
+}
+
+.public-site .home-page .slides {
+  display: flex;
+  transition: transform 0.7s ease-in-out;
+}
+
+.public-site .home-page .slide {
+  min-width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.public-site .home-page .card-liga {
+  width: 80%;
+  max-width: 900px;
+  height: 320px;
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 25px;
+  background: linear-gradient(to top, #1e1e1e 0%, #111 100%);
+  color: #fff;
+  transform-style: preserve-3d;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+  transition: transform 0.5s, box-shadow 0.5s;
+}
+
+.public-site .home-page .card-liga:hover {
+  transform: scale(1.05);
+  box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+}
+
+.public-site .home-page .card-liga img.liga-bg {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  opacity: 0.2;
+  transform: translateZ(-50px) scale(1.1);
+  transition: transform 0.5s;
+}
+
+.public-site .home-page .card-liga:hover img.liga-bg {
+  transform: translateZ(-20px) scale(1.15);
+}
+
+.public-site .home-page .card-liga .info {
+  z-index: 2;
+  max-width: 60%;
+}
+
+.public-site .home-page .card-liga h2 {
+  font-size: 30px;
+  font-family: 'Bebas Neue', sans-serif;
+  margin-bottom: 10px;
+}
+
+.public-site .home-page .card-liga p {
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.public-site .home-page .card-liga img.logo {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  z-index: 2;
+  transition: transform 0.3s;
+  cursor: pointer;
+}
+
+.public-site .home-page .card-liga img.logo:hover {
+  transform: scale(1.3);
+}
+
+.public-site .home-page .card-liga .qr-btn {
+  position: absolute;
+  bottom: 20px; right: 20px;
+  background: #ffcc00;
+  color: #111;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-weight: bold;
+  text-decoration: none;
+  transition: transform 0.3s, background 0.3s;
+}
+
+.public-site .home-page .card-liga .qr-btn:hover {
+  transform: scale(1.15);
+  background: #ffaa00;
+}
+
+/* Navegación */
+.public-site .home-page .nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0,0,0,0.5);
+  color: #fff;
+  border: none;
+  font-size: 2rem;
+  padding: 10px 15px;
+  cursor: pointer;
+  border-radius: 5px;
+  z-index: 3;
+  transition: background 0.3s;
+}
+
+.public-site .home-page .nav:hover {
+  background: rgba(0,0,0,0.8);
+}
+
+.public-site .home-page .nav.prev { left: 10px; }
+.public-site .home-page .nav.next { right: 10px; }
+
+/* Indicadores */
+.public-site .home-page .dots {
+  position: absolute;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 3;
+}
+
+.public-site .home-page .dot {
+  width: 12px;
+  height: 12px;
+  background: rgba(255,255,255,0.5);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.public-site .home-page .dot.active {
+  background: #ffcc00;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .public-site .home-page .slider { height: 320px; }
+  .public-site .home-page .card-liga { width: 90%; height: 280px; padding: 20px; }
+  .public-site .home-page .card-liga img.logo { width: 130px; height: 130px; }
+}
+
+@media (max-width: 600px) {
+  .public-site .home-page .slider { height: 260px; }
+  .public-site .home-page .card-liga { width: 95%; height: 240px; padding: 15px; }
+  .public-site .home-page .card-liga img.logo { width: 110px; height: 110px; }
+}
+
+
+/* Navegación */
+.public-site .home-page .nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0,0,0,0.5);
+  color: #fff;
+  border: none;
+  font-size: 2rem;
+  padding: 10px 15px;
+  cursor: pointer;
+  border-radius: 5px;
+  z-index: 3;
+  transition: background 0.3s;
+}
+
+.public-site .home-page .nav:hover {
+  background: rgba(0,0,0,0.8);
+}
+
+.public-site .home-page .nav.prev { left: 10px; }
+.public-site .home-page .nav.next { right: 10px; }
+
+  /* Tarjeta liga */
+  .public-site .home-page .card-liga {
+    position: relative;
+    width: 750px;
+    max-width: 95%;
+    height: 300px;
+    border-radius: 15px;
+    overflow: hidden;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    background: linear-gradient(to top, #1e1e1e 0%, #111 100%);
+    transform-style: preserve-3d;
+    transition: transform 0.5s, box-shadow 0.5s;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3), 0 20px 40px rgba(0,0,0,0.2);
+  }
+
+  .public-site .home-page .card-liga:hover {
+    transform: rotateY(10deg) scale(1.05);
+    box-shadow: 0 30px 60px rgba(0,0,0,0.5), 0 40px 80px rgba(0,0,0,0.3);
+  }
+
+  .public-site .home-page .card-liga img.liga-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.25;
+    transform: translateZ(-50px) scale(1.1);
+    transition: transform 0.5s;
+  }
+
+  .public-site .home-page .card-liga:hover img.liga-bg {
+    transform: translateZ(-20px) scale(1.15);
+  }
+
+  .public-site .home-page .card-liga::after {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, transparent 60%);
+    transform: rotate(45deg);
+    pointer-events: none;
+    transition: transform 0.5s;
+  }
+
+  .public-site .home-page .card-liga:hover::after {
+    transform: rotate(0deg);
+  }
+
+  .public-site .home-page .card-liga .info {
+    z-index: 2;
+    max-width: 60%;
+  }
+
+  .public-site .home-page .card-liga h2 {
+    font-size: 28px;
+    margin: 0 0 10px 0;
+  }
+
+  .public-site .home-page .card-liga p {
+    font-size: 16px;
+    line-height: 1.3;
+  }
+
+  .public-site .home-page .card-liga img.logo {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 50%;
+    z-index: 2;
+    transition: transform 0.3s;
+    cursor: pointer;
+  }
+
+  .public-site .home-page .card-liga img.logo:hover {
+    transform: scale(1.25);
+  }
+
+  .public-site .home-page .card-liga .qr-btn {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    background: #ffcc00;
+    color: #111;
+    padding: 8px 12px;
+    border-radius: 5px;
+    font-weight: bold;
+    text-decoration: none;
+    transition: transform 0.3s, background 0.3s;
+  }
+
+  .public-site .home-page .card-liga .qr-btn:hover {
+    transform: scale(1.15);
+    background: #ffaa00;
+  }
+
+  /* Contenido debajo */
+  .public-site .home-page .content {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+  }
+
+  .public-site .home-page .content h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 32px;
+    color: #222;
+  }
+
+  .public-site .home-page .cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+  }
+
+  .public-site .home-page .card {
+    background: white;
+    padding: 20px;
+    width: 250px;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    text-align: center;
+    transition: transform 0.3s, box-shadow 0.3s;
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(30px);
+    animation: home-card-fade-in 0.6s forwards;
+  }
+
+  .public-site .home-page .card:nth-child(1) { animation-delay: 0.2s; }
+  .public-site .home-page .card:nth-child(2) { animation-delay: 0.4s; }
+  .public-site .home-page .card:nth-child(3) { animation-delay: 0.6s; }
+
+  .public-site .home-page .card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+  }
+
+  .public-site .home-page .card img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 50%;
+    margin-bottom: 15px;
+    transition: transform 0.3s;
+  }
+
+  .public-site .home-page .card:hover img {
+    transform: scale(1.1);
+  }
+
+  @keyframes home-card-fade-in {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .public-site .home-page .slider-wrapper {
+      flex-direction: column;
+      gap: 10px;
+    }
+    .public-site .home-page .slider {
+      height: 300px;
+    }
+    .public-site .home-page .card-liga {
+      height: 280px;
+      padding: 15px;
+    }
+    .public-site .home-page .card-liga .info {
+      max-width: 55%;
+    }
+    .public-site .home-page .card-liga h2 { font-size: 24px; }
+    .public-site .home-page .card-liga p { font-size: 14px; }
+    .public-site .home-page .card-liga img.logo { width: 120px; height: 120px; }
+  }
+
+  @media (max-width: 600px) {
+    .public-site .home-page .slider { height: 250px; }
+    .public-site .home-page .card-liga { height: 240px; padding: 10px; }
+    .public-site .home-page .card-liga .info { max-width: 50%; }
+    .public-site .home-page .card-liga h2 { font-size: 20px; }
+    .public-site .home-page .card-liga p { font-size: 12px; }
+    .public-site .home-page .card-liga img.logo { width: 100px; height: 100px; }
+  }
