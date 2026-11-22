@@ -75,20 +75,6 @@
   background: #ffcc00;
 }
 
-/* Responsive */
-@media (max-width: 900px) {
-  .public-site .home-page .slider { height: 320px; }
-  .public-site .home-page .card-liga { width: 90%; height: 280px; padding: 20px; }
-  .public-site .home-page .card-liga img.logo { width: 130px; height: 130px; }
-}
-
-@media (max-width: 600px) {
-  .public-site .home-page .slider { height: 260px; }
-  .public-site .home-page .card-liga { width: 95%; height: 240px; padding: 15px; }
-  .public-site .home-page .card-liga img.logo { width: 110px; height: 110px; }
-}
-
-
 /* Navegación */
 .public-site .home-page .nav {
   position: absolute;
@@ -287,6 +273,7 @@
       height: 300px;
     }
     .public-site .home-page .card-liga {
+      width: 90%;
       height: 280px;
       padding: 15px;
     }
