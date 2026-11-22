@@ -135,12 +135,13 @@ class OrganismosController
             view('pages.organismos.detalle.php', ['organismo' => null, 'ligas' => []]);
             return;
         }
+        $errorRelacion = $_SESSION['organismo_relacion_error'] ?? null;
         unset($_SESSION['organismo_relacion_error']);
         view('pages.organismos.detalle.php', [
             'organismo' => $organismo,
             'ligas' => $this->organismoModel->obtenerLigas($id),
             'ligasDisponibles' => $this->organismoModel->listarLigasDisponibles($id),
-            'errorRelacion' => $_SESSION['organismo_relacion_error'] ?? null
+            'errorRelacion' => $errorRelacion
         ]);
     }
 
