@@ -94,30 +94,7 @@
         background: var(--danger);
         box-shadow: 0 0 0 1px rgba(231,76,60,.5);
     }
-.torneos-page .btn-icon{
-        width: 34px;
-        height: 34px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 8px;
-        border: 1px solid transparent;
-        transition: all .2s ease;
-    }
-.torneos-page .btn-icon svg{
-        width: 16px;
-        height: 16px;
-    }
 
-    /* Edit */
-.torneos-page .btn-icon.edit{
-        background: #f1f3f5;
-        color: #2c3e50;
-    }
-.torneos-page .btn-icon.edit:hover{
-        background: var(--primary-dark);
-        color: #fff;
-    }
 .torneos-page .btn-create {
         width: 42px;
         height: 42px;
