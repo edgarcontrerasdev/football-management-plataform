@@ -98,6 +98,22 @@ class Club
         ];
     }
 
+    public function obtenerPorId(int $id): ?array
+    {
+        $stmt = $this->pdo->prepare("
+            SELECT id, nombre, siglas, logo, estado, observaciones, created_at, updated_at
+            FROM tb_clubes
+            WHERE id = :id
+            LIMIT 1
+        ");
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $club = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $club ?: null;
+    }
+
     public function crear(array $data): int
     {
         $sql = "INSERT INTO tb_clubes (nombre, siglas, logo, estado, observaciones)
