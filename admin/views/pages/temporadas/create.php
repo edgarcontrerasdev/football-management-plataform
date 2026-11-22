@@ -1,7 +1,7 @@
 <?php
     $isEdit = isset($temporada);
-    $old = $_SESSION['old'] ?? [];
-    $errors = $_SESSION['errors'] ?? [];
+    $old = $old ?? ($_SESSION['old'] ?? []);
+    $errors = $errors ?? ($_SESSION['errors'] ?? []);
     unset($_SESSION['old'], $_SESSION['errors']);
 
     $action = $isEdit ? 'update' : 'store';
