@@ -8,7 +8,7 @@
 
         <?php if(!empty($toolbox['create'])): ?>
 
-        <button type="button" class="btn-add" onclick="location.href='<?= $toolbox['create'] ?>'">
+        <button type="button" class="btn-add" data-create-url="<?= htmlspecialchars($toolbox['create'], ENT_QUOTES, 'UTF-8') ?>">
         <i class="fas fa-plus"></i>
         </button>
 
@@ -83,3 +83,7 @@
     </form>
 
 </div>
+
+<?php startSection('scripts'); ?>
+<script src="<?= BASE_URL ?>/public/assets/js/admin/tables/table-toolbox.js"></script>
+<?php endSection('scripts'); ?>
