@@ -39,6 +39,12 @@ class Router
             'permission' => 'equipos.ver'
         ],
 
+        'clubes' => [
+            'controller' => 'ClubesController',
+            'permission' => null
+        ],
+
+
         'users' => [
             'controller' => 'UsersController',
             'permission' => 'usuarios.ver'
