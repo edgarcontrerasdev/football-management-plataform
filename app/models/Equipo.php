@@ -14,24 +14,24 @@ class Equipo{
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function getById($id){
-        $sql = "SELECT 
-                e.id, e.siglas, e.nombre AS equipo,
-                e.estado, e.fecha_creacion,
-                e.escudo, e.calle,e.colonia,
-                e.codigo_postal, e.ciudad,
-                e.estado_direccion, e.pais,
-                e.contacto_email, e.contacto_telefono,
-                e.redes_sociales, e.observaciones,
-                l.id AS liga_id,
-                l.nombre AS liga
+    public function getById($id)
+    {
+        $sql = "
+            SELECT
+                e.id,
+                e.nombre AS equipo,
+                e.siglas,
+                e.escudo,
+                e.observaciones,
+                e.created_at,
+                e.updated_at
             FROM tb_equipos e
-            LEFT JOIN tb_ligas l ON e.liga_id = l.id WHERE e.id=:id"; 
-            
+            WHERE e.id = :id
+            LIMIT 1
+        ";
+
         $stmt = $this->pdo->prepare($sql);
-
-        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-
+        $stmt->bindValue(':id', (int) $id, PDO::PARAM_INT);
         $stmt->execute();
 
         return $stmt->fetch(PDO::FETCH_ASSOC);
