@@ -231,14 +231,15 @@ class Equipo{
     public function crearEntidad(array $data): int
     {
         $sql = "
-            INSERT INTO tb_equipos (nombre, siglas, observaciones)
-            VALUES (:nombre, :siglas, :observaciones)
+            INSERT INTO tb_equipos (nombre, siglas, escudo, observaciones)
+            VALUES (:nombre, :siglas, :escudo, :observaciones)
         ";
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
             ':nombre' => trim($data['nombre']),
             ':siglas' => ($data['siglas'] ?? '') !== '' ? trim($data['siglas']) : null,
+            ':escudo' => $data['escudo'] ?? null,
             ':observaciones' => ($data['observaciones'] ?? '') !== ''
                 ? trim($data['observaciones'])
                 : null
