@@ -33,20 +33,20 @@
             
             <a  href="index.php?page=temporadas&action=activar&id=<?= $temporada['id']; ?>"
                 class="btn btn-sm btn-success"
-                onclick="return confirm('¿Confirmas que quieres activar esta temporada? Si aceptas se desactivara automaticamente la temporada ACTIVA');">
+                data-confirm="¿Confirmas que quieres activar esta temporada? Si aceptas se desactivara automaticamente la temporada ACTIVA">
                 Activar
             </a>
 
             <a href="index.php?page=temporadas&action=delete&id=<?=  $temporada['id']; ?>"
                 class="btn btn-sm btn-alert"
-                onclick="return confirm('Deseas eliminar esta temporada?')">
+                data-confirm="Deseas eliminar esta temporada?">
                 Eliminar
             </a>
 
         <?php elseif ($temporada['estado'] === 'activa'): ?>
             <a  href="index.php?page=temporadas&action=cerrar&id=<?= $temporada['id']; ?>"
                 class="btn btn-sm btn-outline-danger"
-                onclick="return confirm('¿Cerrar esta temporada?. Una vez cerrada no se podran asociar mas registros a este temporada');">
+                data-confirm="¿Cerrar esta temporada?. Una vez cerrada no se podran asociar mas registros a este temporada">
                 Cerrar
             </a>
         <?php endif; ?>
@@ -58,3 +58,8 @@
     </div>
 
 </div>
+
+
+<?php startSection('scripts') ?>
+<script src="<?= BASE_URL ?>/public/assets/js/admin/temporadas/temporada-show.js"></script>
+<?php endSection('scripts') ?>
