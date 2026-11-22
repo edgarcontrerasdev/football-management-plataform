@@ -37,3 +37,12 @@
 @media (max-width: 900px) {
     .main { margin-left: 0; padding: 88px 16px 16px 16px; }
 }
+
+
+/* Etiqueta de contexto y estados de carga de tablas */
+.breadcrumbs-label { font-size: 13px; color: var(--muted); }
+.table-ajax-loader {
+    padding: 40px;
+    text-align: center;
+}
+.table-ajax-loader--light { color: #fff; }
