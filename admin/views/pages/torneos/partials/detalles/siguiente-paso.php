@@ -79,34 +79,3 @@ if (empty($progreso['equipos'])) {
     </div>
 </div>
 
-<style>
-    .siguiente-paso-card {
-    border-left: 4px solid var(--primary);
-}
-
-.siguiente-paso-card .card-body {
-    padding: 14px 16px;
-}
-
-.siguiente-paso-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    background: rgba(30, 64, 175, .12);
-    color: var(--primary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-}
-
-.siguiente-paso-label {
-    display: inline-block;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: .5px;
-    text-transform: uppercase;
-    color: var(--primary);
-    margin-bottom: 2px;
-}
-</style>
