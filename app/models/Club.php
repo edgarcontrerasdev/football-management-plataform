@@ -138,6 +138,141 @@ class Club
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Equipos que todavía no tienen una relación vigente con ningún club.
+     */
+    public function listarEquiposDisponibles(): array
+    {
+        $sql = "
+            SELECT e.id, e.nombre, e.siglas, e.escudo
+            FROM tb_equipos e
+            WHERE NOT EXISTS (
+                SELECT 1
+                FROM tb_club_equipos ce
+                WHERE ce.equipo_id = e.id
+                  AND ce.estado = 'activo'
+                  AND ce.fecha_fin IS NULL
+            )
+            ORDER BY e.nombre ASC
+        ";
+
+        return $this->pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Asigna un equipo a un club sin permitir dos relaciones vigentes.
+     * La fila del equipo se bloquea para evitar asignaciones simultáneas.
+     */
+    public function asignarEquipo(
+        int $clubId,
+        int $equipoId,
+        string $fechaInicio,
+        ?string $observaciones = null
+    ): int {
+        $fecha = DateTimeImmutable::createFromFormat('!Y-m-d', $fechaInicio);
+        if (!$fecha || $fecha->format('Y-m-d') !== $fechaInicio) {
+            throw new InvalidArgumentException('La fecha de inicio no es válida.');
+        }
+
+        $this->pdo->beginTransaction();
+
+        try {
+            $clubStmt = $this->pdo->prepare("
+                SELECT estado
+                FROM tb_clubes
+                WHERE id = :club_id
+                LIMIT 1
+            ");
+            $clubStmt->execute([':club_id' => $clubId]);
+            $club = $clubStmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$club) {
+                throw new RuntimeException('El club seleccionado no existe.');
+            }
+
+            if (strtolower((string) $club['estado']) !== 'activo') {
+                throw new RuntimeException('No se pueden asignar equipos a un club inactivo.');
+            }
+
+            $equipoStmt = $this->pdo->prepare("
+                SELECT id
+                FROM tb_equipos
+                WHERE id = :equipo_id
+                LIMIT 1
+                FOR UPDATE
+            ");
+            $equipoStmt->execute([':equipo_id' => $equipoId]);
+
+            if (!$equipoStmt->fetch(PDO::FETCH_ASSOC)) {
+                throw new RuntimeException('El equipo seleccionado no existe.');
+            }
+
+            $relacionStmt = $this->pdo->prepare("
+                SELECT id, fecha_inicio
+                FROM tb_club_equipos
+                WHERE equipo_id = :equipo_id
+                  AND estado = 'activo'
+                  AND fecha_fin IS NULL
+                LIMIT 1
+            ");
+            $relacionStmt->execute([':equipo_id' => $equipoId]);
+
+            if ($relacionStmt->fetch(PDO::FETCH_ASSOC)) {
+                throw new RuntimeException('Este equipo ya pertenece actualmente a un club. Primero debe cerrarse su relación vigente.');
+            }
+
+            $historialStmt = $this->pdo->prepare("
+                SELECT MAX(fecha_fin)
+                FROM tb_club_equipos
+                WHERE equipo_id = :equipo_id
+                  AND fecha_fin IS NOT NULL
+            ");
+            $historialStmt->execute([':equipo_id' => $equipoId]);
+            $ultimaFechaFin = $historialStmt->fetchColumn();
+
+            if ($ultimaFechaFin && $fechaInicio <= $ultimaFechaFin) {
+                throw new RuntimeException('La fecha de inicio debe ser posterior al cierre de la relación anterior.');
+            }
+
+            $insertStmt = $this->pdo->prepare("
+                INSERT INTO tb_club_equipos (
+                    club_id,
+                    equipo_id,
+                    fecha_inicio,
+                    fecha_fin,
+                    estado,
+                    observaciones
+                ) VALUES (
+                    :club_id,
+                    :equipo_id,
+                    :fecha_inicio,
+                    NULL,
+                    'activo',
+                    :observaciones
+                )
+            ");
+            $insertStmt->execute([
+                ':club_id' => $clubId,
+                ':equipo_id' => $equipoId,
+                ':fecha_inicio' => $fechaInicio,
+                ':observaciones' => $observaciones !== null && trim($observaciones) !== ''
+                    ? trim($observaciones)
+                    : null
+            ]);
+
+            $relacionId = (int) $this->pdo->lastInsertId();
+            $this->pdo->commit();
+
+            return $relacionId;
+        } catch (Throwable $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+
+            throw $e;
+        }
+    }
+
     public function crear(array $data): int
     {
         $sql = "INSERT INTO tb_clubes (nombre, siglas, logo, estado, observaciones)
