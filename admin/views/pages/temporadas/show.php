@@ -5,6 +5,15 @@
 
     <table class="table table-bordered mt-3">
         <tr>
+            <th>Propietario</th>
+            <td>
+                <?= htmlspecialchars($temporada['organismo_nombre'] ?? $temporada['liga_propietaria_nombre'] ?? 'No definido'); ?>
+                <span class="text-muted small">
+                    (<?= ($temporada['ambito_tipo'] ?? '') === 'organismo' ? 'Organismo' : 'Liga independiente'; ?>)
+                </span>
+            </td>
+        </tr>
+        <tr>
             <th>Estado</th>
             <td><?= ucfirst($temporada['estado']) ?></td>
         </tr>
