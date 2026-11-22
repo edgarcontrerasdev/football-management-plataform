@@ -99,6 +99,9 @@
             <a href="index.php?page=dashboard" class="nav-item active" data-key="dashboard"><i class="bi bi-speedometer2"></i><span class="label">Panel</span></a>
             <a href="index.php?page=ligas" class="nav-item" data-key="ligas"><i class="bi bi-trophy"></i><span class="label">Ligas</span></a>
             <a href="index.php?page=equipos" class="nav-item" data-key="equipos"><i class="bi bi-people"></i><span class="label">Equipos</span></a>
+            <?php if (in_array(Auth::role(), ['ADMIN', 'SUPERVISOR'], true)): ?>
+            <a href="index.php?page=clubes" class="nav-item" data-key="clubes"><i class="bi bi-shield"></i><span class="label">Clubes</span></a>
+            <?php endif; ?>
             <a href="index.php?page=torneos" class="nav-item" data-key="torneos"><i class="bi bi-flag"></i><span class="label">Torneos</span></a>
             <a href="#" class="nav-item" data-key="partidos"><i class="bi bi-calendar-week"></i><span class="label">Partidos</span></a>
             <a href="index.php?page=temporadas" class="nav-item" data-key="temporadas"><i class="fas fa-calendar"></i><span class="label">Temporadas</span></a>
