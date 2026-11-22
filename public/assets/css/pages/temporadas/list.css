@@ -107,7 +107,15 @@
         box-shadow: 0 0 0 1px rgba(231,76,60,.5);
     }
 
+    
+
+    
+
     /* Edit */
+    
+
+    
+
     .users-toolbar {
         display: flex;
         justify-content: space-between;
@@ -155,6 +163,8 @@
     }
 
 
+    
+        
     .user-cell {
         display: flex;
         align-items: center;
@@ -294,7 +304,7 @@
         animation: temporadas-index-spin 1s linear infinite;
         margin: auto;
     }
-    100% { transform: rotate(360deg);} }
+    
 
     .skeleton {
         display: inline-block;
@@ -304,8 +314,6 @@
         background-size: 200% 100%;
         animation: temporadas-index-shimmer 1.5s infinite;
     }
-    
-    100% { background-position: 200% 0;} }
 }
 
 /* Bootstrap inserta los popovers fuera del contenedor de la vista. */
@@ -353,5 +361,6 @@
     margin-top:-2px;
 }
 
-@keyframes temporadas-index-spin { 0% { transform: rotate(0deg);} 
-@keyframes temporadas-index-shimmer { 0% { background-position: -200% 0;} 
+@keyframes temporadas-index-spin { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }
+
+@keyframes temporadas-index-shimmer { 0% { background-position: -200% 0;} 100% { background-position: 200% 0;} }
