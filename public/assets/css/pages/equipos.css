@@ -1,7 +1,7 @@
 /* Estilos específicos del módulo de equipos */
 
 @scope (.equipos-dashboard-page) {
-.equipos-dashboard-page {
+:scope {
         /* Radios */
         --radius-sm: 8px;
         --radius-md: 12px;
@@ -36,7 +36,7 @@
         --text-muted: #6b7280;
     }
 
-    .equipos-dashboard-page {
+    :scope {
         background-color: var(--bg);
         color:var(--text);
     }
@@ -745,7 +745,7 @@
     border:1px solid #ddd;
     }
 
-    .equipos-index-page {
+    :scope {
         /* 🎨 Colores principales */
         --primary: #1e40af;        /* Azul royal */
         --primary-dark: #1e3a8a;
@@ -767,7 +767,7 @@
         --text-muted: #6b7280;
     }
 
-    .equipos-index-page {
+    :scope {
         background-color: var(--bg);
         color:var(--text);
     }
