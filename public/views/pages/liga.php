@@ -1,59 +1,5 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Liga de Futbol - AFEC</title>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet">
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Roboto Slab', serif; }
-    body { background-color: #f4f4f4; color: #333; line-height: 1.4; }
-    .container { max-width: 1200px; margin: auto; padding: 20px; }
-    
-    /* Header Liga */
-    .liga-header { display: flex; align-items: center; gap: 20px; margin-bottom: 30px; background: #004aad; color: #fff; padding: 20px; border-radius: 10px; }
-    .liga-header img { width: 100px; height: 100px; object-fit: cover; border-radius: 50%; border: 3px solid gold; }
-    .liga-header h1 { font-size: 2rem; }
-    .liga-header p { font-size: 1rem; margin-top: 5px; }
-
-    /* Info general */
-    .info-general { display: flex; gap: 15px; margin-bottom: 30px; }
-    .info-card { flex: 1; background: #fff; padding: 15px; border-radius: 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    .info-card h2 { font-size: 1.5rem; color: #004aad; }
-    .info-card p { margin-top: 5px; font-size: 0.9rem; }
-
-    /* Equipos */
-    .equipos { margin-bottom: 30px; }
-    .equipos h2 { margin-bottom: 15px; color: #004aad; }
-    .equipos-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(150px,1fr)); gap: 15px; }
-    .equipo-card { background: #fff; border-radius: 10px; padding: 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: transform 0.2s; cursor: pointer; }
-    .equipo-card:hover { transform: scale(1.05); }
-    .equipo-card img { width: 80px; height: 80px; object-fit: cover; margin-bottom: 5px; border-radius: 50%; }
-
-    /* Próximos partidos */
-    .partidos { margin-bottom: 30px; }
-    .partidos h2 { margin-bottom: 15px; color: #004aad; }
-    .partido-card { background: #fff; padding: 15px; margin-bottom: 10px; border-radius: 10px; display: flex; justify-content: space-between; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-
-    /* Top goleadores */
-    .top-goleadores { margin-bottom: 30px; }
-    .top-goleadores h2 { margin-bottom: 15px; color: #004aad; }
-    .goleador-card { background: #fff; padding: 10px; border-radius: 10px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-
-    .goleador-card img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
-
-    /* Mesa directiva */
-    .directiva { margin-bottom: 30px; }
-    .directiva h2 { margin-bottom: 15px; color: #004aad; }
-    .directiva-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(150px,1fr)); gap: 15px; }
-    .directivo-card { background: #fff; padding: 10px; border-radius: 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    .directivo-card img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 5px; }
-    .directivo-card p { font-size: 0.9rem; margin-top: 3px; }
-  </style>
-</head>
-<body>
-
-  <div class="container">
+<div class="liga-page">
+<div class="container">
 
     <!-- Header Liga -->
     <div class="liga-header">
@@ -165,6 +111,4 @@
     </div>
 
   </div>
-
-</body>
-</html>
+</div>
