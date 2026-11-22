@@ -124,4 +124,86 @@ class OrganismosController
             exit;
         }
     }
+
+    public function detalles($id): void
+    {
+        $this->verificarAcceso();
+        $id = (int) $id;
+        $organismo = $this->organismoModel->obtenerPorId($id);
+        if (!$organismo) {
+            http_response_code(404);
+            view('pages.organismos.detalle.php', ['organismo' => null, 'ligas' => []]);
+            return;
+        }
+        view('pages.organismos.detalle.php', [
+            'organismo' => $organismo,
+            'ligas' => $this->organismoModel->obtenerLigas($id),
+            'ligasDisponibles' => $this->organismoModel->listarLigasDisponibles($id)
+        ]);
+    }
+
+    public function editar($id): void
+    {
+        $this->verificarAcceso();
+        $organismo = $this->organismoModel->obtenerPorId((int) $id);
+        if (!$organismo) {
+            http_response_code(404);
+            header('Location: index.php?page=organismos');
+            exit;
+        }
+        $old = $_SESSION['organismo_edit_old'] ?? [];
+        unset($_SESSION['organismo_edit_old']);
+        $error = $_SESSION['organismo_edit_error'] ?? null;
+        unset($_SESSION['organismo_edit_error']);
+        view('pages.organismos.edit.php', compact('organismo', 'old', 'error'));
+    }
+
+    public function actualizar($id): void
+    {
+        $this->verificarAcceso();
+        $id = (int) $id;
+        $organismo = $this->organismoModel->obtenerPorId($id);
+        if (!$organismo) {
+            header('Location: index.php?page=organismos');
+            exit;
+        }
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: index.php?page=organismos&action=editar&id=' . $id);
+            exit;
+        }
+
+        $data = [
+            'nombre' => trim((string) ($_POST['nombre'] ?? '')),
+            'siglas' => trim((string) ($_POST['siglas'] ?? '')),
+            'tipo' => trim((string) ($_POST['tipo'] ?? '')),
+            'alcance_territorial' => trim((string) ($_POST['alcance_territorial'] ?? '')),
+            'estado' => trim((string) ($_POST['estado'] ?? '')),
+            'descripcion' => trim((string) ($_POST['descripcion'] ?? '')),
+            'correo' => trim((string) ($_POST['correo'] ?? '')),
+            'telefono' => trim((string) ($_POST['telefono'] ?? '')),
+            'sitio_web' => trim((string) ($_POST['sitio_web'] ?? '')),
+            'fecha_creacion' => trim((string) ($_POST['fecha_creacion'] ?? ''))
+        ];
+        $_SESSION['organismo_edit_old'] = $data;
+        $tipos = ['asociacion', 'federacion', 'comite', 'otro'];
+        $estados = ['activo', 'inactivo'];
+        if ($data['nombre'] === '' || !in_array($data['tipo'], $tipos, true) || !in_array($data['estado'], $estados, true)) {
+            $_SESSION['organismo_edit_error'] = 'Verifica el nombre, tipo y estado del organismo.';
+            header('Location: index.php?page=organismos&action=editar&id=' . $id);
+            exit;
+        }
+        try {
+            $this->organismoModel->actualizar($id, $data);
+            unset($_SESSION['organismo_edit_old']);
+            $_SESSION['success'] = 'La información del organismo se actualizó correctamente.';
+            header('Location: index.php?page=organismos&action=detalles&id=' . $id);
+            exit;
+        } catch (Throwable $e) {
+            error_log('Error al actualizar organismo: ' . $e->getMessage());
+            $_SESSION['organismo_edit_error'] = 'No fue posible actualizar el organismo.';
+            header('Location: index.php?page=organismos&action=editar&id=' . $id);
+            exit;
+        }
+    }
+
 }
