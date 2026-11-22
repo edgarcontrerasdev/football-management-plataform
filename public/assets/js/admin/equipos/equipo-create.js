@@ -1,10 +1,20 @@
 (function () {
+    'use strict';
+
     const input = document.getElementById('escudo');
+    const picker = document.querySelector('.equipo-crest-picker');
     const preview = document.getElementById('equipoCrestPreview');
 
-    if (!input || !preview) return;
+    if (!input || !picker || !preview) return;
 
     const defaultImage = preview.src;
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const maxSize = 2 * 1024 * 1024;
+
+    picker.addEventListener('click', function (event) {
+        event.preventDefault();
+        input.click();
+    });
 
     input.addEventListener('change', function () {
         const file = input.files && input.files[0];
@@ -14,18 +24,29 @@
             return;
         }
 
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
         if (!allowedTypes.includes(file.type)) {
             input.value = '';
             preview.src = defaultImage;
-            window.alert('Selecciona una imagen JPG, PNG o WEBP.');
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Formato no permitido',
+                    text: 'Selecciona una imagen JPG, PNG o WEBP.'
+                });
+            }
             return;
         }
 
-        if (file.size > 2 * 1024 * 1024) {
+        if (file.size > maxSize) {
             input.value = '';
             preview.src = defaultImage;
-            window.alert('El escudo no debe superar los 2 MB.');
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Imagen demasiado grande',
+                    text: 'El escudo no debe superar los 2 MB.'
+                });
+            }
             return;
         }
 
