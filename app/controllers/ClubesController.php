@@ -100,11 +100,11 @@ class ClubesController
         ]);
     }
 
-    public function detalles(int $id): void
+    public function detalles($id): void
     {
         $this->verificarAcceso();
 
-        $club = $this->clubModel->obtenerPorId($id);
+        $club = $this->clubModel->obtenerPorId((int) $id);
 
         view('pages.clubes.detalle.php', [
             'club' => $club
