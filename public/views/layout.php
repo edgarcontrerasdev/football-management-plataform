@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
     <!-- Fuentes utilizadas por el encabezado público -->
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Orbitron:wght@400;600;700&family=Roboto&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Orbitron:wght@400;600;700&family=Poppins:wght@400;500;600;700&family=Roboto&display=swap" rel="stylesheet">
 
     <!-- Estilos compartidos del sitio público -->
     <link rel="stylesheet" href="/afec/public/assets/css/public.css">
