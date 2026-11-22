@@ -564,3 +564,23 @@
   opacity: 1;
   visibility: visible;
 }
+
+
+/* Controles de búsqueda e inicio de sesión con semántica de botón */
+.public-site .icon-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.public-site .icon-wrapper:focus-visible {
+  outline: 3px solid #00ffd0;
+  outline-offset: 4px;
+  border-radius: 4px;
+}
