@@ -26,16 +26,15 @@
   
   <!-- DERECHA: Buscador + Login -->
   <div class="iconos-derecha">
-    <div class="icon-wrapper" id="btnSearch">
-      <i class="fas fa-search"></i>
-      <span class="tooltip-n1">Buscar</span>
-    </div>
+    <button type="button" class="icon-wrapper" id="btnSearch" aria-label="Abrir buscador">
+      <i class="fas fa-search" aria-hidden="true"></i>
+      <span class="tooltip-n1" aria-hidden="true">Buscar</span>
+    </button>
 
-    <div class="icon-wrapper" id="btnLogin">
-      <a href="index.php?page=login">
-      <i class="fas fa-user-circle"></i>
-      <span class="tooltip-n1">Iniciar sesión</span></a>
-    </div>
+    <button type="button" class="icon-wrapper" id="btnLogin" aria-label="Abrir inicio de sesión">
+      <i class="fas fa-user-circle" aria-hidden="true"></i>
+      <span class="tooltip-n1" aria-hidden="true">Iniciar sesión</span>
+    </button>
   </div>
 </div>
 
