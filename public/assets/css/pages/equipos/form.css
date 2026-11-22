@@ -20,7 +20,8 @@
     border-left: 1px solid #e5e7eb;
 }
 
-.equipo-crest-preview-wrap {
+.equipo-crest-picker {
+    position: relative;
     width: 100%;
     min-height: 210px;
     display: flex;
@@ -30,14 +31,48 @@
     background: #fff;
     border: 1px dashed #cbd5e1;
     border-radius: 12px;
+    cursor: pointer;
+    overflow: hidden;
 }
 
-.equipo-crest-preview-wrap img {
+.equipo-crest-picker img {
     display: block;
     width: 100%;
     max-width: 180px;
     height: 180px;
     object-fit: contain;
+}
+
+.equipo-crest-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    color: #fff;
+    background: rgba(15, 23, 42, .68);
+    opacity: 0;
+    transition: opacity .2s ease;
+}
+
+.equipo-crest-overlay i {
+    font-size: 1.7rem;
+}
+
+.equipo-crest-overlay small {
+    font-weight: 600;
+}
+
+.equipo-crest-picker:hover .equipo-crest-overlay,
+.equipo-crest-picker:focus-visible .equipo-crest-overlay {
+    opacity: 1;
+}
+
+.equipo-crest-picker:focus-visible {
+    outline: 3px solid rgba(30, 64, 175, .25);
+    outline-offset: 3px;
 }
 
 .equipo-crest-note {
