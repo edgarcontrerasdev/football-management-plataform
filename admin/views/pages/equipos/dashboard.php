@@ -46,34 +46,34 @@
 <div class="row g-3 mb-5 ">
 
     <div class="col-md-3">
-        <div class="kpi-card success">
+        <div class="kpi-card kpi-card--dashboard success">
             <span class="kpi-title">Total</span>
-            <h3><?= $metricas['total'] ?? 0 ?></h3>
-            <i class="fas fa-trophy"></i>
+            <h3 class="kpi-value"><?= $metricas['total'] ?? 0 ?></h3>
+            <i class="kpi-icon fas fa-trophy"></i>
         </div>
     </div>
 
     <div class="col-md-3">
-        <div class="kpi-card success">
+        <div class="kpi-card kpi-card--dashboard success">
             <span class="kpi-title">Activos</span>
-            <h3><?= $metricas['activos'] ?? 0 ?></h3>
-            <i class="fas fa-play-circle"></i>
+            <h3 class="kpi-value"><?= $metricas['activos'] ?? 0 ?></h3>
+            <i class="kpi-icon fas fa-play-circle"></i>
         </div>
     </div>
 
     <div class="col-md-3">
-        <div class="kpi-card warning">
+        <div class="kpi-card kpi-card--dashboard warning">
             <span class="kpi-title">Planeados</span>
-            <h3><?= $metricas['planeados'] ?? 0 ?></h3>
-            <i class="fas fa-clock"></i>
+            <h3 class="kpi-value"><?= $metricas['planeados'] ?? 0 ?></h3>
+            <i class="kpi-icon fas fa-clock"></i>
         </div>
     </div>
 
     <div class="col-md-3">
-        <div class="kpi-card danger">
+        <div class="kpi-card kpi-card--dashboard danger">
             <span class="kpi-title">Finalizados</span>
-            <h3><?= $metricas['finalizados'] ?? 0 ?></h3>
-            <i class="fas fa-flag-checkered"></i>
+            <h3 class="kpi-value"><?= $metricas['finalizados'] ?? 0 ?></h3>
+            <i class="kpi-icon fas fa-flag-checkered"></i>
         </div>
     </div>
     
@@ -816,43 +816,5 @@ function estadoBadge($estado)
         to{ opacity:1; transform:none; }
     }
 
-  .kpi-card
-    {
-        position: relative;
-        background: linear-gradient(180deg, var(--surface-dark), var(--surface-dark-2));
-        border-radius: var(--radius-md);
-        padding: 14px 16px;
-        border: 1px solid rgba(255,255,255,.06);
-        box-shadow: var(--shadow-sm);
-        color: #e5e7eb;
-        min-height: 92px;
-    }
-
-    .kpi-title{
-        font-size: 12px;
-        letter-spacing: .5px;
-        text-transform: uppercase;
-        color: #9ca3af;
-    }
-
-    .kpi-card h3{
-        margin: 6px 0 0;
-        font-size: 30px;
-        font-weight: 700;
-        line-height: 1;
-    }
-
-    .kpi-card i{
-        position: absolute;
-        right: 14px;
-        top: 14px;
-        font-size: 26px;
-        opacity: .25;
-    }
-
-    /* Acentos sutiles */
-    .kpi-card.success{ border-left: 3px solid var(--success); }
-    .kpi-card.warning{ border-left: 3px solid var(--warning); }
-    .kpi-card.danger{  border-left: 3px solid var(--danger); }
 
 </style>
