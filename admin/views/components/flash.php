@@ -1,75 +1,25 @@
 <!-- admin/views/components/flash.php -->
 
 <?php if ($success): ?>
-
-<script>
-    document.addEventListener('DOMContentLoaded',function(){
-        Swal.fire({
-            icon:   'success',
-            title:  'Correcto',
-            text:   <?= json_encode($success) ?>
-        });
-    });
-</script>
-
+<div class="js-flash-message" data-icon="success" data-title="Correcto" data-content="<?= htmlspecialchars(json_encode($success), ENT_QUOTES, 'UTF-8') ?>"></div>
 <?php endif; ?>
 
 <?php if ($error): ?>
-
-    <script>
-        document.addEventListener('DOMContentLoaded',function(){
-
-            Swal.fire({
-                icon:   'error',
-                title: 'Error',
-                text:   <?= json_encode($error) ?>
-            });
-        });
-    </script>
-
+<div class="js-flash-message" data-icon="error" data-title="Error" data-content="<?= htmlspecialchars(json_encode($error), ENT_QUOTES, 'UTF-8') ?>"></div>
 <?php endif; ?>
 
 <?php if (!empty($errors)): ?>
-
-<script>
-    document.addEventListener('DOMContentLoaded',function(){
-
-        Swal.fire({
-            icon:   'error',
-            title: 'Se encontraron errores',
-            html:   <?= json_encode('<ul><li>' . implode('</li><li>', $errors) . '</li></ul>') ?>
-        });
-    });
-</script>
-
+<div class="js-flash-message" data-icon="error" data-title="Se encontraron errores" data-html="true" data-content="<?= htmlspecialchars(json_encode('<ul><li>' . implode('</li><li>', $errors) . '</li></ul>'), ENT_QUOTES, 'UTF-8') ?>"></div>
 <?php endif; ?>
 
 <?php if ($warning): ?>
-
-<script>
-    document.addEventListener('DOMContentLoaded',function(){
-
-        Swal.fire({
-            icon:   'warning',
-            title: 'Atención',
-            text:   <?= json_encode($warning) ?>
-        });
-    });
-</script>
-
+<div class="js-flash-message" data-icon="warning" data-title="Atención" data-content="<?= htmlspecialchars(json_encode($warning), ENT_QUOTES, 'UTF-8') ?>"></div>
 <?php endif; ?>
 
 <?php if ($info): ?>
-
-<script>
-    document.addEventListener('DOMContentLoaded',function(){
-
-        Swal.fire({
-            icon:   'info',
-            title:  'Información',
-            text:   <?= json_encode($info) ?>
-        });
-    });
-</script>
-
+<div class="js-flash-message" data-icon="info" data-title="Información" data-content="<?= htmlspecialchars(json_encode($info), ENT_QUOTES, 'UTF-8') ?>"></div>
 <?php endif; ?>
+
+<?php startSection('scripts'); ?>
+<script src="<?= BASE_URL ?>/public/assets/js/admin/components/flash-messages.js"></script>
+<?php endSection('scripts'); ?>
