@@ -1,0 +1,39 @@
+/* Ayudas, indicadores de carga y transiciones */
+.text-helper {
+    color: #657285;
+    font-size: 0.9rem;
+    background-color: #b2c5df;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    animation: girar 1s linear infinite;
+}
+
+.table-fade-enter {
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+.table-fade-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: all .35s ease;
+}
+
+.table-fade-exit {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.table-fade-exit-active {
+    opacity: 0;
+    transform: translateY(-5px);
+    transition: all .2s ease;
+}
