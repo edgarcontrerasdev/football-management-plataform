@@ -1,0 +1,153 @@
+/* Página pública de liga */
+.public-site .liga-page,
+.public-site .liga-page * {
+    box-sizing: border-box;
+    font-family: 'Roboto Slab', serif;
+}
+
+.public-site .liga-page {
+    background-color: #f4f4f4;
+    color: #333;
+    line-height: 1.4;
+}
+
+.public-site .liga-page .container {
+    max-width: 1200px;
+    margin: auto;
+    padding: 20px;
+}
+
+/* Header Liga */
+.public-site .liga-page .liga-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 30px;
+    background: #004aad;
+    color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.public-site .liga-page .liga-header img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid gold;
+}
+
+.public-site .liga-page .liga-header h1 { font-size: 2rem; }
+.public-site .liga-page .liga-header p { font-size: 1rem; margin-top: 5px; }
+
+/* Información general */
+.public-site .liga-page .info-general {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.public-site .liga-page .info-card {
+    flex: 1;
+    background: #fff;
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.public-site .liga-page .info-card h2 { font-size: 1.5rem; color: #004aad; }
+.public-site .liga-page .info-card p { margin-top: 5px; font-size: 0.9rem; }
+
+/* Equipos */
+.public-site .liga-page .equipos { margin-bottom: 30px; }
+.public-site .liga-page .equipos h2 { margin-bottom: 15px; color: #004aad; }
+
+.public-site .liga-page .equipos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill,minmax(150px,1fr));
+    gap: 15px;
+}
+
+.public-site .liga-page .equipo-card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+    cursor: pointer;
+}
+
+.public-site .liga-page .equipo-card:hover { transform: scale(1.05); }
+
+.public-site .liga-page .equipo-card img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    margin-bottom: 5px;
+    border-radius: 50%;
+}
+
+/* Próximos partidos */
+.public-site .liga-page .partidos { margin-bottom: 30px; }
+.public-site .liga-page .partidos h2 { margin-bottom: 15px; color: #004aad; }
+
+.public-site .liga-page .partido-card {
+    background: #fff;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* Top goleadores */
+.public-site .liga-page .top-goleadores { margin-bottom: 30px; }
+.public-site .liga-page .top-goleadores h2 { margin-bottom: 15px; color: #004aad; }
+
+.public-site .liga-page .goleador-card {
+    background: #fff;
+    padding: 10px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.public-site .liga-page .goleador-card img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+/* Mesa directiva */
+.public-site .liga-page .directiva { margin-bottom: 30px; }
+.public-site .liga-page .directiva h2 { margin-bottom: 15px; color: #004aad; }
+
+.public-site .liga-page .directiva-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill,minmax(150px,1fr));
+    gap: 15px;
+}
+
+.public-site .liga-page .directivo-card {
+    background: #fff;
+    padding: 10px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.public-site .liga-page .directivo-card img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 5px;
+}
+
+.public-site .liga-page .directivo-card p { font-size: 0.9rem; margin-top: 3px; }
