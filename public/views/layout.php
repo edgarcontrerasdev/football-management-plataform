@@ -11,6 +11,7 @@
     <!-- Estilos compartidos del sitio público -->
     <link rel="stylesheet" href="/afec/public/assets/css/public.css">
     <link rel="stylesheet" href="/afec/public/assets/css/public-header.css">
+    <link rel="stylesheet" href="/afec/public/assets/css/public-footer.css">
 
     <!-- Estilos específicos de cada página -->
     <?php if ($view === 'pages/home.php'): ?>
