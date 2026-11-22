@@ -39,7 +39,7 @@
 </div>
 
 <!-- MODAL BUSCADOR -->
-<div id="modalSearch" class="modal-cortina">
+<div id="modalSearch" class="modal-cortina" role="dialog" aria-modal="true" aria-label="Buscador" aria-hidden="true" inert>
   <div class="modal-search-content">
     <button type="button" class="close" id="closeSearch" aria-label="Cerrar buscador">&times;</button>
     <input type="text" placeholder="Buscar..." class="search-input" aria-label="Texto de búsqueda">
@@ -48,7 +48,7 @@
 </div>
 
 <!-- MODAL LOGIN -->
-<div id="modalLogin" class="modal-centro">
+<div id="modalLogin" class="modal-centro" aria-hidden="true" inert>
   <div class="modal-login-content" role="dialog" aria-modal="true" aria-labelledby="loginModalTitle">
     <button type="button" class="close" id="closeLogin" aria-label="Cerrar inicio de sesión">&times;</button>
     <h3 id="loginModalTitle">Iniciar sesión</h3>
