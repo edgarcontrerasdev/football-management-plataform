@@ -93,31 +93,31 @@
             <div class="kpi-card success">
                 <span class="kpi-title">TEMPORADA ACTIVA: TEMPORADA 2025-2026</span>
                 <h3></h3>
-                <i class="bi bi-calendar"></i>
+                <i class="kpi-icon bi bi-calendar"></i>
             </div>
         </div>
 
         <div class="col-md-3">
             <div class="kpi-card info">
                 <span class="kpi-title">Cuerpo Tecnico Registrados</span>
-                <h3><?= $kpis['dt'] ?? 0 ?></h3>
-                <i class="bi bi-person-badge"></i>
+                <h3 class="kpi-value"><?= $kpis['dt'] ?? 0 ?></h3>
+                <i class="kpi-icon bi bi-person-badge"></i>
             </div>
         </div>
 
         <div class="col-md-3">
             <div class="kpi-card warning">
                 <span class="kpi-title">CREDENCIAELES PENDIENTES</span>
-                <h3><?= $kpis['pendientes'] ?? 80 ?></h3>
-                <i class="bi bi-clock"></i>
+                <h3 class="kpi-value"><?= $kpis['pendientes'] ?? 80 ?></h3>
+                <i class="kpi-icon bi bi-clock"></i>
             </div>
         </div>
 
         <div class="col-md-3">
             <div class="kpi-card danger">
                 <span class="kpi-title">AFILIACIONES RECHAZADAS</span>
-                <h3><?= $kpis['rechazados'] ?? 25 ?></h3>
-                <i class="bi bi-x-circle"></i>
+                <h3 class="kpi-value"><?= $kpis['rechazados'] ?? 25 ?></h3>
+                <i class="kpi-icon bi bi-x-circle"></i>
             </div>
         </div>
 
