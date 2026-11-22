@@ -68,3 +68,34 @@
 .kpi-card--detail.danger  { border-left: 3px solid var(--danger); }
 .kpi-card--detail.info    { border-left: 3px solid var(--info); }
 .kpi-card--detail.primary { border-left: 3px solid var(--primary); }
+
+/* KPI compacto para resúmenes secundarios */
+.kpi-mini {
+    height: 100%;
+    padding: 12px 10px;
+    background: linear-gradient(180deg, var(--surface-dark), var(--surface-dark-2));
+    border: 1px solid rgba(255,255,255,.06);
+    border-top: 3px solid transparent;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    color: #e5e7eb;
+}
+
+.kpi-mini h5 {
+    margin: 0 0 4px;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.kpi-mini small {
+    color: #9ca3af;
+    font-size: 11px;
+    letter-spacing: .35px;
+    text-transform: uppercase;
+}
+
+.kpi-mini.success { border-top-color: var(--success); }
+.kpi-mini.warning { border-top-color: var(--warning); }
+.kpi-mini.danger  { border-top-color: var(--danger); }
+.kpi-mini.info    { border-top-color: var(--info); }
