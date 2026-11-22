@@ -54,48 +54,12 @@
 }
 
 /* ===== VACÍO ===== */
-.table-empty{
-    text-align:center;
-    padding:30px;
-    color:#9ca3af;
-    font-style:italic;
-}
-
 /* ===== ACCIONES ===== */
 .table-actions{
     display:flex;
     gap:6px;
 }
 
-
-
-/* ===== BADGES ===== */
-.badge{
-    padding:4px 10px;
-    border-radius:999px;
-    font-size:12px;
-    font-weight:600;
-}
-
-.badge-success{
-    background:#dcfce7;
-    color:#166534;
-}
-
-.badge-danger{
-    background:#fee2e2;
-    color:#991b1b;
-}
-
-.badge-warning{
-    background:#fef3c7;
-    color:#92400e;
-}
-
-.badge-info{
-    background:#e0f2fe;
-    color:#075985;
-}
 
 
 /*SPINNER */
@@ -118,6 +82,8 @@
 .table-empty{
     text-align:center;
     padding:40px 20px;
+    color:#9ca3af;
+    font-style:italic;
 }
 
 .empty-state{
