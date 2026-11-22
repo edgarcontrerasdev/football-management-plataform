@@ -102,6 +102,9 @@
             <?php if (in_array(Auth::role(), ['ADMIN', 'SUPERVISOR'], true)): ?>
             <a href="index.php?page=clubes" class="nav-item" data-key="clubes"><i class="bi bi-shield"></i><span class="label">Clubes</span></a>
             <?php endif; ?>
+            <?php if (in_array(Auth::role(), ['ADMIN', 'SUPERVISOR'], true)): ?>
+            <a href="index.php?page=organismos" class="nav-item" data-key="organismos"><i class="bi bi-diagram-3"></i><span class="label">Organismos</span></a>
+            <?php endif; ?>
             <a href="index.php?page=torneos" class="nav-item" data-key="torneos"><i class="bi bi-flag"></i><span class="label">Torneos</span></a>
             <a href="#" class="nav-item" data-key="partidos"><i class="bi bi-calendar-week"></i><span class="label">Partidos</span></a>
             <a href="index.php?page=temporadas" class="nav-item" data-key="temporadas"><i class="fas fa-calendar"></i><span class="label">Temporadas</span></a>
