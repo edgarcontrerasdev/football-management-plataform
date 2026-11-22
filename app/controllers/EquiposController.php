@@ -394,7 +394,8 @@
                 ]);
 
                 unset($_SESSION['equipo_old']);
-                header('Location: index.php?page=equipos&action=create&created=1&id=' . $equipoId);
+                $_SESSION['success'] = 'El equipo se registró correctamente.';
+                header('Location: index.php?page=equipos');
                 exit;
             } catch (Throwable $e) {
                 if ($rutaEscudo && is_file($rutaEscudo)) {
