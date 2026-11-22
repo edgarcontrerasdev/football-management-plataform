@@ -47,36 +47,6 @@
     </div>
 </div>
 
-<style>
-    .context-bar {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: rgba(255,255,255,.06);
-    border: 1px solid rgba(255,255,255,.12);
-    border-left: 4px solid #0d6efd;
-    color: #e5e7eb;
-    padding: 12px 14px;
-    border-radius: 8px;
-    font-size: .86rem;
-    }
-
-    .context-icon {
-        width: 34px;
-        height: 34px;
-        border-radius: 50%;
-        background: rgba(13,110,253,.18);
-        color: #60a5fa;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .context-bar p {
-        color: #cbd5e1;
-        font-size: .82rem;
-    }
-</style>
 
 <script>
 
