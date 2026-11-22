@@ -192,4 +192,37 @@ class Organismo
             ':id' => $id
         ]);
     }
+
+    public function obtenerLigas(int $organismoId): array
+    {
+        $stmt = $this->pdo->prepare("
+            SELECT l.id, l.nombre, l.siglas, l.estado AS estado_liga,
+                   lo.tipo_relacion, lo.es_gestor, lo.fecha_inicio,
+                   lo.fecha_fin, lo.estado AS estado_relacion
+            FROM tb_liga_organismos lo
+            INNER JOIN tb_ligas l ON l.id = lo.liga_id
+            WHERE lo.organismo_id = :organismo_id
+            ORDER BY lo.estado = 'activo' DESC, l.nombre ASC
+        ");
+        $stmt->execute([':organismo_id' => $organismoId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function listarLigasDisponibles(int $organismoId): array
+    {
+        $stmt = $this->pdo->prepare("
+            SELECT l.id, l.nombre, l.siglas
+            FROM tb_ligas l
+            WHERE l.estado = 'activo'
+              AND NOT EXISTS (
+                  SELECT 1 FROM tb_liga_organismos lo
+                  WHERE lo.liga_id = l.id
+                    AND lo.organismo_id = :organismo_id
+                    AND lo.estado = 'activo'
+              )
+            ORDER BY l.nombre ASC
+        ");
+        $stmt->execute([':organismo_id' => $organismoId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
