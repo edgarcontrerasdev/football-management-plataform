@@ -23,7 +23,7 @@
 
 ?>
 
-    <div class="equipos-detalle-page"> data-equipo-id="<?= (int) $equipo['id'] ?>"
+    <div class="equipos-detalle-page" data-equipo-id="<?= (int) $equipo['id'] ?>">
 
 <!-- ===== HEADER DEL EQUIPO ===== -->
     <div class="card header-dark shadow-sm border-0 mb-3 p-3">
