@@ -15,9 +15,14 @@ $claseEstado = $estadoClub === 'activo' ? 'success' : 'secondary';
             <p class="text-muted mb-0">Información general de la entidad club.</p>
         </div>
 
+        <div class="d-flex gap-2 flex-wrap">
+        <?php if (!empty($club)): ?>
+        <a href="index.php?page=clubes&action=editar&id=<?= (int) $club['id'] ?>" class="btn btn-primary"><i class="fa-solid fa-pen me-1"></i>Editar club</a>
+        <?php endif; ?>
         <a href="index.php?page=clubes" class="btn btn-outline-secondary">
             <i class="fa-solid fa-arrow-left me-1"></i> Regresar al listado
         </a>
+        </div>
     </div>
 
     <?php if (empty($club)): ?>
