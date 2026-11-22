@@ -8,8 +8,8 @@ $class = htmlspecialchars($kpi['class'] ?? '', ENT_QUOTES, 'UTF-8');
 <div class="kpi-card <?= $class ?>">
     <div>
         <span class="kpi-title"><?= $title ?></span>
-        <h3><?= $value ?></h3>
+        <h3 class="kpi-value"><?= $value ?></h3>
     </div>
 
-    <i class="<?= $icon ?>"></i>
+    <i class="kpi-icon <?= $icon ?>"></i>
 </div>
