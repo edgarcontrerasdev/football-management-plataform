@@ -147,50 +147,38 @@ class Equipo{
         ]);
     }
 
-    //LISTA DE EQUIPOS CON FILTROS
+    // Listado de entidades equipo. La participación en ligas y temporadas
+    // se consulta desde sus relaciones, no desde tb_equipos.
     public function listar($filtros = [], $limit = 10, $offset = 0)
     {
-        $sql = "SELECT 
-                e.id, e.nombre AS equipo,
-                e.estado, e.fecha_creacion,
-                e.escudo, e.calle,
-                e.colonia,e.codigo_postal, e.ciudad,
-                e.estado_direccion, e.pais,
-                e.contacto_email, e.contacto_telefono,
-                e.observaciones,
-                l.id AS liga_id,
-                l.nombre AS liga
+        $sql = "
+            SELECT
+                e.id,
+                e.nombre AS equipo,
+                e.siglas,
+                e.escudo,
+                e.created_at AS fecha_alta
             FROM tb_equipos e
-            LEFT JOIN tb_ligas l ON e.liga_id = l.id WHERE 1=1";
+            WHERE 1 = 1
+        ";
 
         $params = [];
 
-        if(!empty($filtros['estado'])){
-            $sql .= " AND e.estado = :estado";
-            $params[':estado'] = $filtros['estado'];
-        }
-
-        if(!empty($filtros['liga'])){
-            $sql .= " AND e.liga_id = :liga";
-            $params[':liga'] = $filtros['liga'];
-        }
-
-        if(!empty($filtros['buscar'])){
-            $sql .= " AND e.nombre LIKE :buscar";
-            $params[':buscar'] = "%".$filtros['buscar']."%";
+        if (!empty($filtros['buscar'])) {
+            $sql .= " AND (e.nombre LIKE :buscar OR e.siglas LIKE :buscar)";
+            $params[':buscar'] = '%' . trim($filtros['buscar']) . '%';
         }
 
         $sql .= " ORDER BY e.nombre ASC LIMIT :limit OFFSET :offset";
 
         $stmt = $this->pdo->prepare($sql);
 
-        foreach($params as $k=>$v){
-            $stmt->bindValue($k,$v);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
         }
 
-        $stmt->bindValue(':limit',(int)$limit,PDO::PARAM_INT);
-        $stmt->bindValue(':offset',(int)$offset,PDO::PARAM_INT);
-
+        $stmt->bindValue(':limit', (int) $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', (int) $offset, PDO::PARAM_INT);
         $stmt->execute();
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -198,26 +186,18 @@ class Equipo{
 
     public function contar($filtros = [])
     {
-        $sql = "SELECT COUNT(*) total 
-                FROM tb_equipos e 
-                WHERE 1=1";
-
+        $sql = "SELECT COUNT(*) FROM tb_equipos e WHERE 1 = 1";
         $params = [];
 
-        if(!empty($filtros['estado'])){
-            $sql .= " AND e.estado = :estado";
-            $params[':estado'] = $filtros['estado'];
-        }
-
-        if(!empty($filtros['liga'])){
-            $sql .= " AND e.liga_id = :liga";
-            $params[':liga'] = $filtros['liga'];
+        if (!empty($filtros['buscar'])) {
+            $sql .= " AND (e.nombre LIKE :buscar OR e.siglas LIKE :buscar)";
+            $params[':buscar'] = '%' . trim($filtros['buscar']) . '%';
         }
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($params);
 
-        return $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+        return (int) $stmt->fetchColumn();
     }
   
     // Crear nueva liga
