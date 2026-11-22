@@ -1,0 +1,10 @@
+/* Elementos de los modales */
+.modal label {
+    color: #031125;
+    font-weight: 500;
+}
+
+.modal-title {
+    color: var(--royal);
+    font-weight: 500;
+}
