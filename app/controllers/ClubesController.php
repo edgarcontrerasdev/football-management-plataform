@@ -108,11 +108,62 @@ class ClubesController
         $equipos = $club
             ? $this->clubModel->obtenerEquipos((int) $id)
             : [];
+        $equiposDisponibles = $club && strtolower((string) $club['estado']) === 'activo'
+            ? $this->clubModel->listarEquiposDisponibles()
+            : [];
+
+        $errorAsignacion = $_SESSION['club_asignar_error'] ?? null;
+        unset($_SESSION['club_asignar_error']);
 
         view('pages.clubes.detalle.php', [
             'club' => $club,
-            'equipos' => $equipos
+            'equipos' => $equipos,
+            'equiposDisponibles' => $equiposDisponibles,
+            'errorAsignacion' => $errorAsignacion
         ]);
+    }
+
+    public function asignarEquipo($id): void
+    {
+        $this->verificarAcceso();
+
+        $clubId = (int) $id;
+        $urlDetalle = 'index.php?page=clubes&action=detalles&id=' . $clubId;
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . $urlDetalle);
+            exit;
+        }
+
+        $equipoId = (int) ($_POST['equipo_id'] ?? 0);
+        $fechaInicio = trim((string) ($_POST['fecha_inicio'] ?? ''));
+        $observaciones = trim((string) ($_POST['observaciones'] ?? ''));
+
+        if ($clubId <= 0 || $equipoId <= 0 || $fechaInicio === '') {
+            $_SESSION['club_asignar_error'] = 'Selecciona un equipo y una fecha de inicio válida.';
+            header('Location: ' . $urlDetalle);
+            exit;
+        }
+
+        try {
+            $this->clubModel->asignarEquipo(
+                $clubId,
+                $equipoId,
+                $fechaInicio,
+                $observaciones
+            );
+
+            $_SESSION['success'] = 'El equipo se vinculó correctamente al club.';
+        } catch (Throwable $e) {
+            error_log('Error al asignar equipo a club: ' . $e->getMessage());
+            $_SESSION['club_asignar_error'] = $e instanceof RuntimeException
+                || $e instanceof InvalidArgumentException
+                ? $e->getMessage()
+                : 'No fue posible asignar el equipo. Intenta nuevamente.';
+        }
+
+        header('Location: ' . $urlDetalle);
+        exit;
     }
 
     private function verificarAcceso(): void
