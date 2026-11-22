@@ -194,11 +194,6 @@
         align-items: center;
     }
 
-
-    .users-title{
-        color: var(--warning);
-        margin-bottom: 10px;
-    }
         
 
     .user-cell {
