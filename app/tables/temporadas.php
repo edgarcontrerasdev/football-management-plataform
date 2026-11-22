@@ -32,7 +32,7 @@ return [
         'actions' => [
             [
                 'icon'  => 'eye',
-                'url'   => 'index.php?page=temporadas&action=detalles&id={id}',
+                'url'   => 'index.php?page=temporadas&action=show&id={id}',
                 'title' => 'Ver',
                 'class' => ''
             ],
