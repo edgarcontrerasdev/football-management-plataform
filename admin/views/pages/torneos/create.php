@@ -1,3 +1,4 @@
+<div class="torneo-create-page">
 <div class="card shadow">
 
     <div class="card-header bg-dark  text-white d-flex justify-content-between align-items-center">
@@ -25,7 +26,7 @@
                 <div class="col-md-5">
                     <div class="text-center mb-4">
                         <img src="/../../afec/public/assets/img/torneos/torneos_welcome.png"
-                        alt="Bienvenida Torneos" class="img-fluid rounded shadow" style="max-height:280px;">
+                        alt="Bienvenida Torneos" class="img-fluid rounded shadow" class="torneo-welcome-image">
                     </div>
                 </div>
 
@@ -312,37 +313,7 @@
     </div>
 </div>
 
-<style>
-    /* Animación base */
-    @keyframes fadeUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
 
-    /* Paso animado */
-    .wizard-animado {
-        animation: fadeUp 1.2s ease-out;
-    }
-    
-    .glass {
-        background: rgba(255, 255, 255, 0.08);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        border-radius: 14px;
-
-        box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-    }
-
-    
-</style>
 
 <script>
     
@@ -597,3 +568,4 @@
     mostrarPaso();
     
 </script>
+</div>
