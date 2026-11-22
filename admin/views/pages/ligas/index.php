@@ -177,32 +177,7 @@
         box-shadow: 0 0 0 1px rgba(231,76,60,.5);
     }
 
-    .btn-icon{
-        width: 34px;
-        height: 34px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 8px;
-        border: 1px solid transparent;
-        transition: all .2s ease;
-    }
-
-    .btn-icon svg{
-        width: 16px;
-        height: 16px;
-    }
-
-    /* Edit */
-    .btn-icon.edit{
-        background: #f1f3f5;
-        color: #2c3e50;
-    }
-
-    .btn-icon.edit:hover{
-        background: var(--primary-dark);
-        color: #fff;
-    }
+    
 
 
     .btn-create{
