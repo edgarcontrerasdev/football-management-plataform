@@ -48,28 +48,4 @@
 </div>
 
 
-<script>
-
-    document.addEventListener('click',function(e){
-        const btn = e.target.closest('.btn-send');
-         if(!btn) return;
-
-         e.preventDefault();
-
-         const url = btn.getAttribute('href');
-
-         Swal.fire({
-            icon:'info',
-            title: '¿Guardar temporada?',
-            html: 'Los datos seran guardados..',
-            showCancelButton: true,
-            confirmButtonText: 'Sí, guardar',
-            cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#0033ff'
-         }).then((result) =>{
-            if(result.isConfirmed){
-                window.location.href = url;
-            }
-         });
-    });
-</script>
+<script src="<?= ASSETS ?>/js/admin/temporadas/temporada-create.js"></script>
