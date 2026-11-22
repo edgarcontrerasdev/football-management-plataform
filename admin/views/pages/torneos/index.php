@@ -1,3 +1,4 @@
+<div class="torneos-page">
 <h3 class="users-title"><i class="fas fa-trophy"></i> PANEL DE TORNEOS </h3>
 
 <span class="badge-season">  <?=  $temporadaActiva['temporada'];?> </span>
@@ -15,8 +16,4 @@
 <?php include ROOT_PATH.'/admin/views/components/table-toolbox.php'; ?>
 
 <?php include ROOT_PATH. '/admin/views/components/table-content.php'; ?>
-
-
-
-
-
+</div>
