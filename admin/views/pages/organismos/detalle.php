@@ -2,7 +2,7 @@
 $e = static fn($v) => htmlspecialchars((string) ($v ?? ''), ENT_QUOTES, 'UTF-8');
 ?>
 <div class="organismo-detalle-page">
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div class="entity-detail-heading d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div><h3 class="page-title mb-1">Detalle del organismo</h3><p class="page-details mb-0">Información y ligas relacionadas.</p></div>
         <div class="d-flex gap-2">
             <?php if (!empty($organismo)): ?><a href="index.php?page=organismos&action=editar&id=<?= (int) $organismo['id'] ?>" class="btn btn-primary"><i class="fa-solid fa-pen me-1"></i>Editar</a><?php endif; ?>
