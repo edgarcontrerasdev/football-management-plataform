@@ -38,8 +38,11 @@ $telefono = htmlspecialchars((string) ($liga['telefono'] ?? ''), ENT_QUOTES, 'UT
             </div>
         </div>
 
-        <div class="col-12 col-md-4 d-flex justify-content-md-end align-items-center">
-            <a href="index.php?page=ligas&action=index" class="btn btn-light btn-sm">
+        <div class="col-12 col-md-4 d-flex flex-wrap justify-content-md-end align-items-center gap-2">
+            <a href="index.php?page=ligas&action=editar&id=<?= (int) ($liga['id'] ?? 0) ?>" class="btn btn-primary btn-sm">
+                <i class="bi bi-pencil-square"></i> Editar liga
+            </a>
+            <a href="index.php?page=ligas" class="btn btn-outline-secondary btn-sm">
                 <i class="bi bi-arrow-left"></i> Regresar
             </a>
         </div>
