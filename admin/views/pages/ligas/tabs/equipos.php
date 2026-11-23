@@ -113,7 +113,7 @@ $estadosDocumentacion = [
                         <td><span class="badge bg-<?= $participacionClase ?>"><?= htmlspecialchars($participacionTexto, ENT_QUOTES, 'UTF-8') ?></span></td>
                         <td><span class="badge bg-<?= $documentacionClase ?>"><?= htmlspecialchars($documentacionTexto, ENT_QUOTES, 'UTF-8') ?></span></td>
                         <td>
-                            <?php if ($estadoParticipacion === 'pendiente'): ?>
+                            <?php if ($estadoParticipacion === 'pendiente' && ($ligaTemporada['estado'] ?? '') === 'activo'): ?>
                                 <div class="d-flex flex-wrap gap-1">
                                     <form method="POST" action="index.php?page=ligas&action=resolverInscripcionEquipo">
                                         <input type="hidden" name="liga_id" value="<?= (int) $liga['id'] ?>">
@@ -128,6 +128,8 @@ $estadosDocumentacion = [
                                         <button type="submit" class="btn btn-sm btn-outline-danger">Rechazar</button>
                                     </form>
                                 </div>
+                            <?php elseif ($estadoParticipacion === 'pendiente'): ?>
+                                <span class="text-muted small">Pendiente de autorización de temporada</span>
                             <?php else: ?>
                                 <span class="text-muted small">Sin acciones</span>
                             <?php endif; ?>
