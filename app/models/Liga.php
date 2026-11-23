@@ -434,7 +434,11 @@ class Liga
             )
             ORDER BY nombre_temporada ASC
         ");
-        $stmt->execute([':liga_id' => $ligaId, ':temporada_id' => $temporadaId]);
+        $stmt->execute([
+            ':temporada_join' => $temporadaId,
+            ':liga_id' => $ligaId,
+            ':temporada_filter' => $temporadaId
+        ]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
