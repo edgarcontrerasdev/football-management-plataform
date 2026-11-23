@@ -204,6 +204,10 @@ class LigasController
             ? $this->temporadaModel->getActiva('organismo', (int) $organismoGestor['id'])
             : $this->temporadaModel->getActiva('liga', $id);
 
+        $puedeResolverTemporadas = $organismoGestor
+            ? $this->authorization->hasScope('organismo', (int) $organismoGestor['id'])
+            : $this->authorization->hasScope('liga', $id);
+
         $temporadasVinculadas = $this->ligaModel->listarTemporadasVinculadas($id);
         $temporadasDisponibles = $this->temporadaModel->listarDisponiblesParaLiga(
             $id,
@@ -274,6 +278,7 @@ class LigasController
                 'temporadaActual' => $temporadaActual,
                 'temporadasDisponibles' => $temporadasDisponibles,
                 'temporadasVinculadas' => $temporadasVinculadas,
+                'puedeResolverTemporadas' => $puedeResolverTemporadas,
                 'equiposLiga' => $equiposLiga,
                 'ligaTemporada' => $ligaTemporada,
                 'equiposDisponibles' => $equiposDisponibles
@@ -328,6 +333,66 @@ class LigasController
         header('Location: index.php?page=ligas&action=detalle&id=' . $ligaId . '#temporada');
         exit;
     }
+
+    /**
+     * Resuelve una solicitud de vinculación de temporada.
+     * El organismo gestor autoriza las ligas gestionadas; las ligas independientes se autorizan a sí mismas.
+     */
+    public function resolverVinculacionTemporada(): void
+    {
+        $ligaId = (int) ($_POST['liga_id'] ?? 0);
+        $ligaTemporadaId = (int) ($_POST['liga_temporada_id'] ?? 0);
+        $decision = trim((string) ($_POST['decision'] ?? ''));
+
+        $liga = $this->ligaModel->getById($ligaId);
+        if (!$liga || $ligaTemporadaId <= 0 || !in_array($decision, ['aprobar', 'rechazar'], true)) {
+            http_response_code(403);
+            view('403.php');
+            return;
+        }
+
+        $organismoGestor = null;
+        foreach (($liga['organismos'] ?? []) as $organismo) {
+            if ((int) ($organismo['es_gestor'] ?? 0) === 1) {
+                $organismoGestor = $organismo;
+                break;
+            }
+        }
+
+        $autorizado = $organismoGestor
+            ? $this->authorization->hasScope('organismo', (int) $organismoGestor['id'])
+            : $this->authorization->hasScope('liga', $ligaId);
+
+        if (!$autorizado) {
+            http_response_code(403);
+            view('403.php');
+            return;
+        }
+
+        try {
+            $estado = $decision === 'aprobar' ? 'activo' : 'rechazado';
+            $resuelto = $this->ligaModel->resolverVinculacionTemporada(
+                $ligaId,
+                $ligaTemporadaId,
+                $estado
+            );
+
+            if ($resuelto) {
+                flashSuccess($decision === 'aprobar'
+                    ? 'La vinculación de la temporada fue aprobada.'
+                    : 'La solicitud de vinculación fue rechazada.');
+            } else {
+                flashError('La solicitud ya fue resuelta o no pertenece a esta liga.');
+            }
+        } catch (Throwable $e) {
+            error_log('Error al resolver vinculación de temporada: ' . $e->getMessage());
+            flashError('No fue posible resolver la solicitud de vinculación.');
+        }
+
+        header('Location: index.php?page=ligas&action=detalle&id=' . $ligaId . '#temporada');
+        exit;
+    }
+
 
     /**
      * Registra una solicitud de inscripción de equipo en la temporada actual de la liga.
