@@ -251,6 +251,11 @@ class TemporadasController{
 
         $temporadaActual = $this->temporadaModel->getById($id);
 
+        if (!$temporadaActual) {
+            flashError('No existe la temporada solicitada.');
+            redirectRoute('temporadas');
+        }
+
         if (in_array($temporadaActual['estado'], ['finalizada', 'cerrada'])) {
             flashError('No se puede actualizar una temporada finalizada o cerrada.');
             redirectRoute('temporadas');
@@ -309,7 +314,6 @@ class TemporadasController{
 
         flashSuccess('La temporada fue actualizada con exito.');
         redirectRoute('temporadas');
-        header('Location: index.php?page=temporadas');
     }
 
     public function activar($id){
@@ -479,7 +483,7 @@ class TemporadasController{
 
         if(!$result){
             flashError('Ocurrio un error al finalizar la temporada');
-            redirect('temporadas');
+            redirectRoute('temporadas');
         }
 
         flashSuccess('Exito. La temporada paso a estado finalizado.');
