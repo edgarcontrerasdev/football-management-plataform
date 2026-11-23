@@ -24,3 +24,92 @@
 .btn-icon.edit:hover { color: #fff; background: var(--primary-dark); border-color: var(--primary-dark); }
 .btn-delete:hover { color: #fff; background: var(--danger); border-color: var(--danger); }
 .btn-edit:hover { color: #fff; background: var(--primary-light); border-color: var(--primary-light); }
+
+/* Controles de formulario compartidos */
+.form-label {
+    margin-bottom: .45rem;
+    color: #344b66;
+    font-size: .88rem;
+    font-weight: 650;
+}
+
+.form-control,
+.form-select {
+    min-height: 40px;
+    color: #263b53;
+    background-color: #fff;
+    border: 1px solid #d5e1ee;
+    border-radius: 8px;
+    box-shadow: none;
+    transition: border-color .18s ease, box-shadow .18s ease;
+}
+
+textarea.form-control { min-height: 96px; }
+
+.form-control::placeholder { color: #9aa9ba; opacity: 1; }
+
+.form-control:focus,
+.form-select:focus {
+    color: #203a58;
+    background-color: #fff;
+    border-color: #78a9df;
+    outline: 0;
+    box-shadow: 0 0 0 3px rgba(36,89,166,.12);
+}
+
+.form-text {
+    color: #71839a;
+    font-size: .8rem;
+}
+
+.form-check-input {
+    border-color: #bdcbdc;
+}
+.form-check-input:checked {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+.form-check-input:focus {
+    border-color: #78a9df;
+    box-shadow: 0 0 0 3px rgba(36,89,166,.12);
+}
+
+/* Tarjetas de captura */
+.card {
+    color: var(--text);
+    background-color: #fff;
+    border-color: #e1eaf4;
+    border-radius: var(--radius-md);
+}
+.card.shadow,
+.card.shadow-sm {
+    box-shadow: var(--shadow-sm) !important;
+}
+.card-header:not(.bg-dark) {
+    color: #284968;
+    background: #f3f7fc;
+    border-bottom-color: #e3ebf4;
+}
+.card-footer {
+    background: #f8fafd;
+    border-top-color: #e5edf5;
+}
+
+/* Botones Bootstrap: mismo radio y transición */
+.btn {
+    border-radius: 8px;
+    font-weight: 600;
+    transition: background-color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+.btn-primary {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+    border-color: var(--primary-dark);
+}
+.btn:focus-visible {
+    outline: 0;
+    box-shadow: 0 0 0 3px rgba(36,89,166,.18);
+}
