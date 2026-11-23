@@ -25,10 +25,10 @@
 @import url('pages/torneos.css');
 @import url('pages/errors.css');
 
-/* Componentes compartidos: se cargan después de los módulos
-   para mantener una apariencia consistente en todo el panel. */
+/* Componentes compartidos */
 @import url('components/kpis.css');
 @import url('components/page-title.css');
+@import url('components/list-page.css');
 @import url('components/buttons.css');
 @import url('components/toolbox.css');
 @import url('components/pagination.css');
