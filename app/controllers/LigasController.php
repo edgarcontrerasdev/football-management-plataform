@@ -212,6 +212,9 @@ class LigasController
         if ($data['correo'] !== '' && !filter_var($data['correo'], FILTER_VALIDATE_EMAIL)) {
             $errors[] = 'El correo de contacto no tiene un formato válido.';
         }
+        if (mb_strlen($data['correo']) > 150) {
+            $errors[] = 'El correo no puede superar los 150 caracteres.';
+        }
 
         if (mb_strlen($data['telefono']) > 30) {
             $errors[] = 'El teléfono no puede superar los 30 caracteres.';
@@ -363,8 +366,16 @@ class LigasController
         if ($data['correo'] !== '' && !filter_var($data['correo'], FILTER_VALIDATE_EMAIL)) {
             $errors[] = 'El correo no tiene un formato válido.';
         }
+        if (mb_strlen($data['correo']) > 150) {
+            $errors[] = 'El correo no puede superar los 150 caracteres.';
+        }
         if (mb_strlen($data['telefono']) > 30) {
             $errors[] = 'El teléfono no puede superar los 30 caracteres.';
+        }
+        if (mb_strlen($data['direccion']) > 255 || mb_strlen($data['colonia']) > 100 ||
+            mb_strlen($data['municipio']) > 100 || mb_strlen($data['estado_republica']) > 100 ||
+            mb_strlen($data['codigo_postal']) > 10) {
+            $errors[] = 'Revisa la longitud de los campos de ubicación.';
         }
         if ($this->ligaModel->existeOtroNombre($data['nombre'], $id)) {
             $errors[] = 'Ya existe otra liga registrada con ese nombre.';
