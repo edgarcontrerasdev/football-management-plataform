@@ -262,3 +262,67 @@
         min-height: 112px;
     }
 }
+
+
+/* Formularios de edición y vistas secundarias */
+.organismo-detalle-page .card,
+.club-create-card,
+.user-form-card,
+.temporada-show-page .card,
+.liga-edit-page .card {
+    border: 1px solid #e1eaf5 !important;
+    border-radius: 14px;
+    box-shadow: 0 4px 16px rgba(15, 45, 90, .065) !important;
+}
+
+.club-create-card .club-create-aside {
+    background: #f5f9ff;
+    border-left: 1px solid #e6edf6;
+}
+
+.club-create-card .club-form-section h6,
+.user-form-card .form-title,
+.liga-edit-page h3,
+.temporada-show-page h3 {
+    color: #173f83;
+    font-weight: 750;
+}
+
+.user-form-card .form-title {
+    font-size: 1.45rem;
+    letter-spacing: -.02em;
+}
+
+.temporada-show-page .table {
+    --bs-table-bg: transparent;
+    vertical-align: middle;
+}
+
+.temporada-show-page .table th {
+    width: 28%;
+    color: #234b82;
+    background: #f2f7fd;
+    font-weight: 650;
+}
+
+.temporada-show-page .table td,
+.temporada-show-page .table th {
+    padding: .85rem 1rem;
+    border-color: #e6edf6;
+}
+
+.liga-edit-page .form-actions,
+.club-form-actions {
+    background: #f7faff;
+    border-top: 1px solid #e6edf6;
+}
+
+@media (max-width: 767.98px) {
+    .club-create-card .club-create-aside {
+        border-left: 0;
+        border-top: 1px solid #e6edf6;
+    }
+    .temporada-show-page .table th {
+        width: 38%;
+    }
+}
