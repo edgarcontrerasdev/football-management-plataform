@@ -9,7 +9,7 @@ USE afec_v2;
 
 DROP PROCEDURE IF EXISTS migrar_temporadas_por_ambito;
 
-DELIMITER $
+DELIMITER $$
 
 CREATE PROCEDURE migrar_temporadas_por_ambito()
 BEGIN
