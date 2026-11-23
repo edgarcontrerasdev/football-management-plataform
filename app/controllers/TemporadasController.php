@@ -323,8 +323,8 @@ class TemporadasController{
             redirectRoute('temporadas');
         }
 
-        if($temporada['estado'] !== 'borrador'){
-            flashError('Solo se permite activar temporadas en estado PLANEADO');
+        if (!in_array($temporada['estado'], ['borrador', 'planeada'], true)) {
+            flashError('Solo se pueden activar temporadas en estado planeada o borrador.');
             redirectRoute('temporadas');
         }
 
