@@ -9,7 +9,7 @@ $claseEstado = $estadoClub === 'activo' ? 'success' : 'secondary';
 ?>
 
 <div class="clubes-detalle-page">
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div class="entity-detail-heading d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div>
             <h3 class="page-title mb-1">Detalle del club</h3>
             <p class="text-muted mb-0">Información general de la entidad club.</p>
