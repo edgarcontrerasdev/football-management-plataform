@@ -421,7 +421,7 @@ class LigasController
                     ? 'La inscripción del equipo fue aprobada.'
                     : 'La solicitud de inscripción fue rechazada.');
             } else {
-                flashError('La solicitud ya fue resuelta o no pertenece a esta liga.');
+                flashError('La solicitud no está pendiente, no pertenece a esta liga o la temporada aún no ha sido autorizada.');
             }
         } catch (Throwable $e) {
             error_log('Error al resolver inscripción de equipo: ' . $e->getMessage());
