@@ -25,7 +25,7 @@ $value = static fn(string $key, string $default = ''): string =>
 
     <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
-            <form action="index.php?page=ligas&action=store" method="POST">
+            <form action="index.php?page=ligas&action=store" method="POST" enctype="multipart/form-data">
                 <section class="mb-4">
                     <h5 class="form-section-title mb-3"><i class="bi bi-flag me-2"></i>Identidad de la liga</h5>
                     <div class="row g-3">
@@ -44,6 +44,23 @@ $value = static fn(string $key, string $default = ''): string =>
                                 <option value="inactivo" <?= $value('estado') === 'inactivo' ? 'selected' : '' ?>>Inactiva</option>
                                 <option value="suspendido" <?= $value('estado') === 'suspendido' ? 'selected' : '' ?>>Suspendida</option>
                             </select>
+                        </div>
+                    </div>
+                </section>
+
+                <hr class="my-4">
+                <section class="mb-4">
+                    <h5 class="form-section-title mb-3"><i class="bi bi-image me-2"></i>Logotipo</h5>
+                    <div class="row align-items-center g-3">
+                        <div class="col-auto">
+                            <div class="liga-logo-preview">
+                                <img id="ligaLogoPreview" src="<?= ASSETS ?>/img/ligas/default.png" alt="Vista previa del logotipo">
+                            </div>
+                        </div>
+                        <div class="col">
+                            <label class="form-label" for="logo">Seleccionar logotipo</label>
+                            <input class="form-control" type="file" id="logo" name="logo" accept="image/png,image/jpeg,image/webp">
+                            <small class="text-muted">Opcional. Formatos JPG, PNG o WEBP. Máximo 2 MB.</small>
                         </div>
                     </div>
                 </section>
@@ -109,3 +126,10 @@ $value = static fn(string $key, string $default = ''): string =>
         </div>
     </div>
 </div>
+
+<script>
+document.getElementById('logo')?.addEventListener('change', function () {
+    const file = this.files && this.files[0];
+    if (file) document.getElementById('ligaLogoPreview').src = URL.createObjectURL(file);
+});
+</script>
