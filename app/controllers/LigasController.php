@@ -204,6 +204,19 @@ class LigasController
             ? $this->temporadaModel->getActiva('organismo', (int) $organismoGestor['id'])
             : $this->temporadaModel->getActiva('liga', $id);
 
+        $tipoPropietario = $organismoGestor ? 'organismo' : 'liga';
+        $propietarioId = $organismoGestor ? (int) $organismoGestor['id'] : $id;
+        $temporadasDisponibles = $this->temporadaModel->listarPorAmbito($tipoPropietario, $propietarioId);
+        $temporadasVinculadas = $this->ligaModel->listarTemporadasVinculadas($id);
+        $temporadasVinculadasIds = array_map(
+            static fn(array $item): int => (int) $item['temporada_id'],
+            $temporadasVinculadas
+        );
+        $temporadasDisponibles = array_values(array_filter(
+            $temporadasDisponibles,
+            static fn(array $item): bool => !in_array((int) $item['id'], $temporadasVinculadasIds, true)
+        ));
+
         $totalEquipos = 0;
         $equiposLiga = [];
 
@@ -252,9 +265,59 @@ class LigasController
                 'liga' => $liga,
                 'kpis' => $kpis,
                 'temporadaActual' => $temporadaActual,
+                'temporadasDisponibles' => $temporadasDisponibles,
+                'temporadasVinculadas' => $temporadasVinculadas,
                 'equiposLiga' => $equiposLiga
             ]
         );
+    }
+
+    /**
+     * Solicita la vinculación de una temporada perteneciente al ámbito de la liga.
+     */
+    public function vincularTemporada(): void
+    {
+        $ligaId = (int) ($_POST['liga_id'] ?? 0);
+        $temporadaId = (int) ($_POST['temporada_id'] ?? 0);
+        $scopeIds = $this->authorization->getScopedEntityIds('liga');
+        $liga = $this->ligaModel->getById($ligaId, $scopeIds);
+
+        if (!$liga || $temporadaId <= 0) {
+            http_response_code(403);
+            view('403.php');
+            return;
+        }
+
+        $organismoGestor = null;
+        foreach (($liga['organismos'] ?? []) as $organismo) {
+            if ((int) ($organismo['es_gestor'] ?? 0) === 1) {
+                $organismoGestor = $organismo;
+                break;
+            }
+        }
+
+        $tipoEsperado = $organismoGestor ? 'organismo' : 'liga';
+        $propietarioEsperado = $organismoGestor ? (int) $organismoGestor['id'] : $ligaId;
+        $temporada = $this->temporadaModel->getById($temporadaId);
+        $propietarioReal = $temporada
+            ? (int) ($temporada['organismo_id'] ?: $temporada['liga_propietaria_id'])
+            : 0;
+
+        if (!$temporada || $temporada['ambito_tipo'] !== $tipoEsperado || $propietarioReal !== $propietarioEsperado) {
+            flashError('La temporada seleccionada no pertenece al ámbito de esta liga.');
+            header('Location: index.php?page=ligas&action=detalle&id=' . $ligaId . '#temporada');
+            exit;
+        }
+
+        try {
+            $this->ligaModel->vincularTemporada($ligaId, $temporadaId);
+            flashSuccess('La temporada quedó vinculada como solicitud pendiente.');
+        } catch (PDOException $e) {
+            flashError('La temporada ya está vinculada o no fue posible registrar la solicitud.');
+        }
+
+        header('Location: index.php?page=ligas&action=detalle&id=' . $ligaId . '#temporada');
+        exit;
     }
 
 }
