@@ -236,6 +236,103 @@ class LigasController
         }
     }
 
+    /**
+     * Muestra el formulario de edición de una liga dentro del alcance autorizado.
+     */
+    public function editar(int $id): void
+    {
+        $scopeIds = $this->authorization->getScopedEntityIds('liga');
+        $liga = $this->ligaModel->getById($id, $scopeIds);
+
+        if (!$liga) {
+            http_response_code(403);
+            view('403.php');
+            exit;
+        }
+
+        $old = $_SESSION['old'] ?? [];
+        $errors = $_SESSION['errors'] ?? [];
+        unset($_SESSION['old'], $_SESSION['errors']);
+
+        view('pages.ligas.edit.php', [
+            'liga' => $liga,
+            'old' => $old,
+            'errors' => $errors
+        ]);
+    }
+
+    /**
+     * Valida y guarda los datos generales de una liga.
+     */
+    public function actualizar(int $id): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: index.php?page=ligas');
+            exit;
+        }
+
+        $scopeIds = $this->authorization->getScopedEntityIds('liga');
+        $liga = $this->ligaModel->getById($id, $scopeIds);
+
+        if (!$liga) {
+            http_response_code(403);
+            view('403.php');
+            exit;
+        }
+
+        $data = [];
+        foreach ([
+            'nombre', 'siglas', 'estado', 'correo', 'telefono', 'direccion',
+            'colonia', 'municipio', 'estado_republica', 'codigo_postal',
+            'redes_sociales', 'notas'
+        ] as $campo) {
+            $data[$campo] = trim((string) ($_POST[$campo] ?? ''));
+        }
+
+        $errors = [];
+        if ($data['nombre'] === '') {
+            $errors[] = 'El nombre de la liga es obligatorio.';
+        } elseif (mb_strlen($data['nombre']) > 150) {
+            $errors[] = 'El nombre no puede superar los 150 caracteres.';
+        }
+
+        if ($data['siglas'] !== '' && mb_strlen($data['siglas']) > 30) {
+            $errors[] = 'Las siglas no pueden superar los 30 caracteres.';
+        }
+        if (!in_array($data['estado'], ['activo', 'inactivo', 'suspendido'], true)) {
+            $errors[] = 'El estado seleccionado no es válido.';
+        }
+        if ($data['correo'] !== '' && !filter_var($data['correo'], FILTER_VALIDATE_EMAIL)) {
+            $errors[] = 'El correo no tiene un formato válido.';
+        }
+        if (mb_strlen($data['telefono']) > 30) {
+            $errors[] = 'El teléfono no puede superar los 30 caracteres.';
+        }
+        if ($this->ligaModel->existeOtroNombre($data['nombre'], $id)) {
+            $errors[] = 'Ya existe otra liga registrada con ese nombre.';
+        }
+
+        if ($errors) {
+            $_SESSION['errors'] = $errors;
+            $_SESSION['old'] = $data;
+            header('Location: index.php?page=ligas&action=editar&id=' . $id);
+            exit;
+        }
+
+        try {
+            $this->ligaModel->actualizar($id, $data);
+            flashSuccess('La información de la liga se actualizó correctamente.');
+            header('Location: index.php?page=ligas&action=detalle&id=' . $id);
+            exit;
+        } catch (Throwable $e) {
+            error_log('Error al actualizar liga ' . $id . ': ' . $e->getMessage());
+            $_SESSION['errors'] = ['No fue posible actualizar la liga. Verifica los datos e inténtalo nuevamente.'];
+            $_SESSION['old'] = $data;
+            header('Location: index.php?page=ligas&action=editar&id=' . $id);
+            exit;
+        }
+    }
+
     public function miLiga(): void
     {
         $scopeIds = $this->authorization->getScopedEntityIds('liga');
