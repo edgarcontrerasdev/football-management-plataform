@@ -1,0 +1,54 @@
+/* Encabezado común para los listados del panel AFEC-LAP */
+.admin-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding: 0 0 1rem;
+    border-bottom: 1px solid var(--border, #e5eaf1);
+}
+
+.admin-page-title {
+    margin: 0;
+    color: var(--primary, #174ea6);
+    font-size: clamp(1.25rem, 2vw, 1.55rem);
+    line-height: 1.25;
+    font-weight: 700;
+    letter-spacing: -.025em;
+}
+
+.admin-page-description {
+    margin-top: .3rem;
+    color: var(--text-muted, #64748b);
+    font-size: .9rem;
+    line-height: 1.45;
+}
+
+.admin-page-header .badge-season {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+    border-radius: 999px;
+    padding: .45rem .8rem;
+    font-size: .78rem;
+    font-weight: 700;
+}
+
+.admin-page-header [data-bs-toggle="popover"] {
+    cursor: help;
+    font-size: .9rem;
+    vertical-align: middle;
+}
+
+@media (max-width: 575.98px) {
+    .admin-page-header {
+        align-items: flex-start;
+    }
+    .admin-page-header .badge-season {
+        white-space: normal;
+    }
+}
