@@ -200,7 +200,9 @@
             }
 
             try {
-                $this->equipoModel->actualizarEntidad($id, $data);
+                if (!$this->equipoModel->actualizarEntidad($id, $data)) {
+                    throw new RuntimeException('La actualización del equipo no se completó.');
+                }
                 unset($_SESSION['equipo_old']);
                 if ($rutaNueva && $nombreAnterior && $nombreAnterior !== 'default.png') {
                     $rutaAnterior = ROOT_PATH . '/public/assets/img/equipos/' . $nombreAnterior;
