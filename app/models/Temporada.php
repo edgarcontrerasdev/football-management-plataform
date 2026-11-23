@@ -41,6 +41,23 @@ class Temporada
         return $this->listar([], 1000, 0);
     }
 
+    public function listarPorAmbito(string $tipo, int $propietarioId): array
+    {
+        if (!in_array($tipo, ['organismo', 'liga'], true) || $propietarioId <= 0) {
+            return [];
+        }
+        $columna = $tipo === 'organismo' ? 'organismo_id' : 'liga_propietaria_id';
+        $stmt = $this->pdo->prepare("
+            SELECT id, temporada, fecha_inicio, fecha_fin, estado, es_actual
+            FROM tb_temporadas
+            WHERE ambito_tipo = :ambito_tipo AND {$columna} = :propietario_id
+            ORDER BY fecha_inicio DESC, id DESC
+        ");
+        $stmt->execute([':ambito_tipo' => $tipo, ':propietario_id' => $propietarioId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+
     public function getById($id): ?array
     {
         $stmt = $this->pdo->prepare("
