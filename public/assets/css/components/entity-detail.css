@@ -150,7 +150,7 @@
     margin-top: .25rem;
 }
 
-.liga-tabs-card .header-dark {
+.header-dark {
     background: linear-gradient(135deg, #ffffff, #f3f8ff) !important;
     border: 1px solid #e1eaf5 !important;
     border-left: 4px solid var(--primary, #2456a6) !important;
@@ -158,14 +158,14 @@
     box-shadow: 0 3px 12px rgba(15, 45, 90, .06) !important;
 }
 
-.liga-tabs-card .header-dark h3,
-.liga-tabs-card .header-dark .text-white,
-.liga-tabs-card .header-dark .text-light,
-.liga-tabs-card .header-dark .header-info {
+.header-dark h3,
+.header-dark .text-white,
+.header-dark .text-light,
+.header-dark .header-info {
     color: #173f83 !important;
 }
 
-.liga-tabs-card .header-dark .btn-light {
+.header-dark .btn-light {
     color: #234b82;
     background: #eaf2ff;
     border-color: #d4e3f8;
