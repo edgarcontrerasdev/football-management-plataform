@@ -1,4 +1,4 @@
-/* Contenedor de tablas */
+/* Tablas compartidas del panel */
 .table-container {
     width: 100%;
     overflow-x: auto;
@@ -7,16 +7,13 @@
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-sm);
 }
-
 .table-custom {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
     font-size: 14px;
 }
-
 .table-custom thead { background: #f1f6fc; }
-
 .table-custom th {
     padding: 14px 16px;
     color: #536b86;
@@ -28,7 +25,6 @@
     white-space: nowrap;
     border-bottom: 1px solid #dfe8f2;
 }
-
 .table-custom td {
     padding: 13px 16px;
     color: #334155;
@@ -36,11 +32,48 @@
     border-bottom: 1px solid #edf1f6;
     vertical-align: middle;
 }
-
 .table-custom tbody tr:nth-child(even) td { background: #f9fbfe; }
 .table-custom tbody tr:hover td { background: #edf5ff; transition: background .2s ease; }
 .table-row { transition: background .15s ease; }
 .table-actions { display: flex; align-items: center; gap: 6px; }
+
+/* Mismo tratamiento para la tabla AJAX de usuarios */
+.users-list-page .table-responsive,
+.users-list-page .row.card {
+    overflow: hidden;
+    background: #fff;
+    border: 1px solid #e1eaf4;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+.users-list-page .row.card { margin: 0; }
+.users-list-page table.table {
+    width: 100%;
+    min-width: 850px;
+    margin: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 14px;
+}
+.users-list-page table.table thead th {
+    padding: 14px 16px;
+    color: #536b86;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .55px;
+    white-space: nowrap;
+    background: #f1f6fc;
+    border-bottom: 1px solid #dfe8f2;
+}
+.users-list-page table.table tbody td {
+    padding: 12px 16px;
+    color: #334155;
+    vertical-align: middle;
+    border-bottom: 1px solid #edf1f6;
+}
+.users-list-page table.table tbody tr:nth-child(even) td { background: #f9fbfe; }
+.users-list-page table.table tbody tr:hover td { background: #edf5ff; }
+.users-list-page table.table tbody tr:last-child td { border-bottom: 0; }
 
 .spinner {
     width: 36px;
@@ -49,10 +82,9 @@
     border: 4px solid #e8eef6;
     border-top-color: var(--primary);
     border-radius: 50%;
-    animation: spin 1s linear infinite;
+    animation: afec-table-spin 1s linear infinite;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
-
+@keyframes afec-table-spin { to { transform: rotate(360deg); } }
 .table-empty {
     padding: 40px 20px;
     color: #8796a8;
@@ -73,7 +105,6 @@
     border-radius: 7px;
 }
 .btn-empty:hover { color: #fff; background: var(--primary-dark); }
-
 .cell-flex { display: flex; align-items: center; gap: 12px; }
 .cell-avatar {
     display: flex;
@@ -91,7 +122,6 @@
 .cell-title { color: #263f5c; font-size: 14px; font-weight: 650; }
 .cell-subtitle { color: var(--text-muted); font-size: 12px; }
 .cell-flex:hover { padding: 4px; background: #f5f9fe; border-radius: 8px; }
-
 .skeleton-box {
     width: 100%;
     height: 14px;
