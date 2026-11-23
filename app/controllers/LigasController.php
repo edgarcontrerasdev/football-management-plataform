@@ -208,6 +208,12 @@ class LigasController
         $propietarioId = $organismoGestor ? (int) $organismoGestor['id'] : $id;
         $temporadasDisponibles = $this->temporadaModel->listarPorAmbito($tipoPropietario, $propietarioId);
         $temporadasVinculadas = $this->ligaModel->listarTemporadasVinculadas($id);
+        $ligaTemporada = $temporadaActual
+            ? $this->ligaModel->obtenerVinculacionTemporada($id, (int) $temporadaActual['id'])
+            : null;
+        $equiposDisponibles = ($ligaTemporada && $temporadaActual)
+            ? $this->ligaModel->listarEquiposDisponibles($id, (int) $temporadaActual['id'])
+            : [];
         $temporadasVinculadasIds = array_map(
             static fn(array $item): int => (int) $item['temporada_id'],
             $temporadasVinculadas
@@ -267,7 +273,9 @@ class LigasController
                 'temporadaActual' => $temporadaActual,
                 'temporadasDisponibles' => $temporadasDisponibles,
                 'temporadasVinculadas' => $temporadasVinculadas,
-                'equiposLiga' => $equiposLiga
+                'equiposLiga' => $equiposLiga,
+                'ligaTemporada' => $ligaTemporada,
+                'equiposDisponibles' => $equiposDisponibles
             ]
         );
     }
@@ -317,6 +325,70 @@ class LigasController
         }
 
         header('Location: index.php?page=ligas&action=detalle&id=' . $ligaId . '#temporada');
+        exit;
+    }
+
+    /**
+     * Registra una solicitud de inscripción de equipo en la temporada actual de la liga.
+     */
+    public function inscribirEquipo(): void
+    {
+        $ligaId = (int) ($_POST['liga_id'] ?? 0);
+        $temporadaId = (int) ($_POST['temporada_id'] ?? 0);
+        $equipoId = (int) ($_POST['equipo_id'] ?? 0);
+        $numeroRegistro = trim((string) ($_POST['numero_registro'] ?? ''));
+
+        $scopeIds = $this->authorization->getScopedEntityIds('liga');
+        $liga = $this->ligaModel->getById($ligaId, $scopeIds);
+
+        if (!$liga || $temporadaId <= 0 || $equipoId <= 0) {
+            http_response_code(403);
+            view('403.php');
+            return;
+        }
+
+        $temporada = $this->temporadaModel->getById($temporadaId);
+        $organismoGestor = null;
+        foreach (($liga['organismos'] ?? []) as $organismo) {
+            if ((int) ($organismo['es_gestor'] ?? 0) === 1) {
+                $organismoGestor = $organismo;
+                break;
+            }
+        }
+        $tipoEsperado = $organismoGestor ? 'organismo' : 'liga';
+        $propietarioEsperado = $organismoGestor ? (int) $organismoGestor['id'] : $ligaId;
+        $propietarioReal = $temporada
+            ? (int) ($temporada['organismo_id'] ?: $temporada['liga_propietaria_id'])
+            : 0;
+
+        if (
+            !$temporada
+            || $temporada['ambito_tipo'] !== $tipoEsperado
+            || $propietarioReal !== $propietarioEsperado
+            || !$this->ligaModel->obtenerVinculacionTemporada($ligaId, $temporadaId)
+        ) {
+            flashError('La temporada no está vinculada correctamente con esta liga.');
+            header('Location: index.php?page=ligas&action=detalle&id=' . $ligaId . '#equipos');
+            exit;
+        }
+
+        try {
+            $registrado = $this->ligaModel->inscribirEquipo(
+                $ligaId,
+                $temporadaId,
+                $equipoId,
+                $numeroRegistro !== '' ? $numeroRegistro : null
+            );
+            if (!$registrado) {
+                flashError('No se pudo registrar la solicitud de inscripción.');
+            } else {
+                flashSuccess('La solicitud de inscripción del equipo quedó pendiente de revisión.');
+            }
+        } catch (PDOException $e) {
+            flashError('El equipo ya está inscrito o no fue posible registrar la solicitud.');
+        }
+
+        header('Location: index.php?page=ligas&action=detalle&id=' . $ligaId . '#equipos');
         exit;
     }
 
