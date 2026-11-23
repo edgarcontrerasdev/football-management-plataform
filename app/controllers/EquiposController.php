@@ -1,9 +1,9 @@
 <?php 
 
-    require_once __DIR__.'../../core/Auth.php';
+    require_once __DIR__ . '/../core/Auth.php';
 
-    require_once __DIR__.'../../models/Equipo.php';
-    require_once __DIR__.'../../models/Liga.php';
+    require_once __DIR__ . '/../models/Equipo.php';
+    require_once __DIR__ . '/../models/Liga.php';
 
 
     class EquiposController
