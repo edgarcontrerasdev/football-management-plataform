@@ -6,7 +6,8 @@ $estadosParticipacion = [
     'activo' => ['Activo', 'success'],
     'pendiente' => ['Pendiente', 'warning'],
     'suspendido' => ['Suspendido', 'danger'],
-    'baja' => ['Baja', 'secondary']
+    'baja' => ['Baja', 'secondary'],
+    'rechazado' => ['Rechazado', 'danger']
 ];
 $estadosDocumentacion = [
     'completa' => ['Completa', 'success'],
@@ -88,6 +89,7 @@ $estadosDocumentacion = [
                     <th>Registro</th>
                     <th>Participación</th>
                     <th>Documentación</th>
+                    <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -110,6 +112,26 @@ $estadosDocumentacion = [
                         <td><?= htmlspecialchars($equipo['numero_registro'] ?: '—', ENT_QUOTES, 'UTF-8') ?></td>
                         <td><span class="badge bg-<?= $participacionClase ?>"><?= htmlspecialchars($participacionTexto, ENT_QUOTES, 'UTF-8') ?></span></td>
                         <td><span class="badge bg-<?= $documentacionClase ?>"><?= htmlspecialchars($documentacionTexto, ENT_QUOTES, 'UTF-8') ?></span></td>
+                        <td>
+                            <?php if ($estadoParticipacion === 'pendiente'): ?>
+                                <div class="d-flex flex-wrap gap-1">
+                                    <form method="POST" action="index.php?page=ligas&action=resolverInscripcionEquipo">
+                                        <input type="hidden" name="liga_id" value="<?= (int) $liga['id'] ?>">
+                                        <input type="hidden" name="liga_equipo_id" value="<?= (int) $equipo['liga_equipo_id'] ?>">
+                                        <input type="hidden" name="decision" value="aprobar">
+                                        <button type="submit" class="btn btn-sm btn-success">Aprobar</button>
+                                    </form>
+                                    <form method="POST" action="index.php?page=ligas&action=resolverInscripcionEquipo">
+                                        <input type="hidden" name="liga_id" value="<?= (int) $liga['id'] ?>">
+                                        <input type="hidden" name="liga_equipo_id" value="<?= (int) $equipo['liga_equipo_id'] ?>">
+                                        <input type="hidden" name="decision" value="rechazar">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Rechazar</button>
+                                    </form>
+                                </div>
+                            <?php else: ?>
+                                <span class="text-muted small">Sin acciones</span>
+                            <?php endif; ?>
+                        </td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>
