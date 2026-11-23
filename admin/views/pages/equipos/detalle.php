@@ -4,7 +4,7 @@ $escudoRuta = ASSETS . '/img/equipos/' . rawurlencode($escudoNombre);
 ?>
 
 <div class="equipos-detalle-page">
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div class="entity-detail-heading d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div>
             <h3 class="users-title mb-1">Detalle del equipo</h3>
             <p class="text-muted mb-0">Información registrada de la entidad equipo.</p>
