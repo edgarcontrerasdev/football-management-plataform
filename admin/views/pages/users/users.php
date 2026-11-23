@@ -1,6 +1,11 @@
 
 <div class="users-list-page">
-<h3 class="users-title">Usuarios del sistema</h3>
+<div class="admin-page-header mb-4">
+    <div>
+        <h3 class="admin-page-title mb-1">Usuarios del sistema</h3>
+        <p class="admin-page-description mb-0">Administración de cuentas, roles y accesos</p>
+    </div>
+</div>
 
 <div class="wrap-toolbar">
 
