@@ -58,6 +58,29 @@ class Temporada
     }
 
 
+    /** Temporadas elegibles para vincular a una liga, excluyendo vínculos existentes. */
+    public function listarDisponiblesParaLiga(int $ligaId, ?int $organismoGestorId): array
+    {
+        if ($ligaId <= 0) {
+            return [];
+        }
+
+        $sql = $organismoGestorId !== null
+            ? "SELECT t.id, t.temporada, t.fecha_inicio, t.fecha_fin, t.estado, t.es_actual
+               FROM tb_temporadas t
+               WHERE t.ambito_tipo = 'organismo' AND t.organismo_id = :propietario"
+            : "SELECT t.id, t.temporada, t.fecha_inicio, t.fecha_fin, t.estado, t.es_actual
+               FROM tb_temporadas t
+               WHERE t.ambito_tipo = 'liga' AND t.liga_propietaria_id = :propietario";
+        $sql .= " AND NOT EXISTS (SELECT 1 FROM tb_liga_temporadas lt
+                   WHERE lt.liga_id = :liga_id AND lt.temporada_id = t.id)
+                 ORDER BY t.fecha_inicio DESC, t.id DESC";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([':propietario' => $organismoGestorId ?? $ligaId, ':liga_id' => $ligaId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function getById($id): ?array
     {
         $stmt = $this->pdo->prepare("
