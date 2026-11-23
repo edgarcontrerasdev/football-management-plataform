@@ -520,6 +520,35 @@ class Liga
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+
+    /**
+     * Aprueba o rechaza una solicitud pendiente de vinculación de temporada.
+     */
+    public function resolverVinculacionTemporada(int $ligaId, int $ligaTemporadaId, string $estado): bool
+    {
+        if (!in_array($estado, ['activo', 'rechazado'], true)) {
+            throw new InvalidArgumentException('Estado de vinculación no válido.');
+        }
+
+        $stmt = $this->pdo->prepare("
+            UPDATE tb_liga_temporadas
+            SET estado = :estado,
+                fecha_alta = CASE WHEN :estado_fecha = 'activo' THEN NOW() ELSE fecha_alta END
+            WHERE id = :liga_temporada_id
+              AND liga_id = :liga_id
+              AND estado = 'pendiente'
+        ");
+        $stmt->execute([
+            ':estado' => $estado,
+            ':estado_fecha' => $estado,
+            ':liga_temporada_id' => $ligaTemporadaId,
+            ':liga_id' => $ligaId
+        ]);
+
+        return $stmt->rowCount() === 1;
+    }
+
+
     /**
      * Registra la solicitud de vinculación usando el estado predeterminado pendiente.
      */
