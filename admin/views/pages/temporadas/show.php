@@ -1,3 +1,4 @@
+<div class="temporada-show-page">
 <div class="container mt-4">
 
     <h3><?= htmlspecialchars($temporada['temporada']) ?></h3>
@@ -72,3 +73,5 @@
 <?php startSection('scripts') ?>
 <script src="<?= BASE_URL ?>/public/assets/js/admin/temporadas/temporada-show.js"></script>
 <?php endSection('scripts') ?>
+
+</div>
