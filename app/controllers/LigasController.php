@@ -204,10 +204,11 @@ class LigasController
             ? $this->temporadaModel->getActiva('organismo', (int) $organismoGestor['id'])
             : $this->temporadaModel->getActiva('liga', $id);
 
-        $tipoPropietario = $organismoGestor ? 'organismo' : 'liga';
-        $propietarioId = $organismoGestor ? (int) $organismoGestor['id'] : $id;
-        $temporadasDisponibles = $this->temporadaModel->listarPorAmbito($tipoPropietario, $propietarioId);
         $temporadasVinculadas = $this->ligaModel->listarTemporadasVinculadas($id);
+        $temporadasDisponibles = $this->temporadaModel->listarDisponiblesParaLiga(
+            $id,
+            $organismoGestor ? (int) $organismoGestor['id'] : null
+        );
         $ligaTemporada = $temporadaActual
             ? $this->ligaModel->obtenerVinculacionTemporada($id, (int) $temporadaActual['id'])
             : null;
