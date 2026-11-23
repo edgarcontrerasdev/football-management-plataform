@@ -393,6 +393,46 @@ class LigasController
         exit;
     }
 
+
+    /**
+     * Aprueba o rechaza una solicitud pendiente de inscripción de equipo.
+     */
+    public function resolverInscripcionEquipo(): void
+    {
+        $ligaId = (int) ($_POST['liga_id'] ?? 0);
+        $ligaEquipoId = (int) ($_POST['liga_equipo_id'] ?? 0);
+        $decision = trim((string) ($_POST['decision'] ?? ''));
+
+        $scopeIds = $this->authorization->getScopedEntityIds('liga');
+        $liga = $this->ligaModel->getById($ligaId, $scopeIds);
+
+        if (!$liga || $ligaEquipoId <= 0 || !in_array($decision, ['aprobar', 'rechazar'], true)) {
+            http_response_code(403);
+            view('403.php');
+            return;
+        }
+
+        try {
+            $estado = $decision === 'aprobar' ? 'activo' : 'rechazado';
+            $resuelto = $this->ligaModel->resolverInscripcionEquipo($ligaId, $ligaEquipoId, $estado);
+
+            if ($resuelto) {
+                flashSuccess($decision === 'aprobar'
+                    ? 'La inscripción del equipo fue aprobada.'
+                    : 'La solicitud de inscripción fue rechazada.');
+            } else {
+                flashError('La solicitud ya fue resuelta o no pertenece a esta liga.');
+            }
+        } catch (Throwable $e) {
+            error_log('Error al resolver inscripción de equipo: ' . $e->getMessage());
+            flashError('No fue posible resolver la solicitud de inscripción.');
+        }
+
+        header('Location: index.php?page=ligas&action=detalle&id=' . $ligaId . '#equipos');
+        exit;
+    }
+
+
 }
 
 ?>
