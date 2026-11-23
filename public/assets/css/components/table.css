@@ -134,3 +134,24 @@
     0% { background-position: 100% 50%; }
     100% { background-position: 0 50%; }
 }
+
+/* Cabecera del bloque de tabla compartido */
+.table-panel {
+    overflow: hidden;
+    background: #fff;
+    border: 1px solid #e1eaf4;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+.table-panel-heading {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 13px 16px;
+    color: #385675;
+    font-size: 13px;
+    font-weight: 700;
+    background: #fff;
+    border-bottom: 1px solid #e8eef5;
+}
+.table-panel-heading i { color: var(--primary); }
