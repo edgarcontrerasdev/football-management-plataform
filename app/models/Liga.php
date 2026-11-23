@@ -79,6 +79,7 @@ class Liga
             ':nombre' => trim((string) $data['nombre']),
             ':siglas' => ($data['siglas'] ?? '') !== '' ? trim((string) $data['siglas']) : null,
             ':estado' => $data['estado'] ?? 'activo',
+            ':logo' => $data['logo'] ?? null,
             ':correo' => ($data['correo'] ?? '') !== '' ? trim((string) $data['correo']) : null,
             ':telefono' => ($data['telefono'] ?? '') !== '' ? trim((string) $data['telefono']) : null,
             ':direccion' => ($data['direccion'] ?? '') !== '' ? trim((string) $data['direccion']) : null,
@@ -99,10 +100,10 @@ class Liga
     {
         $stmt = $this->pdo->prepare("
             INSERT INTO tb_ligas (
-                nombre, siglas, estado, correo, telefono, direccion, colonia,
+                nombre, siglas, estado, logo, correo, telefono, direccion, colonia,
                 municipio, estado_republica, codigo_postal, redes_sociales, notas
             ) VALUES (
-                :nombre, :siglas, :estado, :correo, :telefono, :direccion, :colonia,
+                :nombre, :siglas, :estado, :logo, :correo, :telefono, :direccion, :colonia,
                 :municipio, :estado_republica, :codigo_postal, :redes_sociales, :notas
             )
         ");
