@@ -395,4 +395,35 @@ class Liga
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    /**
+     * Temporadas ya vinculadas a una liga.
+     */
+    public function listarTemporadasVinculadas(int $ligaId): array
+    {
+        $stmt = $this->pdo->prepare("
+            SELECT lt.id AS liga_temporada_id, lt.estado AS estado_vinculacion,
+                   lt.fecha_solicitud, lt.fecha_alta, t.id AS temporada_id,
+                   t.temporada, t.ambito_tipo, t.estado AS estado_temporada,
+                   t.es_actual, t.fecha_inicio, t.fecha_fin
+            FROM tb_liga_temporadas lt
+            INNER JOIN tb_temporadas t ON t.id = lt.temporada_id
+            WHERE lt.liga_id = :liga_id
+            ORDER BY t.fecha_inicio DESC, t.id DESC
+        ");
+        $stmt->execute([':liga_id' => $ligaId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Registra la solicitud de vinculación usando el estado predeterminado pendiente.
+     */
+    public function vincularTemporada(int $ligaId, int $temporadaId): bool
+    {
+        $stmt = $this->pdo->prepare("
+            INSERT INTO tb_liga_temporadas (liga_id, temporada_id, fecha_solicitud)
+            VALUES (:liga_id, :temporada_id, NOW())
+        ");
+        return $stmt->execute([':liga_id' => $ligaId, ':temporada_id' => $temporadaId]);
+    }
 }
