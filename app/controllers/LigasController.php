@@ -182,8 +182,14 @@ class LigasController
             'nombre' => trim((string) ($_POST['nombre'] ?? '')),
             'siglas' => trim((string) ($_POST['siglas'] ?? '')),
             'estado' => trim((string) ($_POST['estado'] ?? 'activo')),
-            'correo' => trim((string) ($_POST['contacto_email'] ?? '')),
-            'telefono' => trim((string) ($_POST['contacto_telefono'] ?? '')),
+            'correo' => trim((string) ($_POST['correo'] ?? '')),
+            'telefono' => trim((string) ($_POST['telefono'] ?? '')),
+            'direccion' => trim((string) ($_POST['direccion'] ?? '')),
+            'colonia' => trim((string) ($_POST['colonia'] ?? '')),
+            'municipio' => trim((string) ($_POST['municipio'] ?? '')),
+            'estado_republica' => trim((string) ($_POST['estado_republica'] ?? '')),
+            'codigo_postal' => trim((string) ($_POST['codigo_postal'] ?? '')),
+            'redes_sociales' => trim((string) ($_POST['redes_sociales'] ?? '')),
             'notas' => trim((string) ($_POST['notas'] ?? ''))
         ];
 
@@ -209,6 +215,11 @@ class LigasController
 
         if (mb_strlen($data['telefono']) > 30) {
             $errors[] = 'El teléfono no puede superar los 30 caracteres.';
+        }
+        if (mb_strlen($data['direccion']) > 255 || mb_strlen($data['colonia']) > 100 ||
+            mb_strlen($data['municipio']) > 100 || mb_strlen($data['estado_republica']) > 100 ||
+            mb_strlen($data['codigo_postal']) > 10) {
+            $errors[] = 'Revisa la longitud de los campos de ubicación.';
         }
 
         if ($data['nombre'] !== '' && $this->ligaModel->existeNombre($data['nombre'])) {
