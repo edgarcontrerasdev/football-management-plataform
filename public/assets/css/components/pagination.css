@@ -1,101 +1,72 @@
-    #paginacion{
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 15px;
-        padding: 12px 16px;
-        background: linear-gradient(135deg, #0f172a, #1f2937);
-        border-radius: 14px;
-        color: #e5e7eb;
-        font-size: 14px;
-    }
+/* Paginación de listados */
+#paginacion {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    margin-top: 15px;
+    color: var(--text);
+    font-size: 14px;
+    background: linear-gradient(120deg, #fff, #f4f8fd);
+    border: 1px solid #e1eaf4;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
 
-    /* Contenedor central */
-    #paginacion .paginacion-center {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
+#paginacion .paginacion-center { display: flex; align-items: center; gap: 8px; }
+#paginacion .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 38px;
+    height: 36px;
+    padding: 0 13px;
+    color: #405671;
+    font-size: 14px;
+    font-weight: 550;
+    line-height: 1;
+    vertical-align: middle;
+    background: #edf3fa;
+    border: 1px solid #dce6f1;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: all .2s ease;
+}
+#paginacion .btn i { display: inline-block; line-height: 0; }
+#paginacion .btn-nav { min-width: 42px; }
+#paginacion .btn:hover {
+    color: #fff;
+    background: linear-gradient(135deg, #3978c2, #2459a6);
+    border-color: #2459a6;
+    box-shadow: 0 4px 10px rgba(36,89,166,.18);
+    transform: translateY(-1px);
+}
+#paginacion .btn.active {
+    color: #fff;
+    font-weight: 650;
+    background: linear-gradient(135deg, #2e6db8, #174b91);
+    border-color: #174b91;
+}
+#paginacion .btn:disabled {
+    color: #a0adbc;
+    background: #f5f7fa;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+#paginacion .info-registros { color: var(--text-muted); }
+#paginacion select {
+    padding: 6px 10px;
+    color: var(--text);
+    font-weight: 500;
+    background: #fff;
+    border: 1px solid #dce6f1;
+    border-radius: 8px;
+}
+.btn.disabled { opacity: .45; pointer-events: none; cursor: not-allowed; }
 
-    /* ===== BOTÓN BASE ===== */
-    #paginacion .btn {
-        height: 38px;
-        padding: 0 16px;
-        border-radius: 999px; /* 🔥 PILL */
-        border: none;
-        background: rgba(255,255,255,0.08);
-        color: #e5e7eb;
-        font-size: 16px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all .25s ease;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap:8px;
-        line-height: 1;
-        vertical-align: middle;
-    }
-
-    #paginacion .btn i {
-    display: inline-block;
-    line-height: 0; /* Anula cualquier altura de línea heredada en el icono */
-    }
-
-    /* ===== BOTONES DE NAVEGACIÓN (‹ ›) ===== */
-    #paginacion .btn-nav {
-        min-width: 42px;
-        font-weight: 600;
-    }
-
-    /* ===== BOTONES NUMÉRICOS ===== */
-    #paginacion .btn-page {
-        min-width: 38px;
-    }
-
-    /* ===== HOVER CON GRADIENTE ===== */
-    #paginacion .btn:hover {
-        background: linear-gradient(135deg, #3b82f6, #2563eb);
-        color: #fff;
-        box-shadow: 0 6px 16px rgba(59,130,246,.45);
-        transform: translateY(-1px);
-    }
-
-    /* ===== ACTIVO ===== */
-    #paginacion .btn.active {
-        background: linear-gradient(135deg, #2563eb, #1d4ed8);
-        color: #fff;
-        font-weight: 600;
-        box-shadow: 0 6px 20px rgba(37,99,235,.55);
-        transform: none;
-    }
-
-    /* ===== DESHABILITADO ===== */
-    #paginacion .btn:disabled {
-        background: rgba(255,255,255,0.04);
-        color: #9ca3af;
-        cursor: not-allowed;
-        box-shadow: none;
-        transform: none;
-    }
-
-    /* Texto informativo */
-    #paginacion .info-registros {
-        color: #cbd5e1;
-    }
-
-    /* Selector */
-    #paginacion select {
-        padding: 6px 10px;
-        border-radius: 10px;
-        border: none;
-        background: #f8fafc;
-        color: #1e40af;
-        font-weight: 500;
-    }
-
-    .btn.disabled {
-        opacity: 0.45;
-        pointer-events: none;
-        cursor: not-allowed;
-    }
+@media (max-width: 650px) {
+    #paginacion { align-items: flex-start; flex-direction: column; }
+}
