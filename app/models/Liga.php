@@ -99,9 +99,11 @@ class Liga
     {
         $stmt = $this->pdo->prepare("
             INSERT INTO tb_ligas (
-                nombre, siglas, estado, correo, telefono, notas
+                nombre, siglas, estado, correo, telefono, direccion, colonia,
+                municipio, estado_republica, codigo_postal, redes_sociales, notas
             ) VALUES (
-                :nombre, :siglas, :estado, :correo, :telefono, :notas
+                :nombre, :siglas, :estado, :correo, :telefono, :direccion, :colonia,
+                :municipio, :estado_republica, :codigo_postal, :redes_sociales, :notas
             )
         ");
 
@@ -111,6 +113,12 @@ class Liga
             ':estado' => $data['estado'] ?? 'activo',
             ':correo' => ($data['correo'] ?? '') !== '' ? trim((string) $data['correo']) : null,
             ':telefono' => ($data['telefono'] ?? '') !== '' ? trim((string) $data['telefono']) : null,
+            ':direccion' => ($data['direccion'] ?? '') !== '' ? trim((string) $data['direccion']) : null,
+            ':colonia' => ($data['colonia'] ?? '') !== '' ? trim((string) $data['colonia']) : null,
+            ':municipio' => ($data['municipio'] ?? '') !== '' ? trim((string) $data['municipio']) : null,
+            ':estado_republica' => ($data['estado_republica'] ?? '') !== '' ? trim((string) $data['estado_republica']) : null,
+            ':codigo_postal' => ($data['codigo_postal'] ?? '') !== '' ? trim((string) $data['codigo_postal']) : null,
+            ':redes_sociales' => ($data['redes_sociales'] ?? '') !== '' ? trim((string) $data['redes_sociales']) : null,
             ':notas' => ($data['notas'] ?? '') !== '' ? trim((string) $data['notas']) : null
         ]);
     }
