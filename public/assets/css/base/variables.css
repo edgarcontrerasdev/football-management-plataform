@@ -1,41 +1,43 @@
 :root {
-    --royal: #0b3ea6;
-    --silver: #d9e2e8;
-    --bg: #0b1630;
-    --card-bg: rgba(255,255,255,0.03);
-    --muted: #c9d6e3;
-    --accent: #5ea8ff;
+    /* Identidad institucional */
+    --royal: #174b91;
+    --primary: #2459a6;
+    --primary-dark: #173f78;
+    --primary-light: #4b83c5;
+    --accent: #8fc5f5;
+
+    /* Superficies y fondos */
+    --bg: #edf4fc;
+    --content-bg: #f5f9ff;
+    --card-bg: #ffffff;
+    --bg-white: #f8fbff;
+    --card: #ffffff;
+    --surface-dark: #15345f;
+    --surface-dark-2: #10294d;
+
+    /* Texto */
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --muted: #d5e3f3;
+    --silver: #dbe6f2;
+    --border: #dce6f1;
+
+    /* Estados */
+    --success: #16a36a;
+    --danger: #dc4c4c;
+    --warning: #d99a20;
+    --info: #168ac4;
 
     /* Radios */
     --radius-sm: 8px;
     --radius-md: 12px;
     --radius-lg: 16px;
 
-    /* Sombras */
-    --shadow-sm: 0 2px 6px rgba(0,0,0,.08);
-    --shadow-md: 0 6px 18px rgba(0,0,0,.18);
+    /* Sombras suaves */
+    --shadow-sm: 0 2px 8px rgba(25, 55, 90, .06);
+    --shadow-md: 0 8px 24px rgba(25, 55, 90, .10);
+    --shadow-lg: 0 14px 36px rgba(25, 55, 90, .13);
 
-    /* Superficies oscuras */
-    --surface-dark: #0f172a;
-    --surface-dark-2: #111827;
-
-    /* Colores principales */
-    --primary: #1e40af;
-    --primary-dark: #1e3a8a;
-    --primary-light: #3b82f6;
-
-    /* Estados */
-    --success: #16a34a;
-    --danger: #dc2626;
-    --warning: #f59e0b;
-    --info: #0ea5e9;
-
-    /* Fondo y superficies */
-    --bg-white: #f8fafc;
-    --card: #ffffff;
-    --border: #e5e7eb;
-
-    /* Texto */
-    --text: #1f2937;
-    --text-muted: #6b7280;
+    /* Degradado institucional del menú */
+    --sidebar-gradient: linear-gradient(180deg, #173f70 0%, #12345f 48%, #0d294e 100%);
 }
