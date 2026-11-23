@@ -10,9 +10,14 @@ $escudoRuta = ASSETS . '/img/equipos/' . rawurlencode($escudoNombre);
             <p class="text-muted mb-0">Información registrada de la entidad equipo.</p>
         </div>
 
-        <a href="index.php?page=equipos" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> Regresar al listado
-        </a>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="index.php?page=equipos&action=editar&id=<?= (int) ($equipo['id'] ?? 0) ?>" class="btn btn-primary">
+                <i class="bi bi-pencil-square me-1"></i>Editar equipo
+            </a>
+            <a href="index.php?page=equipos" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Regresar al listado
+            </a>
+        </div>
     </div>
 
     <?php if (empty($equipo)): ?>
