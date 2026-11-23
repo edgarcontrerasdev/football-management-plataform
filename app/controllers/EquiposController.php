@@ -111,7 +111,7 @@
 
             if (!$equipo) {
                 http_response_code(404);
-                view('pages.404.php');
+                view('404.php');
                 return;
             }
 
@@ -140,7 +140,7 @@
             $equipo = $this->equipoModel->getById($id);
             if (!$equipo) {
                 http_response_code(404);
-                view('pages.404.php');
+                view('404.php');
                 return;
             }
 
