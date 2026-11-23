@@ -1,75 +1,82 @@
-/* ================= SIDEBAR ================= */
-    .sidebar {
-        position: fixed;
-        top: 68px; /* debajo del header */
-        left: 0;
-        width: 260px;
-        height: calc(100vh - 68px);
-        padding: 20px 10px;
-        background: linear-gradient(180deg, rgba(3,12,30,0.88), rgba(8,18,34,0.92));
-        border-right: 1px solid rgba(255,255,255,0.03);
-        transition: transform .28s ease, width .28s ease;
-        z-index: 30;
-        overflow: auto;
-    }
+/* Menú lateral institucional */
+.sidebar {
+    position: fixed;
+    top: 68px;
+    left: 0;
+    width: 260px;
+    height: calc(100vh - 68px);
+    padding: 20px 10px;
+    background: var(--sidebar-gradient);
+    border-right: 1px solid rgba(255,255,255,.08);
+    box-shadow: 8px 0 24px rgba(13, 41, 78, .10);
+    transition: transform .28s ease, width .28s ease;
+    z-index: 30;
+    overflow: auto;
+}
 
-    /* collapsed state */
-    .sidebar.collapsed {
-        transform: translateX(0px);
-        width: 60px;
-    }
+.sidebar.collapsed {
+    transform: translateX(0);
+    width: 60px;
+}
 
-    /* sidebar items */
-    .nav-item {
-        display:flex;
-        align-items:center;
-        gap:12px;
-        padding:10px 14px;
-        margin:6px 8px;
-        border-radius:10px;
-        color: var(--muted);
-        text-decoration:none;
-        transition: all .28s ease;
-        position: relative;
-    }
+.nav-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    margin: 6px 8px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    color: #d7e6f8;
+    text-decoration: none;
+    transition: background .2s ease, color .2s ease, transform .2s ease;
+}
 
-    .nav-item i { font-size:20px; width:20px; text-align:center; color:var(--accent); }
+.nav-item i {
+    width: 20px;
+    font-size: 19px;
+    text-align: center;
+    color: #9fc9f3;
+}
 
-    /* HOVER (diferente de active) */
-    .nav-item:hover {
-        color: #ffffff;
-        background: rgba(94,168,255,0.08);
-        transform: translateX(4px);
-    }
+.nav-item:hover {
+    color: #fff;
+    background: rgba(255,255,255,.10);
+    border-color: rgba(255,255,255,.08);
+    transform: translateX(3px);
+}
 
-    /* ACTIVE item: barra a la izquierda + fondo ligeramente más oscuro */
-    .nav-item.active {
-        color: white;
-        background: linear-gradient(90deg, rgba(94,168,255,0.08), rgba(11,62,166,0.03));
-        box-shadow: 0 6px 18px rgba(11,62,166,0.06) inset;
-    }
+.nav-item.active {
+    color: #fff;
+    background: linear-gradient(90deg, rgba(126,184,241,.24), rgba(255,255,255,.08));
+    border-color: rgba(190,220,250,.15);
+    box-shadow: inset 3px 0 0 #9bcaff;
+}
 
-    .nav-item.active::before{
-        content:"";
-        position:absolute;
-        left:0; top:8px; bottom:8px;
-        width:4px;
-        background: linear-gradient(180deg,var(--royal), #0041a8);
-        border-radius: 4px;
-    }
+.nav-item.active i { color: #fff; }
 
-    /* if collapsed show only icons */
-    .sidebar.collapsed .nav-item span.label { display:none; }
-    .sidebar.collapsed .nav-item { justify-content:center; padding:10px 6px; width: 30px; }
+.sidebar .section-title {
+    margin: 16px 12px 7px;
+    padding-left: 6px;
+    color: rgba(222,237,255,.62);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.1px;
+}
 
-    /* small helper for section title */
-    .sidebar .section-title {
-        font-size:12px; color: rgba(255,255,255,0.55); margin:14px 12px 6px;
-        padding-left:6px; text-transform:uppercase; letter-spacing:1px;
-    }
+.sidebar.collapsed .nav-item span.label { display: none; }
+.sidebar.collapsed .nav-item {
+    justify-content: center;
+    width: 30px;
+    padding: 10px 6px;
+}
 
-/* Responsive: menú lateral */
 @media (max-width: 900px) {
-    .sidebar { transform: translateX(-260px); width: 260px; }
+    .sidebar {
+        width: 260px;
+        transform: translateX(-260px);
+    }
     .sidebar.show { transform: translateX(0); }
 }
