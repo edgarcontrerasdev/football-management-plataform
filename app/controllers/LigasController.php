@@ -239,8 +239,9 @@ class LigasController
     /**
      * Muestra el formulario de edición de una liga dentro del alcance autorizado.
      */
-    public function editar(int $id): void
+    public function editar($id): void
     {
+        $id = (int) $id;
         $scopeIds = $this->authorization->getScopedEntityIds('liga');
         $liga = $this->ligaModel->getById($id, $scopeIds);
 
@@ -264,8 +265,9 @@ class LigasController
     /**
      * Valida y guarda los datos generales de una liga.
      */
-    public function actualizar(int $id): void
+    public function actualizar($id): void
     {
+        $id = (int) $id;
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: index.php?page=ligas');
             exit;
