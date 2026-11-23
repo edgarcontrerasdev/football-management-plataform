@@ -20,6 +20,45 @@ class Liga
      * - [ids] = ligas autorizadas
      */
     
+
+    /**
+     * Comprueba si ya existe una liga con el mismo nombre.
+     */
+    public function existeNombre(string $nombre): bool
+    {
+        $stmt = $this->pdo->prepare("
+            SELECT 1
+            FROM tb_ligas
+            WHERE LOWER(TRIM(nombre)) = LOWER(TRIM(:nombre))
+            LIMIT 1
+        ");
+        $stmt->execute([':nombre' => $nombre]);
+        return (bool) $stmt->fetchColumn();
+    }
+
+    /**
+     * Registra una liga independiente. Su organismo gestor podrá vincularse después.
+     */
+    public function crear(array $data): bool
+    {
+        $stmt = $this->pdo->prepare("
+            INSERT INTO tb_ligas (
+                nombre, siglas, estado, correo, telefono, notas
+            ) VALUES (
+                :nombre, :siglas, :estado, :correo, :telefono, :notas
+            )
+        ");
+
+        return $stmt->execute([
+            ':nombre' => trim((string) $data['nombre']),
+            ':siglas' => ($data['siglas'] ?? '') !== '' ? trim((string) $data['siglas']) : null,
+            ':estado' => $data['estado'] ?? 'activo',
+            ':correo' => ($data['correo'] ?? '') !== '' ? trim((string) $data['correo']) : null,
+            ':telefono' => ($data['telefono'] ?? '') !== '' ? trim((string) $data['telefono']) : null,
+            ':notas' => ($data['notas'] ?? '') !== '' ? trim((string) $data['notas']) : null
+        ]);
+    }
+
     public function listar(
         array $filtros = [],
         ?array $scopeIds = null,
