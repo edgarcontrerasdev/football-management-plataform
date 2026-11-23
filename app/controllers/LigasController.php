@@ -152,6 +152,90 @@ class LigasController
         );
     }
 
+
+    /**
+     * Muestra el formulario para registrar una liga.
+     */
+    public function crear(): void
+    {
+        $errors = $_SESSION['errors'] ?? [];
+        $old = $_SESSION['old'] ?? [];
+        unset($_SESSION['errors'], $_SESSION['old']);
+
+        view('pages.ligas.create.php', [
+            'errors' => $errors,
+            'old' => $old
+        ]);
+    }
+
+    /**
+     * Valida y registra una liga independiente.
+     */
+    public function store(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: index.php?page=ligas');
+            exit;
+        }
+
+        $data = [
+            'nombre' => trim((string) ($_POST['nombre'] ?? '')),
+            'siglas' => trim((string) ($_POST['siglas'] ?? '')),
+            'estado' => trim((string) ($_POST['estado'] ?? 'activo')),
+            'correo' => trim((string) ($_POST['contacto_email'] ?? '')),
+            'telefono' => trim((string) ($_POST['contacto_telefono'] ?? '')),
+            'notas' => trim((string) ($_POST['notas'] ?? ''))
+        ];
+
+        $errors = [];
+
+        if ($data['nombre'] === '') {
+            $errors[] = 'El nombre de la liga es obligatorio.';
+        } elseif (mb_strlen($data['nombre']) > 150) {
+            $errors[] = 'El nombre de la liga no puede superar los 150 caracteres.';
+        }
+
+        if ($data['siglas'] !== '' && mb_strlen($data['siglas']) > 30) {
+            $errors[] = 'Las siglas no pueden superar los 30 caracteres.';
+        }
+
+        if (!in_array($data['estado'], ['activo', 'inactivo', 'suspendido'], true)) {
+            $errors[] = 'El estado seleccionado no es válido.';
+        }
+
+        if ($data['correo'] !== '' && !filter_var($data['correo'], FILTER_VALIDATE_EMAIL)) {
+            $errors[] = 'El correo de contacto no tiene un formato válido.';
+        }
+
+        if (mb_strlen($data['telefono']) > 30) {
+            $errors[] = 'El teléfono no puede superar los 30 caracteres.';
+        }
+
+        if ($data['nombre'] !== '' && $this->ligaModel->existeNombre($data['nombre'])) {
+            $errors[] = 'Ya existe una liga registrada con ese nombre.';
+        }
+
+        if ($errors) {
+            $_SESSION['errors'] = $errors;
+            $_SESSION['old'] = $_POST;
+            header('Location: index.php?page=ligas&action=crear');
+            exit;
+        }
+
+        try {
+            $this->ligaModel->crear($data);
+            flashSuccess('La liga se creó correctamente.');
+            header('Location: index.php?page=ligas');
+            exit;
+        } catch (Throwable $e) {
+            error_log('Error al crear liga: ' . $e->getMessage());
+            $_SESSION['errors'] = ['No fue posible guardar la liga. Verifica los datos e inténtalo nuevamente.'];
+            $_SESSION['old'] = $_POST;
+            header('Location: index.php?page=ligas&action=crear');
+            exit;
+        }
+    }
+
     public function miLiga(): void
     {
         $scopeIds = $this->authorization->getScopedEntityIds('liga');
