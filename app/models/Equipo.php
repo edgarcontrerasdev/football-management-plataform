@@ -286,6 +286,32 @@ class Equipo{
 
 
     /**
+     * Actualiza los datos permanentes de una entidad equipo.
+     */
+    public function actualizarEntidad(int $id, array $data): bool
+    {
+        $stmt = $this->pdo->prepare("
+            UPDATE tb_equipos
+            SET nombre = :nombre,
+                siglas = :siglas,
+                escudo = :escudo,
+                observaciones = :observaciones
+            WHERE id = :id
+            LIMIT 1
+        ");
+
+        return $stmt->execute([
+            ':nombre' => trim((string) $data['nombre']),
+            ':siglas' => ($data['siglas'] ?? '') !== '' ? trim((string) $data['siglas']) : null,
+            ':escudo' => $data['escudo'] ?? null,
+            ':observaciones' => ($data['observaciones'] ?? '') !== ''
+                ? trim((string) $data['observaciones'])
+                : null,
+            ':id' => $id
+        ]);
+    }
+
+    /**
      * Registra la entidad base de un equipo.
      * La afiliación a clubes y la participación en ligas se gestionan
      * por separado y no forman parte de este registro.
