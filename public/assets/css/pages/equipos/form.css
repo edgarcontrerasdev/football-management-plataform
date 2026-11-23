@@ -1,40 +1,41 @@
 /* Formulario de alta de equipos */
 .equipo-create-card {
     overflow: hidden;
-    border-radius: 12px;
+    border: 1px solid #e1eaf4;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
 }
 
 .equipo-form-section h6 {
-    color: #1e40af;
-    letter-spacing: .04em;
+    color: var(--primary-dark);
     font-size: .82rem;
+    font-weight: 750;
+    letter-spacing: .045em;
 }
 
-.equipo-form-section .form-label {
-    color: #334155;
-    font-weight: 600;
-}
+.equipo-form-section .form-label { color: #344b66; font-weight: 650; }
 
 .equipo-create-aside {
-    background: #f8fafc;
-    border-left: 1px solid #e5e7eb;
+    background: #f4f8fd;
+    border-left: 1px solid #e3ebf4;
 }
 
 .equipo-crest-picker {
     position: relative;
-    width: 100%;
-    min-height: 210px;
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 100%;
+    min-height: 210px;
     padding: 18px;
-    background: #fff;
-    border: 1px dashed #cbd5e1;
-    border-radius: 12px;
-    cursor: pointer;
     overflow: hidden;
+    background: #fff;
+    border: 1px dashed #b9cce1;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: border-color .2s ease, background .2s ease;
 }
-
+.equipo-crest-picker:hover { background: #fafdff; border-color: var(--primary-light); }
 .equipo-crest-picker img {
     display: block;
     width: 100%;
@@ -42,7 +43,6 @@
     height: 180px;
     object-fit: contain;
 }
-
 .equipo-crest-overlay {
     position: absolute;
     inset: 0;
@@ -52,43 +52,25 @@
     justify-content: center;
     gap: 7px;
     color: #fff;
-    background: rgba(15, 23, 42, .68);
+    background: rgba(17, 49, 86, .76);
     opacity: 0;
     transition: opacity .2s ease;
 }
-
-.equipo-crest-overlay i {
-    font-size: 1.7rem;
-}
-
-.equipo-crest-overlay small {
-    font-weight: 600;
-}
-
+.equipo-crest-overlay i { font-size: 1.7rem; }
+.equipo-crest-overlay small { font-weight: 650; }
 .equipo-crest-picker:hover .equipo-crest-overlay,
-.equipo-crest-picker:focus-visible .equipo-crest-overlay {
-    opacity: 1;
-}
-
+.equipo-crest-picker:focus-visible .equipo-crest-overlay { opacity: 1; }
 .equipo-crest-picker:focus-visible {
-    outline: 3px solid rgba(30, 64, 175, .25);
+    outline: 3px solid rgba(36,89,166,.2);
     outline-offset: 3px;
 }
-
-.equipo-crest-note {
-    color: #64748b;
-    font-size: .82rem;
-    line-height: 1.5;
-}
+.equipo-crest-note { color: var(--text-muted); font-size: .82rem; line-height: 1.5; }
 
 .equipo-form-actions {
-    background: #f8fafc;
-    border-top: 1px solid #e5e7eb;
+    background: #f7f9fc;
+    border-top: 1px solid #e3ebf4;
 }
 
 @media (max-width: 991.98px) {
-    .equipo-create-aside {
-        border-left: 0;
-        border-top: 1px solid #e5e7eb;
-    }
+    .equipo-create-aside { border-top: 1px solid #e3ebf4; border-left: 0; }
 }
