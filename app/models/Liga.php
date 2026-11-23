@@ -37,6 +37,62 @@ class Liga
     }
 
     /**
+     * Comprueba si el nombre ya está registrado en otra liga.
+     */
+    public function existeOtroNombre(string $nombre, int $excluirId): bool
+    {
+        $stmt = $this->pdo->prepare("
+            SELECT 1
+            FROM tb_ligas
+            WHERE LOWER(TRIM(nombre)) = LOWER(TRIM(:nombre))
+              AND id <> :id
+            LIMIT 1
+        ");
+        $stmt->execute([':nombre' => $nombre, ':id' => $excluirId]);
+        return (bool) $stmt->fetchColumn();
+    }
+
+    /**
+     * Actualiza los datos generales de una liga sin alterar sus relaciones.
+     */
+    public function actualizar(int $id, array $data): bool
+    {
+        $stmt = $this->pdo->prepare("
+            UPDATE tb_ligas
+            SET nombre = :nombre,
+                siglas = :siglas,
+                estado = :estado,
+                correo = :correo,
+                telefono = :telefono,
+                direccion = :direccion,
+                colonia = :colonia,
+                municipio = :municipio,
+                estado_republica = :estado_republica,
+                codigo_postal = :codigo_postal,
+                redes_sociales = :redes_sociales,
+                notas = :notas
+            WHERE id = :id
+            LIMIT 1
+        ");
+
+        return $stmt->execute([
+            ':nombre' => trim((string) $data['nombre']),
+            ':siglas' => ($data['siglas'] ?? '') !== '' ? trim((string) $data['siglas']) : null,
+            ':estado' => $data['estado'] ?? 'activo',
+            ':correo' => ($data['correo'] ?? '') !== '' ? trim((string) $data['correo']) : null,
+            ':telefono' => ($data['telefono'] ?? '') !== '' ? trim((string) $data['telefono']) : null,
+            ':direccion' => ($data['direccion'] ?? '') !== '' ? trim((string) $data['direccion']) : null,
+            ':colonia' => ($data['colonia'] ?? '') !== '' ? trim((string) $data['colonia']) : null,
+            ':municipio' => ($data['municipio'] ?? '') !== '' ? trim((string) $data['municipio']) : null,
+            ':estado_republica' => ($data['estado_republica'] ?? '') !== '' ? trim((string) $data['estado_republica']) : null,
+            ':codigo_postal' => ($data['codigo_postal'] ?? '') !== '' ? trim((string) $data['codigo_postal']) : null,
+            ':redes_sociales' => ($data['redes_sociales'] ?? '') !== '' ? trim((string) $data['redes_sociales']) : null,
+            ':notas' => ($data['notas'] ?? '') !== '' ? trim((string) $data['notas']) : null,
+            ':id' => $id
+        ]);
+    }
+
+    /**
      * Registra una liga independiente. Su organismo gestor podrá vincularse después.
      */
     public function crear(array $data): bool
