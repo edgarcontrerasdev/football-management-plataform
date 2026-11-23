@@ -2,8 +2,14 @@
 -- Migracion: temporadas independientes por organismo o liga.
 -- Ejecutar una sola vez sobre la base de datos AFEC-LAP.
 -- La migracion conserva IDs, fechas, estados y relaciones existentes.
+-- La base se selecciona explícitamente para evitar ejecutarla en otro esquema.
 
-DELIMITER $$
+USE afec_v2;
+
+
+DROP PROCEDURE IF EXISTS migrar_temporadas_por_ambito;
+
+DELIMITER $
 
 CREATE PROCEDURE migrar_temporadas_por_ambito()
 BEGIN
