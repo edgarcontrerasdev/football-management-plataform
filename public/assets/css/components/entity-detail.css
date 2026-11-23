@@ -111,3 +111,75 @@
         flex: 1 1 auto;
     }
 }
+
+/* Encabezado de entidad: mismo patrón para todos los módulos */
+.entity-detail-heading {
+    width: 100%;
+    padding: 1.1rem 1.25rem;
+    margin-bottom: 1.25rem !important;
+    background: linear-gradient(135deg, #ffffff, #f3f8ff);
+    border: 1px solid #e1eaf5;
+    border-left: 4px solid var(--primary, #2456a6);
+    border-radius: 14px;
+    box-shadow: 0 3px 12px rgba(15, 45, 90, .06);
+}
+
+.entity-detail-heading h3 {
+    color: #173f83;
+    font-size: clamp(1.2rem, 2vw, 1.55rem);
+    font-weight: 750;
+    letter-spacing: -.025em;
+}
+
+.entity-detail-heading p {
+    color: #64748b !important;
+    font-size: .92rem;
+}
+
+.entity-detail-heading .btn {
+    white-space: nowrap;
+}
+
+.entity-detail-heading .badge-season {
+    background: #eaf2ff;
+    color: #234b82;
+    border: 1px solid #d4e3f8;
+}
+
+.torneo-detail-heading {
+    margin-top: .25rem;
+}
+
+.liga-tabs-card .header-dark {
+    background: linear-gradient(135deg, #ffffff, #f3f8ff) !important;
+    border: 1px solid #e1eaf5 !important;
+    border-left: 4px solid var(--primary, #2456a6) !important;
+    border-radius: 14px;
+    box-shadow: 0 3px 12px rgba(15, 45, 90, .06) !important;
+}
+
+.liga-tabs-card .header-dark h3,
+.liga-tabs-card .header-dark .text-white,
+.liga-tabs-card .header-dark .text-light,
+.liga-tabs-card .header-dark .header-info {
+    color: #173f83 !important;
+}
+
+.liga-tabs-card .header-dark .btn-light {
+    color: #234b82;
+    background: #eaf2ff;
+    border-color: #d4e3f8;
+}
+
+@media (max-width: 767.98px) {
+    .entity-detail-heading {
+        padding: 1rem;
+        align-items: flex-start !important;
+    }
+    .entity-detail-heading > div:last-child {
+        width: 100%;
+    }
+    .entity-detail-heading .btn {
+        flex: 1 1 auto;
+    }
+}
