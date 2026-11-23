@@ -23,6 +23,12 @@ return [
                 'url'   => 'index.php?page=equipos&action=detalles&id={id}',
                 'title' => 'Ver equipo',
                 'class' => ''
+            ],
+            [
+                'icon'  => 'pencil',
+                'url'   => 'index.php?page=equipos&action=editar&id={id}',
+                'title' => 'Editar equipo',
+                'class' => ''
             ]
         ]
     ]
