@@ -77,3 +77,46 @@
     outline: 2px solid #93c5fd;
     outline-offset: 3px;
 }
+
+
+/* Cabecera del detalle: mismo patrón de identidad que el detalle de equipos. */
+.liga-detail-page .liga-identity-card {
+    background: #fff;
+    border: 1px solid #e5edf7;
+    border-radius: 14px;
+}
+.liga-detail-page .liga-identity-logo {
+    width: 148px;
+    height: 148px;
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8fbff;
+    border: 1px solid #e2eaf4;
+    border-radius: 12px;
+}
+.liga-detail-page .liga-identity-logo img {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+.liga-detail-page .liga-identity-name { color: #173f83; }
+.liga-detail-page .liga-identity-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 22px;
+    color: #64748b;
+    font-size: .9rem;
+}
+.liga-detail-page .liga-identity-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.liga-detail-page .liga-identity-meta i { color: var(--primary, #2456a6); }
+@media (max-width: 575.98px) {
+    .liga-detail-page .liga-identity-logo { width: 112px; height: 112px; }
+    .liga-detail-page .liga-identity-card .card-body { padding: 1.25rem !important; }
+}
