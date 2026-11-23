@@ -28,15 +28,17 @@
     $direccionTexto = implode(', ', $direccionPartes);
     $estado = strtolower((string) ($liga['estado'] ?? ''));
     $estadoTexto = match ($estado) {
-        'activo'   => 'Activa',
-        'inactivo' => 'Inactiva',
-        default    => ucfirst($estado ?: 'Sin estado')
+        'activo'     => 'Activa',
+        'inactivo'   => 'Inactiva',
+        'suspendido' => 'Suspendida',
+        default      => ucfirst($estado ?: 'Sin estado')
     };
 
     $estadoClase = match ($estado) {
-        'activo'   => 'success',
-        'inactivo' => 'secondary',
-        default    => 'secondary'
+        'activo'     => 'success',
+        'inactivo'   => 'secondary',
+        'suspendido' => 'warning',
+        default      => 'secondary'
     };
 ?>
 
