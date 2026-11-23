@@ -274,7 +274,9 @@ class LigasController
         }
 
         try {
-            $this->ligaModel->crear($data);
+            if (!$this->ligaModel->crear($data)) {
+                throw new RuntimeException('La creación de la liga no se completó.');
+            }
             flashSuccess('La liga se creó correctamente.');
             header('Location: index.php?page=ligas');
             exit;
@@ -376,7 +378,9 @@ class LigasController
         }
 
         try {
-            $this->ligaModel->actualizar($id, $data);
+            if (!$this->ligaModel->actualizar($id, $data)) {
+                throw new RuntimeException('La actualización de la liga no se completó.');
+            }
             flashSuccess('La información de la liga se actualizó correctamente.');
             header('Location: index.php?page=ligas&action=detalle&id=' . $id);
             exit;
