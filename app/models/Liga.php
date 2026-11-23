@@ -407,7 +407,7 @@ class Liga
             WHERE liga_id = :liga_id AND temporada_id = :temporada_id
             LIMIT 1
         ");
-        $stmt->execute([':liga_id' => $ligaId, ':temporada_id' => $temporadaId]);
+        $stmt->execute([':liga_id' => $ligaId, ':temporada_join' => $temporadaId, ':temporada_filter' => $temporadaId]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row ?: null;
     }
@@ -423,13 +423,13 @@ class Liga
                    COALESCE(NULLIF(et.siglas, ''), e.siglas) AS siglas_temporada
             FROM tb_equipos e
             LEFT JOIN tb_equipo_temporadas et
-                ON et.equipo_id = e.id AND et.temporada_id = :temporada_id
+                ON et.equipo_id = e.id AND et.temporada_id = :temporada_join
             WHERE NOT EXISTS (
                 SELECT 1
                 FROM tb_liga_temporadas lt
                 INNER JOIN tb_liga_equipos le ON le.liga_temporada_id = lt.id
                 WHERE lt.liga_id = :liga_id
-                  AND lt.temporada_id = :temporada_id
+                  AND lt.temporada_id = :temporada_filter
                   AND le.equipo_id = e.id
             )
             ORDER BY nombre_temporada ASC
