@@ -470,6 +470,36 @@ class Liga
         return $stmt->rowCount() === 1;
     }
 
+
+    /**
+     * Resuelve una solicitud pendiente de inscripción, limitada a la liga indicada.
+     */
+    public function resolverInscripcionEquipo(int $ligaId, int $ligaEquipoId, string $estado): bool
+    {
+        if (!in_array($estado, ['activo', 'rechazado'], true)) {
+            throw new InvalidArgumentException('Estado de resolución no válido.');
+        }
+
+        $stmt = $this->pdo->prepare("
+            UPDATE tb_liga_equipos le
+            INNER JOIN tb_liga_temporadas lt ON lt.id = le.liga_temporada_id
+            SET le.estado_participacion = :estado,
+                le.fecha_alta = CASE WHEN :estado_fecha = 'activo' THEN NOW() ELSE le.fecha_alta END
+            WHERE le.id = :liga_equipo_id
+              AND lt.liga_id = :liga_id
+              AND le.estado_participacion = 'pendiente'
+        ");
+        $stmt->execute([
+            ':estado' => $estado,
+            ':estado_fecha' => $estado,
+            ':liga_equipo_id' => $ligaEquipoId,
+            ':liga_id' => $ligaId
+        ]);
+
+        return $stmt->rowCount() === 1;
+    }
+
+
     /**
      * Temporadas ya vinculadas a una liga.
      */
