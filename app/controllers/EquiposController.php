@@ -101,6 +101,127 @@
            
         }
 
+        /**
+         * Formulario para editar los datos permanentes de un equipo.
+         */
+        public function editar($id)
+        {
+            $id = (int) $id;
+            $equipo = $this->equipoModel->getById($id);
+
+            if (!$equipo) {
+                http_response_code(404);
+                view('pages.404.php');
+                return;
+            }
+
+            $error = $_SESSION['equipo_error'] ?? null;
+            $old = $_SESSION['equipo_old'] ?? [];
+            unset($_SESSION['equipo_error'], $_SESSION['equipo_old']);
+
+            view('pages.equipos.edit.php', [
+                'equipo' => $equipo,
+                'error' => $error,
+                'old' => $old
+            ]);
+        }
+
+        /**
+         * Guarda cambios de identidad y escudo de un equipo.
+         */
+        public function actualizar($id)
+        {
+            $id = (int) $id;
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                header('Location: index.php?page=equipos');
+                exit;
+            }
+
+            $equipo = $this->equipoModel->getById($id);
+            if (!$equipo) {
+                http_response_code(404);
+                view('pages.404.php');
+                return;
+            }
+
+            $data = [
+                'nombre' => trim((string) ($_POST['nombre'] ?? '')),
+                'siglas' => trim((string) ($_POST['siglas'] ?? '')),
+                'observaciones' => trim((string) ($_POST['observaciones'] ?? '')),
+                'escudo' => $equipo['escudo'] ?? null
+            ];
+
+            $_SESSION['equipo_old'] = $data;
+            if ($data['nombre'] === '') {
+                $_SESSION['equipo_error'] = 'El nombre del equipo es obligatorio.';
+                header('Location: index.php?page=equipos&action=editar&id=' . $id);
+                exit;
+            }
+            if (mb_strlen($data['nombre']) > 150 || mb_strlen($data['siglas']) > 30) {
+                $_SESSION['equipo_error'] = 'Revisa la longitud del nombre (máximo 150) y las siglas (máximo 30).';
+                header('Location: index.php?page=equipos&action=editar&id=' . $id);
+                exit;
+            }
+
+            $rutaNueva = null;
+            $nombreAnterior = $equipo['escudo'] ?? null;
+            $archivo = $_FILES['escudo'] ?? null;
+
+            if ($archivo && $archivo['error'] !== UPLOAD_ERR_NO_FILE) {
+                if ($archivo['error'] !== UPLOAD_ERR_OK || $archivo['size'] > 2 * 1024 * 1024) {
+                    $_SESSION['equipo_error'] = 'El escudo debe cargarse correctamente y no superar 2 MB.';
+                    header('Location: index.php?page=equipos&action=editar&id=' . $id);
+                    exit;
+                }
+
+                $finfo = new finfo(FILEINFO_MIME_TYPE);
+                $mime = $finfo->file($archivo['tmp_name']);
+                $formatos = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+                if (!isset($formatos[$mime]) || @getimagesize($archivo['tmp_name']) === false) {
+                    $_SESSION['equipo_error'] = 'El escudo debe ser una imagen JPG, PNG o WEBP válida.';
+                    header('Location: index.php?page=equipos&action=editar&id=' . $id);
+                    exit;
+                }
+
+                $directorio = ROOT_PATH . '/public/assets/img/equipos/';
+                if (!is_dir($directorio) && !mkdir($directorio, 0755, true) && !is_dir($directorio)) {
+                    $_SESSION['equipo_error'] = 'No está disponible la carpeta de escudos.';
+                    header('Location: index.php?page=equipos&action=editar&id=' . $id);
+                    exit;
+                }
+
+                $data['escudo'] = bin2hex(random_bytes(16)) . '.' . $formatos[$mime];
+                $rutaNueva = $directorio . $data['escudo'];
+                if (!move_uploaded_file($archivo['tmp_name'], $rutaNueva)) {
+                    $_SESSION['equipo_error'] = 'No fue posible guardar el nuevo escudo.';
+                    header('Location: index.php?page=equipos&action=editar&id=' . $id);
+                    exit;
+                }
+            }
+
+            try {
+                $this->equipoModel->actualizarEntidad($id, $data);
+                unset($_SESSION['equipo_old']);
+                if ($rutaNueva && $nombreAnterior && $nombreAnterior !== 'default.png') {
+                    $rutaAnterior = ROOT_PATH . '/public/assets/img/equipos/' . $nombreAnterior;
+                    if (is_file($rutaAnterior)) {
+                        @unlink($rutaAnterior);
+                    }
+                }
+                $_SESSION['success'] = 'Los datos del equipo se actualizaron correctamente.';
+                header('Location: index.php?page=equipos&action=detalles&id=' . $id);
+                exit;
+            } catch (Throwable $e) {
+                if ($rutaNueva && is_file($rutaNueva)) {
+                    @unlink($rutaNueva);
+                }
+                error_log('Error al actualizar equipo ' . $id . ': ' . $e->getMessage());
+                $_SESSION['equipo_error'] = 'No fue posible actualizar el equipo. Intenta nuevamente.';
+                header('Location: index.php?page=equipos&action=editar&id=' . $id);
+                exit;
+            }
+        }
+
         public function dashboard(){
             $equipo = $this->equipoModel->getById(10);
             $viewPath = ROOT_PATH.'/admin/views/pages/equipos/dashboard.php';
