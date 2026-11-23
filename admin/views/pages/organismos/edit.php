@@ -2,8 +2,8 @@
 $old = $old ?? [];
 $valor = static fn(string $campo, $default = '') => $old[$campo] ?? ($organismo[$campo] ?? $default);
 ?>
-<h3 class="page-title mb-1">Editar organismo</h3>
-<p class="page-details mb-4">Actualiza los datos generales sin alterar sus relaciones con ligas.</p>
+<div class="organismo-edit-page"><div class="entity-detail-heading mb-4"><div><h3 class="page-title mb-1">Editar organismo</h3>
+<p class="page-details mb-0">Actualiza los datos generales sin alterar sus relaciones con ligas.</p></div></div>
 <?php if (!empty($error)): ?><div class="alert alert-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div><?php endif; ?>
 <div class="card border-0 shadow-sm"><div class="card-body p-4">
 <form action="index.php?page=organismos&action=actualizar&id=<?= (int) $organismo['id'] ?>" method="POST">
@@ -21,3 +21,5 @@ $valor = static fn(string $campo, $default = '') => $old[$campo] ?? ($organismo[
 </div>
 <div class="d-flex justify-content-end gap-2 mt-4"><a href="index.php?page=organismos&action=detalles&id=<?= (int) $organismo['id'] ?>" class="btn btn-light">Cancelar</a><button class="btn btn-primary" type="submit"><i class="fas fa-save me-1"></i>Guardar cambios</button></div>
 </form></div></div>
+
+</div>
