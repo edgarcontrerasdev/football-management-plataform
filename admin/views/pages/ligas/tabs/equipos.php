@@ -1,5 +1,7 @@
 <?php
 $equiposLiga = $equiposLiga ?? [];
+$equiposDisponibles = $equiposDisponibles ?? [];
+$ligaTemporada = $ligaTemporada ?? null;
 $estadosParticipacion = [
     'activo' => ['Activo', 'success'],
     'pendiente' => ['Pendiente', 'warning'],
@@ -26,6 +28,44 @@ $estadosDocumentacion = [
         <?= count($equiposLiga) ?> equipo(s)
     </span>
 </div>
+
+<?php if (!empty($temporadaActual) && $ligaTemporada): ?>
+    <form method="POST" action="index.php?page=ligas&action=inscribirEquipo" class="card card-body border mb-4">
+        <input type="hidden" name="liga_id" value="<?= (int) $liga['id'] ?>">
+        <input type="hidden" name="temporada_id" value="<?= (int) $temporadaActual['id'] ?>">
+        <h6 class="mb-3">Registrar equipo en esta temporada</h6>
+        <?php if ($equiposDisponibles): ?>
+            <div class="row g-2 align-items-end">
+                <div class="col-12 col-lg-7">
+                    <label for="equipo_id" class="form-label">Equipo</label>
+                    <select class="form-select" id="equipo_id" name="equipo_id" required>
+                        <option value="">Selecciona un equipo</option>
+                        <?php foreach ($equiposDisponibles as $disponible): ?>
+                            <option value="<?= (int) $disponible['id'] ?>">
+                                <?= htmlspecialchars($disponible['nombre_temporada'], ENT_QUOTES, 'UTF-8') ?>
+                                <?= !empty($disponible['siglas_temporada']) ? ' · ' . htmlspecialchars($disponible['siglas_temporada'], ENT_QUOTES, 'UTF-8') : '' ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-12 col-lg-3">
+                    <label for="numero_registro" class="form-label">Número de registro</label>
+                    <input type="text" class="form-control" id="numero_registro" name="numero_registro" maxlength="50">
+                </div>
+                <div class="col-12 col-lg-2">
+                    <button type="submit" class="btn btn-primary w-100">Inscribir</button>
+                </div>
+            </div>
+            <small class="text-muted d-block mt-2">La inscripción se registra como pendiente de revisión.</small>
+        <?php else: ?>
+            <p class="text-muted mb-0">No hay equipos disponibles para inscribir. Todos los equipos registrados ya participan o todavía no existen equipos en el catálogo.</p>
+        <?php endif; ?>
+    </form>
+<?php elseif (!empty($temporadaActual)): ?>
+    <div class="alert alert-warning">
+        La temporada actual todavía no está vinculada a esta liga. Primero registra la solicitud en la pestaña Temporada.
+    </div>
+<?php endif; ?>
 
 <?php if (empty($temporadaActual)): ?>
     <div class="alert alert-info mb-0">
