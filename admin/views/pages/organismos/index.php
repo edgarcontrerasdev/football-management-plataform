@@ -1,8 +1,8 @@
 <div class="organismos-index-page">
-    <div class="page-header mb-4">
+    <div class="admin-page-header mb-4">
         <div>
-            <h3 class="page-title mb-1">Organismos</h3>
-            <p class="page-details mb-0">Catálogo y administración de organismos deportivos</p>
+            <h3 class="admin-page-title mb-1">Organismos</h3>
+            <p class="admin-page-description mb-0">Catálogo y administración de organismos deportivos</p>
         </div>
     </div>
 
