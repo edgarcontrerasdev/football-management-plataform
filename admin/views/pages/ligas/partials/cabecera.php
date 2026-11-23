@@ -22,9 +22,14 @@ $estadoClase = $estadoClase ?? match ($estado) {
             <h3 class="admin-page-title mb-1">Detalle de la liga</h3>
             <p class="admin-page-description mb-0">Información general y administración de la liga.</p>
         </div>
-        <a href="index.php?page=ligas" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-1"></i>Regresar al listado
-        </a>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="index.php?page=ligas&action=editar&id=<?= (int) ($liga['id'] ?? 0) ?>" class="btn btn-primary">
+                <i class="bi bi-pencil-square me-1"></i>Editar liga
+            </a>
+            <a href="index.php?page=ligas" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Regresar al listado
+            </a>
+        </div>
     </div>
 
     <div class="card border-0 shadow-sm liga-identity-card mb-4">
@@ -54,11 +59,6 @@ $estadoClase = $estadoClase ?? match ($estado) {
                             <span><i class="bi bi-telephone"></i><?= htmlspecialchars((string) $liga['telefono'], ENT_QUOTES, 'UTF-8') ?></span>
                         <?php endif; ?>
                     </div>
-                </div>
-                <div class="col-12 col-lg-auto">
-                    <a href="index.php?page=ligas&action=editar&id=<?= (int) ($liga['id'] ?? 0) ?>" class="btn btn-primary">
-                        <i class="bi bi-pencil-square me-1"></i>Editar liga
-                    </a>
                 </div>
             </div>
         </div>
