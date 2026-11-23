@@ -1,8 +1,8 @@
 <div class="clubes-index-page">
-    <div class="page-header mb-4">
+    <div class="admin-page-header mb-4">
         <div>
-            <h3 class="page-title mb-1">Clubes</h3>
-            <p class="page-details mb-0">Catálogo y administración de clubes</p>
+            <h3 class="admin-page-title mb-1">Clubes</h3>
+            <p class="admin-page-description mb-0">Catálogo y administración de clubes</p>
         </div>
     </div>
 
