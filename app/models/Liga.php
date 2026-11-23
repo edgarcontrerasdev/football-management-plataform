@@ -407,7 +407,7 @@ class Liga
             WHERE liga_id = :liga_id AND temporada_id = :temporada_id
             LIMIT 1
         ");
-        $stmt->execute([':liga_id' => $ligaId, ':temporada_join' => $temporadaId, ':temporada_filter' => $temporadaId]);
+        $stmt->execute([':liga_id' => $ligaId, ':temporada_id' => $temporadaId]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row ?: null;
     }
