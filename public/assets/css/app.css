@@ -1,10 +1,14 @@
-/* Estilos base: variables, reset y tipografía */
+/* =========================================================
+   AFEC-LAP | Hoja principal del panel administrativo
+   Orden: fundamentos -> módulos -> componentes -> estructura
+   ========================================================= */
+
+/* Fundamentos visuales */
 @import url('base/variables.css');
 @import url('base/reset.css');
 @import url('base/typography.css');
 
-@import url('components/kpis.css');
-@import url('components/page-title.css');
+/* Estilos específicos de cada módulo */
 @import url('pages/users/form.css');
 @import url('pages/users/list.css');
 @import url('pages/dashboard.css');
@@ -14,11 +18,6 @@
 @import url('pages/equipos.css');
 @import url('pages/equipos/form.css');
 @import url('pages/clubes/form.css');
-@import url('components/buttons.css');
-@import url('components/toolbox.css');
-@import url('components/pagination.css');
-@import url('components/table.css');
-
 @import url('pages/ligas/header.css');
 @import url('pages/ligas/list.css');
 @import url('pages/ligas/tabs.css');
@@ -26,7 +25,14 @@
 @import url('pages/torneos.css');
 @import url('pages/errors.css');
 
-/* Componentes reutilizables del panel */
+/* Componentes compartidos: se cargan después de los módulos
+   para mantener una apariencia consistente en todo el panel. */
+@import url('components/kpis.css');
+@import url('components/page-title.css');
+@import url('components/buttons.css');
+@import url('components/toolbox.css');
+@import url('components/pagination.css');
+@import url('components/table.css');
 @import url('components/dropdowns.css');
 @import url('components/modals.css');
 @import url('components/feedback.css');
@@ -36,6 +42,3 @@
 @import url('layout/header.css');
 @import url('layout/sidebar.css');
 @import url('layout/main.css');
-
-
-
