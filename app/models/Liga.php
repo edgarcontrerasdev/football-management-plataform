@@ -488,6 +488,7 @@ class Liga
             WHERE le.id = :liga_equipo_id
               AND lt.liga_id = :liga_id
               AND le.estado_participacion = 'pendiente'
+              AND lt.estado = 'activo'
         ");
         $stmt->execute([
             ':estado' => $estado,
