@@ -233,12 +233,55 @@ class LigasController
             exit;
         }
 
+        $rutaLogo = null;
+        $data['logo'] = null;
+        $archivoLogo = $_FILES['logo'] ?? null;
+
+        if ($archivoLogo && $archivoLogo['error'] !== UPLOAD_ERR_NO_FILE) {
+            if ($archivoLogo['error'] !== UPLOAD_ERR_OK || $archivoLogo['size'] > 2 * 1024 * 1024) {
+                $_SESSION['errors'] = ['El logotipo debe cargarse correctamente y no superar 2 MB.'];
+                $_SESSION['old'] = $_POST;
+                header('Location: index.php?page=ligas&action=crear');
+                exit;
+            }
+
+            $finfo = new finfo(FILEINFO_MIME_TYPE);
+            $mime = $finfo->file($archivoLogo['tmp_name']);
+            $formatos = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+            if (!isset($formatos[$mime]) || @getimagesize($archivoLogo['tmp_name']) === false) {
+                $_SESSION['errors'] = ['El logotipo debe ser una imagen JPG, PNG o WEBP válida.'];
+                $_SESSION['old'] = $_POST;
+                header('Location: index.php?page=ligas&action=crear');
+                exit;
+            }
+
+            $directorio = ROOT_PATH . '/public/assets/img/ligas/';
+            if (!is_dir($directorio) && !mkdir($directorio, 0755, true) && !is_dir($directorio)) {
+                $_SESSION['errors'] = ['No está disponible la carpeta para guardar logotipos de ligas.'];
+                $_SESSION['old'] = $_POST;
+                header('Location: index.php?page=ligas&action=crear');
+                exit;
+            }
+
+            $data['logo'] = bin2hex(random_bytes(16)) . '.' . $formatos[$mime];
+            $rutaLogo = $directorio . $data['logo'];
+            if (!move_uploaded_file($archivoLogo['tmp_name'], $rutaLogo)) {
+                $_SESSION['errors'] = ['No fue posible guardar el logotipo.'];
+                $_SESSION['old'] = $_POST;
+                header('Location: index.php?page=ligas&action=crear');
+                exit;
+            }
+        }
+
         try {
             $this->ligaModel->crear($data);
             flashSuccess('La liga se creó correctamente.');
             header('Location: index.php?page=ligas');
             exit;
         } catch (Throwable $e) {
+            if ($rutaLogo && is_file($rutaLogo)) {
+                @unlink($rutaLogo);
+            }
             error_log('Error al crear liga: ' . $e->getMessage());
             $_SESSION['errors'] = ['No fue posible guardar la liga. Verifica los datos e inténtalo nuevamente.'];
             $_SESSION['old'] = $_POST;
