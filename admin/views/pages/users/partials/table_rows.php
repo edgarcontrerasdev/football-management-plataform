@@ -16,13 +16,13 @@
                         </div>
                     </div>
                 </td>
-                <td> <?= htmlspecialchars($user['rol'] ?? 'Sin rol'); ?> </td>
+                <td> <?= htmlspecialchars($user['rol_nombre'] ?? 'Sin rol'); ?> </td>
                 <td>
                     <div>@<?= htmlspecialchars($user['usuario']) ?></div>
                     <small class="text-muted">ID <?= (int) $user['id'] ?></small>
                 </td>
-                <td> <?= $user['liga'] ?? '-'; ?> </td>
-                <td> <?=  $user['equipo'] ?? '-'; ?> </td>
+                <td> <?= htmlspecialchars($user['liga'] ?? '-', ENT_QUOTES, 'UTF-8'); ?> </td>
+                <td> <?= htmlspecialchars($user['equipo'] ?? '-', ENT_QUOTES, 'UTF-8'); ?> </td>
                 <td class="text-center">
                     <span id="status-<?= $user['id'] ?>" class="user-status 
                     <?= $user['estado'] === 'activo' ? 'active' : 'inactive' ?>">
