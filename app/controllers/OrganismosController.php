@@ -148,7 +148,7 @@ class OrganismosController
         } catch (Throwable $e) {
             if ($rutaLogoNuevo && is_file($rutaLogoNuevo)) @unlink($rutaLogoNuevo);
             error_log('Error al registrar organismo: ' . $e->getMessage());
-            $_SESSION['organismo_error'] = $e instanceof RuntimeException ? $e->getMessage() : 'No fue posible registrar el organismo.';
+            $_SESSION['organismo_error'] = $e instanceof PDOException ? 'No fue posible registrar el organismo.' : $e->getMessage();
             header('Location: index.php?page=organismos&action=crear');
             exit;
         }
@@ -241,7 +241,7 @@ class OrganismosController
         } catch (Throwable $e) {
             if ($rutaLogoNuevo && is_file($rutaLogoNuevo)) @unlink($rutaLogoNuevo);
             error_log('Error al actualizar organismo: ' . $e->getMessage());
-            $_SESSION['organismo_edit_error'] = $e instanceof RuntimeException ? $e->getMessage() : 'No fue posible actualizar el organismo.';
+            $_SESSION['organismo_edit_error'] = $e instanceof PDOException ? 'No fue posible actualizar el organismo.' : $e->getMessage();
             header('Location: index.php?page=organismos&action=editar&id=' . $id);
             exit;
         }
