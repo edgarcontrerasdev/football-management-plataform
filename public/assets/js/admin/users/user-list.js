@@ -72,12 +72,27 @@ document.addEventListener('DOMContentLoaded', () => {
             pagina: pagina.value,
             limite: limite.value || '10'
         });
-        fetch('index.php?page=ajax&action=usersFilter&' + params.toString())
-            .then(response => response.json())
+        fetch('index.php?page=ajax&action=usersFilter&' + params.toString(), {
+            headers: {'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest'},
+            credentials: 'same-origin'
+        })
+            .then(async response => {
+                const raw = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(raw);
+                } catch (error) {
+                    throw new Error(`El servidor respondió con HTTP ${response.status} y no devolvió JSON: ${raw.slice(0, 350)}`);
+                }
+                if (!response.ok || data.success === false) {
+                    throw new Error(data.mensaje || `Error HTTP ${response.status}`);
+                }
+                return data;
+            })
             .then(data => {
                 const result = data.usuarios || {};
-                const users = result.usuarios || [];
-                const total = Number(result.total || data.total || 0);
+                const users = Array.isArray(result) ? result : (result.usuarios || []);
+                const total = Number(data.total ?? result.total ?? users.length);
                 if (!users.length) {
                     tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No se encontraron usuarios.</td></tr>';
                     renderPagination(0, 1, Number(limite.value));
@@ -100,9 +115,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }).join('');
                 renderPagination(total, Number(pagina.value), Number(limite.value));
             })
-            .catch(() => {
-                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error al cargar usuarios.</td></tr>';
-                if (loader) loader.style.display = 'none';
+            .catch(error => {
+                console.error('Error al cargar usuarios:', error);
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">Error al cargar usuarios: ${escapeHTML(error.message)}</td></tr>`;
             })
             .finally(() => { if (loader) loader.style.display = 'none'; });
     };
