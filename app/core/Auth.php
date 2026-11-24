@@ -47,6 +47,8 @@ class Auth
 
             'rol_id'      => (int) $user['rol_id'],
             'rol_clave'   => $user['rol_clave'],
+            // Alias temporal para vistas/controladores que aún consultan la clave legacy.
+            'rol'         => $user['rol_clave'],
             'rol_nombre'  => $user['rol_nombre'],
 
             'estado'      => $user['estado'],
@@ -73,6 +75,8 @@ class Auth
 
             'rol_id'      => (int) $user['rol_id'],
             'rol_clave'   => $user['rol_clave'],
+            // Alias temporal para vistas/controladores que aún consultan la clave legacy.
+            'rol'         => $user['rol_clave'],
             'rol_nombre'  => $user['rol_nombre'],
 
             'estado'      => $user['estado'],
