@@ -19,26 +19,20 @@ class User {
 
     public function usuarioExiste($usuario, $ignoredId = null)
     {
-        $query = $this->pdo->prepare(
-            "SELECT
-                u.id,
-                u.afiliado_id,
-                u.usuario,
-                u.password,
-                u.rol_id,
-                u.estado,
-                u.avatar,
-                r.clave AS rol_clave,
-                r.nombre AS rol_nombre
+        $sql = "SELECT u.id, u.afiliado_id, u.usuario, u.password, u.rol_id,
+                       u.estado, u.avatar, r.clave AS rol_clave, r.nombre AS rol_nombre
                 FROM tb_usuarios u
-                INNER JOIN tb_roles r
-                ON r.id = u.rol_id
-                WHERE u.usuario = ?
-                  AND (? IS NULL OR u.id <> ?)
-                LIMIT 1"
-        );
+                INNER JOIN tb_roles r ON r.id = u.rol_id
+                WHERE u.usuario = :usuario";
+        $params = [':usuario' => $usuario];
 
-        $query->execute([$usuario, $ignoredId, $ignoredId]);
+        if ($ignoredId !== null) {
+            $sql .= " AND u.id <> :ignored_id";
+            $params[':ignored_id'] = (int) $ignoredId;
+        }
+
+        $query = $this->pdo->prepare($sql);
+        $query->execute($params);
 
         return $query->fetch(PDO::FETCH_ASSOC);
     }
