@@ -17,7 +17,7 @@ class User {
         return $query->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function usuarioExiste($usuario)
+    public function usuarioExiste($usuario, $ignoredId = null)
     {
         $query = $this->pdo->prepare(
             "SELECT
@@ -34,10 +34,11 @@ class User {
                 INNER JOIN tb_roles r
                 ON r.id = u.rol_id
                 WHERE u.usuario = ?
+                  AND (? IS NULL OR u.id <> ?)
                 LIMIT 1"
         );
 
-        $query->execute([$usuario]);
+        $query->execute([$usuario, $ignoredId, $ignoredId]);
 
         return $query->fetch(PDO::FETCH_ASSOC);
     }
@@ -54,6 +55,11 @@ class User {
                 u.rol_id,
                 u.estado,
                 u.avatar,
+                u.nombre,
+                u.correo,
+                u.telefono,
+                u.liga_id,
+                u.equipo_id,
 
                 r.clave AS rol_clave,
                 r.nombre AS rol_nombre,
@@ -163,44 +169,40 @@ class User {
         ]);
     }
 
-    /** Actualizar un usuario existente */
+    /** Actualizar un usuario existente sin modificar campos omitidos. */
     public function update($id, $data)
     {
+        $columns = [
+            'nombre' => 'nombre',
+            'correo' => 'correo',
+            'telefono' => 'telefono',
+            'usuario' => 'usuario',
+            'rol_id' => 'rol_id',
+            'estado' => 'estado',
+            'liga_id' => 'liga_id',
+            'equipo_id' => 'equipo_id',
+            'avatar' => 'avatar',
+            'password' => 'password'
+        ];
+
         $fields = [];
-        $params = [':id' => $id];
+        $params = [':id' => (int) $id];
 
-        // Usuario
-        if (isset($data['usuario'])) {
-            $fields[] = 'usuario = :usuario';
-            $params[':usuario'] = $data['usuario'];
+        foreach ($columns as $key => $column) {
+            if (array_key_exists($key, $data)) {
+                $fields[] = $column . ' = :' . $key;
+                $params[':' . $key] = $data[$key];
+            }
         }
 
-        // Password (solo si viene)
-        if (isset($data['password'])) {
-            $fields[] = 'password = :password';
-            $params[':password'] = $data['password'];
-        }
-
-        // Rol
-        if (isset($data['rol'])) {
-            $fields[] = 'rol_id = :rol_id';
-            $params[':rol_id'] = $data['rol'];
-        }
-
-        // Estado
-        if (isset($data['estado'])) {
-            $fields[] = 'estado = :estado';
-            $params[':estado'] = $data['estado'];
-        }
-
-        if (empty($fields)) {
+        if (!$fields) {
             return false;
         }
 
-        $sql = "UPDATE tb_usuarios SET " . implode(', ', $fields) . " WHERE id = :id";
-
-        $query = $this->pdo->prepare($sql);
-        return $query->execute($params);
+        $stmt = $this->pdo->prepare(
+            'UPDATE tb_usuarios SET ' . implode(', ', $fields) . ' WHERE id = :id'
+        );
+        return $stmt->execute($params);
     }
 
 
