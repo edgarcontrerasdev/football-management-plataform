@@ -24,7 +24,7 @@ $valor = static fn(string $campo, $default = '') => $old[$campo] ?? ($organismo[
     <?php
     $imageUploadId = 'logo';
     $imageUploadName = 'logo';
-    $imageUploadSrc = !empty($organismo['logo']) ? ASSETS . '/img/organismos/' . rawurlencode($organismo['logo']) : ASSETS . '/img/organismos/default.png';
+    $imageUploadSrc = !empty($organismo['logo']) ? ASSETS . '/img/organismos/' . rawurlencode($organismo['logo']) : ASSETS . '/img/ligas/default.png';
     $imageUploadLabel = 'Cambiar logotipo';
     $imageUploadAlt = 'Logotipo del organismo';
     $imageUploadHint = 'Opcional. JPG, PNG o WEBP. Máximo 2 MB.';
