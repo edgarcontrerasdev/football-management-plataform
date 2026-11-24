@@ -7,7 +7,7 @@
 
 <div class="card border-0 shadow-sm">
     <div class="card-body p-4">
-        <form action="index.php?page=organismos&action=store" method="POST">
+        <form action="index.php?page=organismos&action=store" method="POST" enctype="multipart/form-data">
             <div class="row g-3">
                 <div class="col-md-8">
                     <label class="form-label" for="nombre">Nombre <span class="text-danger">*</span></label>
@@ -56,7 +56,19 @@
                     <textarea class="form-control" id="descripcion" name="descripcion" rows="3"><?= htmlspecialchars($old['descripcion'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
                 </div>
             </div>
-            <div class="d-flex justify-content-end gap-2 mt-4">
+            <div class="col-12 mt-3">
+    <h5 class="form-section-title mb-3"><i class="fa-solid fa-image me-2"></i>Logotipo del organismo</h5>
+    <?php
+    $imageUploadId = 'logo';
+    $imageUploadName = 'logo';
+    $imageUploadSrc = !empty($old['logo']) ? ASSETS . '/img/organismos/' . rawurlencode($old['logo']) : ASSETS . '/img/organismos/default.png';
+    $imageUploadLabel = 'Cambiar logotipo';
+    $imageUploadAlt = 'Logotipo del organismo';
+    $imageUploadHint = 'Opcional. JPG, PNG o WEBP. Máximo 2 MB.';
+    include ROOT_PATH . '/admin/views/components/image-upload.php';
+    ?>
+</div>
+<div class="d-flex justify-content-end gap-2 mt-4">
                 <a href="index.php?page=organismos" class="btn btn-light">Cancelar</a>
                 <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Guardar organismo</button>
             </div>
