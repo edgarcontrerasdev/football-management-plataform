@@ -13,7 +13,7 @@ $imageUploadHint = $imageUploadHint ?? 'Opcional. JPG, PNG o WEBP. Máximo 2 MB.
 $imageUploadShape = $imageUploadShape ?? 'square';
 ?>
 <div class="afec-image-upload afec-image-upload--<?= htmlspecialchars($imageUploadShape, ENT_QUOTES, 'UTF-8') ?>">
-    <label class="afec-image-upload__preview" for="<?= htmlspecialchars($imageUploadId, ENT_QUOTES, 'UTF-8') ?>" title="<?= htmlspecialchars($imageUploadLabel, ENT_QUOTES, 'UTF-8') ?>">
+    <label class="afec-image-upload__preview" for="<?= htmlspecialchars($imageUploadId, ENT_QUOTES, 'UTF-8') ?>" title="<?= htmlspecialchars($imageUploadLabel, ENT_QUOTES, 'UTF-8') ?>" tabindex="0" role="button" aria-label="<?= htmlspecialchars($imageUploadLabel, ENT_QUOTES, 'UTF-8') ?>">
         <img id="<?= htmlspecialchars($imageUploadId, ENT_QUOTES, 'UTF-8') ?>Preview" src="<?= htmlspecialchars($imageUploadSrc, ENT_QUOTES, 'UTF-8') ?>" alt="<?= htmlspecialchars($imageUploadAlt, ENT_QUOTES, 'UTF-8') ?>">
         <span class="afec-image-upload__overlay">
             <i class="fa-solid fa-camera" aria-hidden="true"></i>
