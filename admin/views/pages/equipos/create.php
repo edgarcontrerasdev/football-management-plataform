@@ -84,27 +84,15 @@
                             <i class="fa-solid fa-image me-2"></i>Escudo del equipo
                         </h6>
 
-                        <label for="escudo" class="equipo-crest-picker" title="Cambiar escudo">
-                            <img
-                                id="equipoCrestPreview"
-                                src="<?= ASSETS ?>/img/equipos/default.png"
-                                alt="Vista previa del escudo del equipo"
-                            >
-                            <span class="equipo-crest-overlay">
-                                <i class="fa-solid fa-camera"></i>
-                                <small>Cambiar escudo</small>
-                            </span>
-                        </label>
-                        <input
-                            type="file"
-                            id="escudo"
-                            name="escudo"
-                            accept="image/png,image/jpeg,image/webp"
-                            hidden
-                        >
-                        <small class="form-text text-muted d-block mt-2">
-                            Opcional. Formatos PNG, JPG o WEBP. Tamaño máximo: 2 MB.
-                        </small>
+                        <?php
+                        $imageUploadId = 'escudo';
+                        $imageUploadName = 'escudo';
+                        $imageUploadSrc = ASSETS . '/img/equipos/default.png';
+                        $imageUploadLabel = 'Cambiar escudo';
+                        $imageUploadAlt = 'Escudo del equipo';
+                        $imageUploadHint = 'Opcional. JPG, PNG o WEBP. Máximo 2 MB.';
+                        include ROOT_PATH . '/admin/views/components/image-upload.php';
+                        ?>
                         <p class="equipo-crest-note mt-3 mb-0">
                             El escudo registrado aquí corresponde a la entidad equipo. Si su imagen cambia por temporada, se administrará posteriormente en la identidad de temporada.
                         </p>
