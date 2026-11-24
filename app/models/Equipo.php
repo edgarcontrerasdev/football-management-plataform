@@ -45,7 +45,7 @@ class Equipo{
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public public function getByLiga($ligaId){
+    public function getByLiga($ligaId){
         $sql = "SELECT DISTINCT e.id, e.nombre
                 FROM tb_equipos e
                 INNER JOIN tb_liga_equipos le ON le.equipo_id = e.id
