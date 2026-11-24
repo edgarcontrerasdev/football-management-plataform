@@ -310,7 +310,8 @@ class User
         $filtros = [
             'filtro' => trim((string) ($params['filtro'] ?? '')),
             'estado' => $params['estado'] ?? 'all',
-            'rol' => $params['rol'] ?? null
+            'rol' => $params['rol'] ?? null,
+            'liga' => $params['liga'] ?? null
         ];
         return count($this->filtrar($filtros));
     }
