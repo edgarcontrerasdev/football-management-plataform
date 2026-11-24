@@ -1,72 +1,72 @@
 <?php
-require_once __DIR__.'../../../config/database.php';
-require_once __DIR__.'../../models/Liga.php';
-require_once __DIR__.'../../models/Equipo.php';
+
+require_once __DIR__ . '/../models/Liga.php';
+require_once __DIR__ . '/../models/Equipo.php';
+require_once __DIR__ . '/../models/User.php';
 require_once __DIR__ . '/../core/Auth.php';
 
-class AjaxController {
+class AjaxController
+{
+    private PDO $pdo;
 
-    private $pdo;
-
-    public function __construct($pdo) {
+    public function __construct(PDO $pdo)
+    {
         $this->pdo = $pdo;
     }
 
-    // Devuelve todas las ligas en JSON
-    public function ligas() {
+    public function ligas(): void
+    {
         $ligaModel = new Liga($this->pdo);
-        $ligas = $ligaModel->all();
-        echo json_encode($ligas);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($ligaModel->all());
         exit;
     }
 
-    // Devuelve equipos según liga_id en JSON
-    public function equipos() {
-        $equipoModel = new Equipo($this->pdo);
-        $liga_id = $_GET['liga_id'] ?? null;
-        if (!$liga_id) {
-            echo json_encode([]);
-            exit;
-        }
-
-        $equipos = $equipoModel->getByLiga($liga_id); // Método que filtra por liga
+    public function equipos(): void
+    {
+        $ligaId = (int) ($_GET['liga_id'] ?? 0);
+        $equipos = $ligaId > 0 ? (new Equipo($this->pdo))->getByLiga($ligaId) : [];
+        header('Content-Type: application/json; charset=utf-8');
         echo json_encode($equipos);
         exit;
     }
 
-    public function index(){
+    public function index(): void
+    {
         echo 'Controlador AJAX listo';
     }
 
-    
-   public function usersFilter() {\n        Auth::requireRole(['ADMIN', 'SUPERVISOR']);
-        require_once __DIR__ . '/../models/User.php';
-        require_once __DIR__ . '/../../config/database.php';
+    public function usersFilter(): void
+    {
+        Auth::requireRole(['ADMIN', 'SUPERVISOR']);
 
-        $filtros = [
-            'filtro' => $_GET['filtro'] ?? '',
-            'estado' => $_GET['estado'] ?? 'all',
-            'rol'    => $_GET['rol'] ?? null,
-            'liga'   => $_GET['liga'] ?? null,
-            'pagina' => isset($_GET['pagina']) ? (int)$_GET['pagina'] : 1,
-            'limite' => isset($_GET['limite']) ? (int)$_GET['limite'] : 10,
-        ];
+        header('Content-Type: application/json; charset=utf-8');
 
-        $userModel = new User($this->pdo);
+        try {
+            $filtros = [
+                'filtro' => trim((string) ($_GET['filtro'] ?? '')),
+                'estado' => (string) ($_GET['estado'] ?? 'all'),
+                'rol' => $_GET['rol'] ?? null,
+                'liga' => $_GET['liga'] ?? null,
+                'pagina' => max(1, (int) ($_GET['pagina'] ?? 1)),
+                'limite' => min(100, max(1, (int) ($_GET['limite'] ?? 10))),
+            ];
 
-        //usuariosPaginados y filtrados
-        $usuarios = $userModel->filterUsers($filtros);
-        //total de usuarios filtrados(sin limit)
-        $total = $userModel->countUsers($filtros);
+            $resultado = (new User($this->pdo))->filterUsers($filtros);
 
-        header('Content-Type: application/json');
-        echo json_encode([
-            'usuarios' => $usuarios,
-            'total' => $total
-        ]);
+            echo json_encode([
+                'usuarios' => $resultado,
+                'total' => (int) $resultado['total'],
+            ], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+        } catch (Throwable $e) {
+            error_log('Error al filtrar usuarios: ' . $e->getMessage());
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'mensaje' => 'No fue posible cargar los usuarios.',
+            ], JSON_UNESCAPED_UNICODE);
+        }
+
         exit;
     }
-
 }
-
-?>
