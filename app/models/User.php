@@ -40,8 +40,13 @@ class User {
     /** Buscar un usuario por su ID*/
     public function findById($id)
     {
-        $query = $this->pdo->prepare(
-            "SELECT
+        /*
+         * La estructura vigente separa los datos personales en tb_afiliados
+         * y los alcances de acceso en tb_usuario_alcances. No consultar
+         * columnas heredadas que ya no existen en tb_usuarios.
+         */
+        $sql = "
+            SELECT
                 u.id,
                 u.afiliado_id,
                 u.usuario,
@@ -49,29 +54,44 @@ class User {
                 u.rol_id,
                 u.estado,
                 u.avatar,
-                u.nombre,
-                u.correo,
-                u.telefono,
-                u.liga_id,
-                u.equipo_id,
-
+                COALESCE(
+                    NULLIF(TRIM(CONCAT_WS(' ', a.nombres, a.apellido_paterno, a.apellido_materno)), ''),
+                    u.usuario
+                ) AS nombre,
+                NULL AS correo,
+                NULL AS telefono,
+                (
+                    SELECT ua.entidad_id
+                    FROM tb_usuario_alcances ua
+                    WHERE ua.usuario_id = u.id
+                      AND ua.tipo_entidad = 'liga'
+                      AND ua.estado = 'activo'
+                    ORDER BY ua.id DESC
+                    LIMIT 1
+                ) AS liga_id,
+                (
+                    SELECT ua.entidad_id
+                    FROM tb_usuario_alcances ua
+                    WHERE ua.usuario_id = u.id
+                      AND ua.tipo_entidad = 'equipo'
+                      AND ua.estado = 'activo'
+                    ORDER BY ua.id DESC
+                    LIMIT 1
+                ) AS equipo_id,
                 r.clave AS rol_clave,
                 r.nombre AS rol_nombre,
                 r.estado AS rol_estado
-
             FROM tb_usuarios u
+            INNER JOIN tb_roles r ON r.id = u.rol_id
+            LEFT JOIN tb_afiliados a ON a.id = u.afiliado_id
+            WHERE u.id = :id
+            LIMIT 1
+        ";
 
-            INNER JOIN tb_roles r
-            ON r.id = u.rol_id
+        $query = $this->pdo->prepare($sql);
+        $query->execute([':id' => (int) $id]);
 
-            WHERE u.id = ?
-
-            LIMIT 1"
-        );
-
-        $query->execute([$id]);
-
-        return $query->fetch(PDO::FETCH_ASSOC);
+        return $query->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
     public function all($estado = null) 
