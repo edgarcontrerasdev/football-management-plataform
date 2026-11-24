@@ -125,7 +125,7 @@ class UsersController
 
     public function index(): void
     {
-        Auth::requireLogin();
+        $this->requireManager();
         $roles = (new Role($this->db))->all();
         $ligas = (new Liga($this->db))->all();
         $users = $this->userModel->filtrar([
