@@ -1,73 +1,33 @@
 <?php
 
-class User {
+class User
+{
+    private PDO $pdo;
 
-    private $pdo;
-
-    public function __construct($pdo) {
+    public function __construct(PDO $pdo)
+    {
         $this->pdo = $pdo;
     }
 
-    /* Busca un usuario activo por su nombre de usuario*/
-    public function findByUsername($usuario) {
-        $query = $this->pdo->prepare(
-            "SELECT * FROM tb_usuarios WHERE usuario = ? AND estado = 1 LIMIT 1"
-        );
-        $query->execute([$usuario]);
-        return $query->fetch(PDO::FETCH_ASSOC);
-    }
-
-    public function usuarioExiste($usuario, $ignoredId = null)
+    private function selectBase(): string
     {
-        $sql = "SELECT u.id, u.afiliado_id, u.usuario, u.password, u.rol_id,
-                       u.estado, u.avatar, r.clave AS rol_clave, r.nombre AS rol_nombre
-                FROM tb_usuarios u
-                INNER JOIN tb_roles r ON r.id = u.rol_id
-                WHERE u.usuario = :usuario";
-        $params = [':usuario' => $usuario];
-
-        if ($ignoredId !== null) {
-            $sql .= " AND u.id <> :ignored_id";
-            $params[':ignored_id'] = (int) $ignoredId;
-        }
-
-        $query = $this->pdo->prepare($sql);
-        $query->execute($params);
-
-        return $query->fetch(PDO::FETCH_ASSOC);
-    }
-    
-    /** Buscar un usuario por su ID*/
-    public function findById($id)
-    {
-        /*
-         * La estructura vigente separa los datos personales en tb_afiliados
-         * y los alcances de acceso en tb_usuario_alcances. No consultar
-         * columnas heredadas que ya no existen en tb_usuarios.
-         */
-        $sql = "
+        return "
             SELECT
-                u.id,
-                u.afiliado_id,
-                u.usuario,
-                u.password,
-                u.rol_id,
-                u.estado,
-                u.avatar,
+                u.id, u.afiliado_id, u.usuario, u.password, u.rol_id,
+                u.estado, u.avatar, u.created_at,
                 COALESCE(
                     NULLIF(TRIM(CONCAT_WS(' ', a.nombres, a.apellido_paterno, a.apellido_materno)), ''),
                     u.usuario
                 ) AS nombre,
-                NULL AS correo,
-                NULL AS telefono,
+                r.clave AS rol_clave,
+                r.nombre AS rol_nombre,
                 (
                     SELECT ua.entidad_id
                     FROM tb_usuario_alcances ua
                     WHERE ua.usuario_id = u.id
                       AND ua.tipo_entidad = 'liga'
                       AND ua.estado = 'activo'
-                    ORDER BY ua.id DESC
-                    LIMIT 1
+                    ORDER BY ua.id DESC LIMIT 1
                 ) AS liga_id,
                 (
                     SELECT ua.entidad_id
@@ -75,132 +35,164 @@ class User {
                     WHERE ua.usuario_id = u.id
                       AND ua.tipo_entidad = 'equipo'
                       AND ua.estado = 'activo'
-                    ORDER BY ua.id DESC
-                    LIMIT 1
+                    ORDER BY ua.id DESC LIMIT 1
                 ) AS equipo_id,
-                r.clave AS rol_clave,
-                r.nombre AS rol_nombre,
-                r.estado AS rol_estado
+                (
+                    SELECT l.nombre
+                    FROM tb_usuario_alcances ua
+                    INNER JOIN tb_ligas l ON l.id = ua.entidad_id
+                    WHERE ua.usuario_id = u.id
+                      AND ua.tipo_entidad = 'liga'
+                      AND ua.estado = 'activo'
+                    ORDER BY ua.id DESC LIMIT 1
+                ) AS liga,
+                (
+                    SELECT e.nombre
+                    FROM tb_usuario_alcances ua
+                    INNER JOIN tb_equipos e ON e.id = ua.entidad_id
+                    WHERE ua.usuario_id = u.id
+                      AND ua.tipo_entidad = 'equipo'
+                      AND ua.estado = 'activo'
+                    ORDER BY ua.id DESC LIMIT 1
+                ) AS equipo
             FROM tb_usuarios u
             INNER JOIN tb_roles r ON r.id = u.rol_id
             LEFT JOIN tb_afiliados a ON a.id = u.afiliado_id
-            WHERE u.id = :id
-            LIMIT 1
         ";
-
-        $query = $this->pdo->prepare($sql);
-        $query->execute([':id' => (int) $id]);
-
-        return $query->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
-    public function all($estado = null) 
+    public function findByUsername($usuario)
     {
-        $sql = "SELECT u.*, .clave AS rol,l.nombre AS liga,e.nombre AS equipo FROM tb_usuarios u
-            LEFT JOIN tb_roles r ON u.rol_id = r.id LEFT JOIN tb_ligas l ON u.liga_id = l.id 
-            LEFT JOIN tb_equipos e ON u.equipo_id = e.id";
+        $sql = "
+            SELECT u.*, r.clave AS rol_clave, r.nombre AS rol_nombre,
+                   r.estado AS rol_estado
+            FROM tb_usuarios u
+            INNER JOIN tb_roles r ON r.id = u.rol_id
+            WHERE u.usuario = :usuario AND u.estado = 'activo'
+            LIMIT 1
+        ";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([':usuario' => trim((string) $usuario)]);
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
 
-        if ($estado !== null) {
-            $sql .= " WHERE u.estado = :estado";
-            $sql .= " ORDER BY u.id DESC";
-            $stmt = $this->pdo->prepare($sql);
-            $stmt->execute([':estado' => $estado]);
-        } else {
-            $sql .= " ORDER BY u.id DESC";
-            $stmt = $this->pdo->query($sql);
+    public function usuarioExiste($usuario, $ignoredId = null)
+    {
+        $sql = "SELECT id FROM tb_usuarios WHERE usuario = :usuario";
+        $params = [':usuario' => trim((string) $usuario)];
+        if ($ignoredId !== null) {
+            $sql .= " AND id <> :ignored_id";
+            $params[':ignored_id'] = (int) $ignoredId;
+        }
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
+
+    public function findById($id)
+    {
+        $stmt = $this->pdo->prepare($this->selectBase() . " WHERE u.id = :id LIMIT 1");
+        $stmt->execute([':id' => (int) $id]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$user) {
+            return null;
         }
 
+        $role = $this->pdo->prepare("SELECT estado AS rol_estado FROM tb_roles WHERE id = :id");
+        $role->execute([':id' => (int) $user['rol_id']]);
+        $user['rol_estado'] = $role->fetchColumn() ?: null;
+        return $user;
+    }
+
+    public function all($estado = null)
+    {
+        $sql = $this->selectBase();
+        $params = [];
+        if ($estado !== null && $estado !== 'all') {
+            $sql .= " WHERE u.estado = :estado";
+            $params[':estado'] = $estado;
+        }
+        $sql .= " ORDER BY u.id DESC";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function filtrar(array $filtros)
     {
-        $filtros = array_merge([
-            'estado' => 'all',
-            'rol' => null,
-            'filtro' => ''
-        ], $filtros);
-        $sql = "
-        SELECT u.*, r.clave AS rol,
-        l.nombre AS liga,
-        e.nombre AS equipo
-        FROM tb_usuarios u
-        LEFT JOIN tb_roles r ON u.rol_id = r.id
-        LEFT JOIN tb_ligas l ON u.liga_id = l.id
-        LEFT JOIN tb_equipos e ON u.equipo_id = e.id
-        WHERE 1=1
-        ";
-
+        $filtros = array_merge(['estado' => 'all', 'rol' => null, 'filtro' => ''], $filtros);
+        $sql = $this->selectBase() . " WHERE 1=1";
         $params = [];
 
-        if ($filtros['estado'] === 'active') {
-            $sql .= " AND u.estado = 1";
-        } elseif ($filtros['estado'] === 'inactive') {
-            $sql .= " AND u.estado = 0";
+        if ($filtros['estado'] === 'active' || $filtros['estado'] === '1') {
+            $sql .= " AND u.estado = 'activo'";
+        } elseif ($filtros['estado'] === 'inactive' || $filtros['estado'] === '0') {
+            $sql .= " AND u.estado <> 'activo'";
         }
 
         if ($filtros['rol'] !== null && $filtros['rol'] !== '') {
             $sql .= " AND u.rol_id = :rol";
-            $params[':rol'] = $filtros['rol'];
+            $params[':rol'] = (int) $filtros['rol'];
         }
 
         if ($filtros['filtro'] !== '') {
             $sql .= " AND (
-                u.nombre LIKE :filtro OR
-                u.usuario LIKE :filtro OR
-                u.correo LIKE :filtro
+                u.usuario LIKE :filtro
+                OR a.nombres LIKE :filtro
+                OR a.apellido_paterno LIKE :filtro
+                OR a.apellido_materno LIKE :filtro
             )";
-            $params[':filtro'] = "%{$filtros['filtro']}%";
+            $params[':filtro'] = '%' . $filtros['filtro'] . '%';
         }
 
         $sql .= " ORDER BY u.id DESC";
-
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($params);
-
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-
-    /** Crear un nuevo usuario */
-    public function create($data) 
+    public function create($data)
     {
-        $query = $this->pdo->prepare(
-            "INSERT INTO tb_usuarios (nombre,telefono,avatar,correo, usuario, password, rol_id, estado,liga_id,equipo_id)
-             VALUES (:nombre,:telefono,:avatar,:correo,:usuario, :password, :rol_id, :estado, :liga_id, :equipo_id)"
-        );
-        return $query->execute([
-            ':nombre' => $data['nombre'],
-            ':telefono'=> $data['telefono'],
-            ':avatar' => $data['avatar'],
-            ':correo' => $data['correo'],
-            ':usuario' => $data['usuario'],
-            ':password' => $data['password'], // hashear antes de pasar aquí
-            ':rol_id' => $data['rol_id'],
-            ':estado' => $data['estado'] ?? 1,
-            ':liga_id' => $data['liga_id'] ?? null,
-            ':equipo_id' => $data['equipo_id'] ?? null
-        ]);
+        $this->pdo->beginTransaction();
+        try {
+            $stmt = $this->pdo->prepare("
+                INSERT INTO tb_usuarios (afiliado_id, usuario, password, rol_id, estado, avatar)
+                VALUES (:afiliado_id, :usuario, :password, :rol_id, :estado, :avatar)
+            ");
+            $stmt->execute([
+                ':afiliado_id' => !empty($data['afiliado_id']) ? (int) $data['afiliado_id'] : null,
+                ':usuario' => trim((string) $data['usuario']),
+                ':password' => $data['password'],
+                ':rol_id' => (int) $data['rol_id'],
+                ':estado' => $data['estado'] ?? 'activo',
+                ':avatar' => $data['avatar'] ?? null
+            ]);
+
+            $userId = (int) $this->pdo->lastInsertId();
+            $this->replaceScopes($userId, $data);
+            $this->pdo->commit();
+            return $userId;
+        } catch (Throwable $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $e;
+        }
     }
 
-    /** Actualizar un usuario existente sin modificar campos omitidos. */
     public function update($id, $data)
     {
+        $id = (int) $id;
+        $fields = [];
+        $params = [':id' => $id];
         $columns = [
-            'nombre' => 'nombre',
-            'correo' => 'correo',
-            'telefono' => 'telefono',
             'usuario' => 'usuario',
             'rol_id' => 'rol_id',
             'estado' => 'estado',
-            'liga_id' => 'liga_id',
-            'equipo_id' => 'equipo_id',
             'avatar' => 'avatar',
-            'password' => 'password'
+            'password' => 'password',
+            'afiliado_id' => 'afiliado_id'
         ];
-
-        $fields = [];
-        $params = [':id' => (int) $id];
 
         foreach ($columns as $key => $column) {
             if (array_key_exists($key, $data)) {
@@ -209,181 +201,105 @@ class User {
             }
         }
 
-        if (!$fields) {
-            return false;
+        $this->pdo->beginTransaction();
+        try {
+            if ($fields) {
+                $stmt = $this->pdo->prepare(
+                    'UPDATE tb_usuarios SET ' . implode(', ', $fields) . ' WHERE id = :id'
+                );
+                $stmt->execute($params);
+            }
+
+            if (array_key_exists('liga_id', $data) || array_key_exists('equipo_id', $data)) {
+                $this->replaceScopes($id, $data);
+            }
+
+            $this->pdo->commit();
+            return true;
+        } catch (Throwable $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    private function replaceScopes(int $userId, array $data): void
+    {
+        $this->pdo->prepare("
+            UPDATE tb_usuario_alcances
+            SET estado = 'inactivo', fecha_fin = COALESCE(fecha_fin, CURDATE())
+            WHERE usuario_id = :usuario_id
+              AND tipo_entidad IN ('liga', 'equipo')
+              AND estado = 'activo'
+        ")->execute([':usuario_id' => $userId]);
+
+        $insert = $this->pdo->prepare("
+            INSERT INTO tb_usuario_alcances
+                (usuario_id, tipo_entidad, entidad_id, estado, fecha_inicio)
+            VALUES (:usuario_id, :tipo_entidad, :entidad_id, 'activo', CURDATE())
+        ");
+
+        if (!empty($data['liga_id'])) {
+            $insert->execute([
+                ':usuario_id' => $userId,
+                ':tipo_entidad' => 'liga',
+                ':entidad_id' => (int) $data['liga_id']
+            ]);
         }
 
-        $stmt = $this->pdo->prepare(
-            'UPDATE tb_usuarios SET ' . implode(', ', $fields) . ' WHERE id = :id'
-        );
-        return $stmt->execute($params);
+        if (!empty($data['equipo_id'])) {
+            $insert->execute([
+                ':usuario_id' => $userId,
+                ':tipo_entidad' => 'equipo',
+                ':entidad_id' => (int) $data['equipo_id']
+            ]);
+        }
     }
 
-
-    /** Desactivar un usuario (soft delete)*/
-    public function disable($id) {
-        $query = $this->pdo->prepare(
-            "UPDATE tb_usuarios SET estado = 0 WHERE id = ?"
-        );
-        return $query->execute([$id]);
+    public function disable($id)
+    {
+        return $this->update($id, ['estado' => 'inactivo']);
     }
 
-    /** Cambiar contraseña*/
-    public function changePassword($id, $hashedPassword) {
-        $query = $this->pdo->prepare(
-            "UPDATE tb_usuarios SET password = :password WHERE id = :id"
-        );
-        return $query->execute([
-            ':password' => $hashedPassword,
-            ':id' => $id
-        ]);
+    public function changePassword($id, $hashedPassword)
+    {
+        return $this->update($id, ['password' => $hashedPassword]);
     }
 
-    //buscar con filtros
     public function filter($search = '', $estado = 'all', $rol = null)
     {
-        $sql = "
-            SELECT u.*, r.clave AS rol
-            FROM tb_usuarios u
-            LEFT JOIN tb_roles r ON u.rol_id = r.id
-            WHERE 1=1
-        ";
-
-        $params = [];
-
-        if ($search !== '') {
-            $sql .= " AND (
-                u.nombre LIKE :search
-                OR u.usuario LIKE :search
-                OR u.correo LIKE :search
-            )";
-            $params[':search'] = "%$search%";
-        }
-
-        if ($estado !== 'all') {
-            $sql .= " AND u.estado = :estado";
-            $params[':estado'] = $estado;
-        }
-
-        if (!empty($rol)) {
-            $sql .= " AND u.rol_id = :rol";
-            $params[':rol'] = $rol;
-        }
-
-        $sql .= " ORDER BY u.id DESC";
-
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute($params);
-
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->filtrar([
+            'filtro' => $search,
+            'estado' => $estado,
+            'rol' => $rol
+        ]);
     }
 
     public function filterUsers($params)
     {
-        $sqlBase = "
-            FROM tb_usuarios u
-            LEFT JOIN tb_roles r ON r.id = u.rol_id
-            LEFT JOIN tb_ligas l ON l.id = u.liga_id
-            LEFT JOIN tb_equipos e ON e.id = u.equipo_id
-            WHERE 1=1
-        ";
-
-        $binds = [];
-
-        if ($params['filtro'] !== '') {
-            $sqlBase .= " AND (u.usuario LIKE :filtro OR u.nombre LIKE :filtro OR u.correo LIKE :filtro)";
-            $binds[':filtro'] = '%' . $params['filtro'] . '%';
-        }
-
-        if ($params['estado'] !== '' && $params['estado'] !== null) {
-            $sqlBase .= " AND u.estado = :estado ";
-            $binds[':estado'] = $params['estado'];
-        }
-
-        if (!empty($params['rol'])) {
-            $sqlBase .= " AND u.rol_id = :rol ";
-            $binds[':rol'] = $params['rol'];
-        }
-
-        if (!empty($params['liga'])) {
-            $sqlBase .= " AND u.liga_id = :liga ";
-            $binds[':liga'] = $params['liga'];
-        }
-
-        // 1️⃣ Total de registros filtrados
-        $stmtTotal = $this->pdo->prepare("SELECT COUNT(*) AS total $sqlBase");
-        $stmtTotal->execute($binds);
-        $total = (int)$stmtTotal->fetch(PDO::FETCH_ASSOC)['total'];
-
-        // 2️⃣ Datos de la página actual
-        $pagina = max(1, (int)$params['pagina']);
-        $limite = max(1, (int)$params['limite']);
-        $offset = ($pagina - 1) * $limite;
-
-        $sqlDatos = "
-            SELECT 
-                u.id,
-                u.usuario,
-                u.nombre,
-                u.correo,
-                u.estado,
-                u.telefono,
-                r.clave AS rol,
-                l.nombre AS liga,
-                e.nombre AS equipo,
-                u.avatar
-            $sqlBase
-            ORDER BY u.nombre ASC
-            LIMIT $limite OFFSET $offset
-        ";
-
-        $stmt = $this->pdo->prepare($sqlDatos);
-        $stmt->execute($binds);
-        $usuarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
+        $filtros = [
+            'filtro' => trim((string) ($params['filtro'] ?? '')),
+            'estado' => $params['estado'] ?? 'all',
+            'rol' => $params['rol'] ?? null
+        ];
+        $todos = $this->filtrar($filtros);
+        $total = count($todos);
+        $pagina = max(1, (int) ($params['pagina'] ?? 1));
+        $limite = min(100, max(1, (int) ($params['limite'] ?? 10)));
         return [
             'total' => $total,
-            'usuarios' => $usuarios
+            'usuarios' => array_slice($todos, ($pagina - 1) * $limite, $limite)
         ];
     }
 
-    //funcion para contar usuarios filtrados
-   public function countUsers            ($params)
+    public function countUsers($params)
     {
-        $sql = "SELECT COUNT(*) FROM tb_usuarios u
-                LEFT JOIN tb_roles r ON r.id = u.rol_id
-                LEFT JOIN tb_ligas l ON l.id = u.liga_id
-                WHERE 1=1";
-
-        $binds = [];
-
-        // filtros
-        if ($params['filtro'] !== '') {
-            $sql .= " AND (u.usuario LIKE :filtro OR u.nombre LIKE :filtro OR u.correo LIKE :filtro)";
-            $binds[':filtro'] = '%' . $params['filtro'] . '%';
-        }
-
-        if ($params['estado'] !== null && $params['estado'] !== '') {
-            $sql .= " AND u.estado = :estado";
-            $binds[':estado'] = $params['estado'];
-        }
-
-        if (!empty($params['rol'])) {
-            $sql .= " AND u.rol_id = :rol";
-            $binds[':rol'] = $params['rol'];
-        }
-
-        if (!empty($params['liga'])) {
-            $sql .= " AND u.liga_id = :liga";
-            $binds[':liga'] = $params['liga'];
-        }
-
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute($binds);
-
-        return (int)$stmt->fetchColumn();
+        $filtros = [
+            'filtro' => trim((string) ($params['filtro'] ?? '')),
+            'estado' => $params['estado'] ?? 'all',
+            'rol' => $params['rol'] ?? null
+        ];
+        return count($this->filtrar($filtros));
     }
-
 }
-
-?>
