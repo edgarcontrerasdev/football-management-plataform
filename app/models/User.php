@@ -78,12 +78,19 @@ class User
 
     public function usuarioExiste($usuario, $ignoredId = null)
     {
-        $sql = "SELECT id FROM tb_usuarios WHERE usuario = :usuario";
+        $sql = "
+            SELECT u.*, r.clave AS rol_clave, r.nombre AS rol_nombre,
+                   r.estado AS rol_estado
+            FROM tb_usuarios u
+            INNER JOIN tb_roles r ON r.id = u.rol_id
+            WHERE u.usuario = :usuario
+        ";
         $params = [':usuario' => trim((string) $usuario)];
         if ($ignoredId !== null) {
-            $sql .= " AND id <> :ignored_id";
+            $sql .= " AND u.id <> :ignored_id";
             $params[':ignored_id'] = (int) $ignoredId;
         }
+        $sql .= " LIMIT 1";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
