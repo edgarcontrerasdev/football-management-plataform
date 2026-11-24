@@ -377,7 +377,7 @@ class UsersController {
             if (!$input['liga_id'] || !$input['equipo_id']) {
                 $errors[] = 'Selecciona una liga y un equipo para este usuario.';
             } else {
-                $check = $this->db->prepare('SELECT COUNT(*) FROM tb_liga_equipos WHERE equipo_id = :equipo AND liga_id = :liga AND estado_participacion = 'activo'');
+                $check = $this->db->prepare("SELECT COUNT(*) FROM tb_liga_equipos WHERE equipo_id = :equipo AND liga_id = :liga AND estado_participacion = 'activo'");
                 $check->execute([':equipo' => $input['equipo_id'], ':liga' => $input['liga_id']]);
                 if ((int) $check->fetchColumn() === 0) {
                     $errors[] = 'El equipo seleccionado no pertenece a la liga indicada.';
@@ -414,6 +414,10 @@ class UsersController {
         }
 
         if ($errors) {
+            if ($rutaNuevoAvatar && is_file($rutaNuevoAvatar)) {
+                unlink($rutaNuevoAvatar);
+                $rutaNuevoAvatar = null;
+            }
             $user = array_merge($user, $input);
             $data = ['errors' => $errors];
             $viewPath = ROOT_PATH . '/admin/views/pages/users/edit.php';
