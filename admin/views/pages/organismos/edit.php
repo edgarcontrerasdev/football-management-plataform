@@ -19,7 +19,7 @@ $valor = static fn(string $campo, $default = '') => $old[$campo] ?? ($organismo[
 <div class="col-md-4"><label class="form-label" for="sitio_web">Sitio web</label><input type="url" class="form-control" id="sitio_web" name="sitio_web" maxlength="255" value="<?= htmlspecialchars((string) $valor('sitio_web'), ENT_QUOTES, 'UTF-8') ?>"></div>
 <div class="col-12"><label class="form-label" for="descripcion">Descripción</label><textarea class="form-control" id="descripcion" name="descripcion" rows="3"><?= htmlspecialchars((string) $valor('descripcion'), ENT_QUOTES, 'UTF-8') ?></textarea></div>
 </div>
-<div class="col-12 mt-3">
+<div class="row g-3 mt-1"><div class="col-12">
     <h5 class="form-section-title mb-3"><i class="fa-solid fa-image me-2"></i>Logotipo del organismo</h5>
     <?php
     $imageUploadId = 'logo';
@@ -30,7 +30,7 @@ $valor = static fn(string $campo, $default = '') => $old[$campo] ?? ($organismo[
     $imageUploadHint = 'Opcional. JPG, PNG o WEBP. Máximo 2 MB.';
     include ROOT_PATH . '/admin/views/components/image-upload.php';
     ?>
-</div>
+</div></div></div>
 <div class="d-flex justify-content-end gap-2 mt-4"><a href="index.php?page=organismos&action=detalles&id=<?= (int) $organismo['id'] ?>" class="btn btn-light">Cancelar</a><button class="btn btn-primary" type="submit"><i class="fas fa-save me-1"></i>Guardar cambios</button></div>
 </form></div></div>
 
