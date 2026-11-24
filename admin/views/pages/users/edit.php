@@ -26,12 +26,16 @@ $errores = $data['errors'] ?? [];
             <form id="formEditUser" action="index.php?page=users&action=update&id=<?= (int) $user['id'] ?>" method="POST" enctype="multipart/form-data">
                 <div class="user-form-grid">
                     <aside class="avatar-column">
-                        <label for="avatar" class="avatar-box" title="Cambiar avatar">
-                            <img id="avatarPreview" src="<?= $escape($avatarActual) ?>" alt="Avatar actual">
-                            <div class="avatar-overlay"><span><i class="fa-solid fa-camera"></i></span><small>Cambiar avatar</small></div>
-                        </label>
-                        <input type="file" name="avatar" id="avatar" accept="image/png,image/jpeg" hidden>
-                        <p>Imagen de perfil del usuario.<br><strong>PNG o JPG</strong><br>Máximo 2 MB.</p>
+                        <?php
+                        $imageUploadId = 'avatar';
+                        $imageUploadName = 'avatar';
+                        $imageUploadSrc = $avatarActual;
+                        $imageUploadLabel = 'Cambiar avatar';
+                        $imageUploadAlt = 'Avatar actual del usuario';
+                        $imageUploadHint = 'Opcional. Si no seleccionas otra imagen, se conservará la actual. JPG, PNG o WEBP; máximo 2 MB.';
+                        $imageUploadShape = 'circle';
+                        include ROOT_PATH . '/admin/views/components/image-upload.php';
+                        ?>
                     </aside>
 
                     <div class="form-column">
@@ -102,8 +106,6 @@ $errores = $data['errors'] ?? [];
     const teamBox = document.getElementById('boxEquipo');
     const league = document.getElementById('liga_id');
     const team = document.getElementById('equipo_id');
-    const avatar = document.getElementById('avatar');
-    const preview = document.getElementById('avatarPreview');
     if (role && leagueBox && teamBox) {
         const syncRole = () => {
             const value = Number(role.value);
@@ -126,22 +128,6 @@ $errores = $data['errors'] ?? [];
         };
         league.addEventListener('change', filterTeams);
         filterTeams();
-    }
-    if (avatar && preview) {
-        const original = preview.src;
-        avatar.addEventListener('change', () => {
-            const file = avatar.files && avatar.files[0];
-            if (!file) { preview.src = original; return; }
-            if (!['image/jpeg','image/png'].includes(file.type) || file.size > 2 * 1024 * 1024) {
-                avatar.value = '';
-                preview.src = original;
-                alert(file.size > 2 * 1024 * 1024 ? 'El avatar no debe superar 2 MB.' : 'Selecciona una imagen JPG o PNG.');
-                return;
-            }
-            const reader = new FileReader();
-            reader.onload = () => { if (typeof reader.result === 'string') preview.src = reader.result; };
-            reader.readAsDataURL(file);
-        });
     }
 })();
 </script>
