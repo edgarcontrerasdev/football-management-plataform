@@ -56,7 +56,7 @@
                     <textarea class="form-control" id="descripcion" name="descripcion" rows="3"><?= htmlspecialchars($old['descripcion'] ?? '', ENT_QUOTES, 'UTF-8') ?></textarea>
                 </div>
             </div>
-            <div class="col-12 mt-3">
+            <div class="row g-3 mt-1"><div class="col-12">
     <h5 class="form-section-title mb-3"><i class="fa-solid fa-image me-2"></i>Logotipo del organismo</h5>
     <?php
     $imageUploadId = 'logo';
@@ -67,7 +67,7 @@
     $imageUploadHint = 'Opcional. JPG, PNG o WEBP. Máximo 2 MB.';
     include ROOT_PATH . '/admin/views/components/image-upload.php';
     ?>
-</div>
+</div></div>
 <div class="d-flex justify-content-end gap-2 mt-4">
                 <a href="index.php?page=organismos" class="btn btn-light">Cancelar</a>
                 <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i>Guardar organismo</button>
