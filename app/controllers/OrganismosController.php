@@ -146,8 +146,9 @@ class OrganismosController
             header('Location: index.php?page=organismos');
             exit;
         } catch (Throwable $e) {
+            if ($rutaLogoNuevo && is_file($rutaLogoNuevo)) @unlink($rutaLogoNuevo);
             error_log('Error al registrar organismo: ' . $e->getMessage());
-            $_SESSION['organismo_error'] = 'No fue posible registrar el organismo.';
+            $_SESSION['organismo_error'] = $e instanceof RuntimeException ? $e->getMessage() : 'No fue posible registrar el organismo.';
             header('Location: index.php?page=organismos&action=crear');
             exit;
         }
@@ -238,8 +239,9 @@ class OrganismosController
             header('Location: index.php?page=organismos&action=detalles&id=' . $id);
             exit;
         } catch (Throwable $e) {
+            if ($rutaLogoNuevo && is_file($rutaLogoNuevo)) @unlink($rutaLogoNuevo);
             error_log('Error al actualizar organismo: ' . $e->getMessage());
-            $_SESSION['organismo_edit_error'] = 'No fue posible actualizar el organismo.';
+            $_SESSION['organismo_edit_error'] = $e instanceof RuntimeException ? $e->getMessage() : 'No fue posible actualizar el organismo.';
             header('Location: index.php?page=organismos&action=editar&id=' . $id);
             exit;
         }
