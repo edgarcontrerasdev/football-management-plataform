@@ -135,6 +135,17 @@ class User
             $params[':rol'] = (int) $filtros['rol'];
         }
 
+        if (!empty($filtros['liga'])) {
+            $sql .= " AND EXISTS (
+                SELECT 1 FROM tb_usuario_alcances ula
+                WHERE ula.usuario_id = u.id
+                  AND ula.tipo_entidad = 'liga'
+                  AND ula.entidad_id = :liga_id
+                  AND ula.estado = 'activo'
+            )";
+            $params[':liga_id'] = (int) $filtros['liga'];
+        }
+
         if ($filtros['filtro'] !== '') {
             $sql .= " AND (
                 u.usuario LIKE :filtro
@@ -281,7 +292,8 @@ class User
         $filtros = [
             'filtro' => trim((string) ($params['filtro'] ?? '')),
             'estado' => $params['estado'] ?? 'all',
-            'rol' => $params['rol'] ?? null
+            'rol' => $params['rol'] ?? null,
+            'liga' => $params['liga'] ?? null
         ];
         $todos = $this->filtrar($filtros);
         $total = count($todos);
