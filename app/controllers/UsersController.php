@@ -60,6 +60,12 @@ class UsersController
         if ($key === 'LIGA') {
             if (!$ligaId) {
                 $errors[] = 'Selecciona la liga que tendrá asignada esta cuenta.';
+            } else {
+                $check = $this->db->prepare("SELECT COUNT(*) FROM tb_ligas WHERE id = :id AND estado = 'activo'");
+                $check->execute([':id' => $ligaId]);
+                if ((int) $check->fetchColumn() === 0) {
+                    $errors[] = 'La liga seleccionada no existe o está inactiva.';
+                }
             }
             return $errors;
         }
@@ -165,6 +171,12 @@ class UsersController
                 throw new RuntimeException('El nombre de usuario ya está registrado.');
             }
 
+            $key = $this->roleKey($rolId);
+            if (in_array($key, ['ADMIN', 'SUPERVISOR'], true)) {
+                $ligaId = $equipoId = null;
+            } elseif ($key === 'LIGA') {
+                $equipoId = null;
+            }
             $errors = $this->validateScope($rolId, $ligaId, $equipoId);
             if ($errors) {
                 throw new RuntimeException(implode(' ', $errors));
@@ -230,6 +242,12 @@ class UsersController
         }
         if ($this->userModel->usuarioExiste($usuario, $id)) {
             $errors[] = 'El nombre de usuario ya está registrado.';
+        }
+        $key = $this->roleKey($rolId);
+        if (in_array($key, ['ADMIN', 'SUPERVISOR'], true)) {
+            $ligaId = $equipoId = null;
+        } elseif ($key === 'LIGA') {
+            $equipoId = null;
         }
         $errors = array_merge($errors, $this->validateScope($rolId, $ligaId, $equipoId));
 
