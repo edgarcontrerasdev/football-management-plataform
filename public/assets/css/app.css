@@ -27,6 +27,7 @@
 
 /* Componentes compartidos */
 @import url('components/entity-detail.css');
+@import url('components/image-upload.css');
 @import url('components/kpis.css');
 @import url('components/page-title.css');
 @import url('components/list-page.css');
