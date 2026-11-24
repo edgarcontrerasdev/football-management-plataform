@@ -388,14 +388,55 @@ class LigasController
             exit;
         }
 
+        $logoAnterior = $liga['logo'] ?? null;
+        $data['logo'] = $logoAnterior;
+        $rutaNuevoLogo = null;
+        $archivoLogo = $_FILES['logo'] ?? null;
+        if ($archivoLogo && ($archivoLogo['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+            if ($archivoLogo['error'] !== UPLOAD_ERR_OK || $archivoLogo['size'] > 2 * 1024 * 1024) {
+                $_SESSION['errors'] = ['El logotipo debe cargarse correctamente y no superar 2 MB.'];
+                $_SESSION['old'] = $data;
+                header('Location: index.php?page=ligas&action=editar&id=' . $id);
+                exit;
+            }
+            $mime = (new finfo(FILEINFO_MIME_TYPE))->file($archivoLogo['tmp_name']);
+            $formatos = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+            if (!isset($formatos[$mime]) || @getimagesize($archivoLogo['tmp_name']) === false) {
+                $_SESSION['errors'] = ['El logotipo debe ser una imagen JPG, PNG o WEBP válida.'];
+                $_SESSION['old'] = $data;
+                header('Location: index.php?page=ligas&action=editar&id=' . $id);
+                exit;
+            }
+            $directorio = ROOT_PATH . '/public/assets/img/ligas/';
+            if (!is_dir($directorio) && !mkdir($directorio, 0755, true) && !is_dir($directorio)) {
+                $_SESSION['errors'] = ['No está disponible la carpeta para guardar logotipos de ligas.'];
+                $_SESSION['old'] = $data;
+                header('Location: index.php?page=ligas&action=editar&id=' . $id);
+                exit;
+            }
+            $data['logo'] = bin2hex(random_bytes(16)) . '.' . $formatos[$mime];
+            $rutaNuevoLogo = $directorio . $data['logo'];
+            if (!move_uploaded_file($archivoLogo['tmp_name'], $rutaNuevoLogo)) {
+                $_SESSION['errors'] = ['No fue posible guardar el nuevo logotipo.'];
+                $_SESSION['old'] = $data;
+                header('Location: index.php?page=ligas&action=editar&id=' . $id);
+                exit;
+            }
+        }
+
         try {
             if (!$this->ligaModel->actualizar($id, $data)) {
                 throw new RuntimeException('La actualización de la liga no se completó.');
+            }
+            if ($rutaNuevoLogo && $logoAnterior && $logoAnterior !== 'default.png') {
+                $rutaAnterior = ROOT_PATH . '/public/assets/img/ligas/' . $logoAnterior;
+                if (is_file($rutaAnterior)) @unlink($rutaAnterior);
             }
             flashSuccess('La información de la liga se actualizó correctamente.');
             header('Location: index.php?page=ligas&action=detalle&id=' . $id);
             exit;
         } catch (Throwable $e) {
+            if ($rutaNuevoLogo && is_file($rutaNuevoLogo)) @unlink($rutaNuevoLogo);
             error_log('Error al actualizar liga ' . $id . ': ' . $e->getMessage());
             $_SESSION['errors'] = ['No fue posible actualizar la liga. Verifica los datos e inténtalo nuevamente.'];
             $_SESSION['old'] = $data;
