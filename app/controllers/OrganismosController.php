@@ -22,6 +22,31 @@ class OrganismosController
         }
     }
 
+    private function guardarLogo(?array $archivo, ?string $logoActual = null): array
+    {
+        if (!$archivo || ($archivo['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+            return [$logoActual, null];
+        }
+        if (($archivo['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || ($archivo['size'] ?? 0) > 2 * 1024 * 1024) {
+            throw new RuntimeException('El logotipo debe cargarse correctamente y no superar 2 MB.');
+        }
+        $mime = (new finfo(FILEINFO_MIME_TYPE))->file($archivo['tmp_name']);
+        $formatos = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+        if (!isset($formatos[$mime]) || @getimagesize($archivo['tmp_name']) === false) {
+            throw new RuntimeException('El logotipo debe ser una imagen JPG, PNG o WEBP válida.');
+        }
+        $directorio = ROOT_PATH . '/public/assets/img/organismos/';
+        if (!is_dir($directorio) && !mkdir($directorio, 0755, true) && !is_dir($directorio)) {
+            throw new RuntimeException('No está disponible la carpeta de logotipos de organismos.');
+        }
+        $nombre = bin2hex(random_bytes(16)) . '.' . $formatos[$mime];
+        $ruta = $directorio . $nombre;
+        if (!move_uploaded_file($archivo['tmp_name'], $ruta)) {
+            throw new RuntimeException('No fue posible guardar el logotipo del organismo.');
+        }
+        return [$nombre, $ruta];
+    }
+
     public function index(): void
     {
         $this->verificarAcceso();
@@ -101,8 +126,7 @@ class OrganismosController
             'telefono' => trim((string) ($_POST['telefono'] ?? '')),
             'sitio_web' => trim((string) ($_POST['sitio_web'] ?? '')),
             'fecha_creacion' => trim((string) ($_POST['fecha_creacion'] ?? '')),
-            // El formulario de edición no cambia el logotipo; conservar el existente.
-            'logo' => $organismo['logo'] ?? null
+            'logo' => null
         ];
 
         $_SESSION['organismo_old'] = $data;
@@ -113,7 +137,9 @@ class OrganismosController
             exit;
         }
 
+        $rutaLogoNuevo = null;
         try {
+            [$data['logo'], $rutaLogoNuevo] = $this->guardarLogo($_FILES['logo'] ?? null);
             $this->organismoModel->crear($data);
             unset($_SESSION['organismo_old']);
             $_SESSION['success'] = 'El organismo se registró correctamente.';
@@ -187,7 +213,8 @@ class OrganismosController
             'correo' => trim((string) ($_POST['correo'] ?? '')),
             'telefono' => trim((string) ($_POST['telefono'] ?? '')),
             'sitio_web' => trim((string) ($_POST['sitio_web'] ?? '')),
-            'fecha_creacion' => trim((string) ($_POST['fecha_creacion'] ?? ''))
+            'fecha_creacion' => trim((string) ($_POST['fecha_creacion'] ?? '')),
+            'logo' => $organismo['logo'] ?? null
         ];
         $_SESSION['organismo_edit_old'] = $data;
         $tipos = ['asociacion', 'federacion', 'comite', 'otro'];
@@ -197,8 +224,15 @@ class OrganismosController
             header('Location: index.php?page=organismos&action=editar&id=' . $id);
             exit;
         }
+        $logoAnterior = $organismo['logo'] ?? null;
+        $rutaLogoNuevo = null;
         try {
+            [$data['logo'], $rutaLogoNuevo] = $this->guardarLogo($_FILES['logo'] ?? null, $logoAnterior);
             $this->organismoModel->actualizar($id, $data);
+            if ($rutaLogoNuevo && $logoAnterior && $logoAnterior !== 'default.png') {
+                $rutaAnterior = ROOT_PATH . '/public/assets/img/organismos/' . $logoAnterior;
+                if (is_file($rutaAnterior)) @unlink($rutaAnterior);
+            }
             unset($_SESSION['organismo_edit_old']);
             $_SESSION['success'] = 'La información del organismo se actualizó correctamente.';
             header('Location: index.php?page=organismos&action=detalles&id=' . $id);
