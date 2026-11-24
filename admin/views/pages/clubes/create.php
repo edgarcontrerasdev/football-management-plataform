@@ -67,7 +67,7 @@
                         <?php
                         $imageUploadId = 'logo';
                         $imageUploadName = 'logo';
-                        $imageUploadSrc = ASSETS . '/img/clubes/default.png';
+                        $imageUploadSrc = ASSETS . '/img/ligas/default.png';
                         $imageUploadLabel = 'Cambiar logotipo';
                         $imageUploadAlt = 'Logotipo del club';
                         $imageUploadHint = 'Opcional. JPG, PNG o WEBP. Máximo 2 MB.';
