@@ -155,12 +155,16 @@ class User
 
         if ($filtros['filtro'] !== '') {
             $sql .= " AND (
-                u.usuario LIKE :filtro
-                OR a.nombres LIKE :filtro
-                OR a.apellido_paterno LIKE :filtro
-                OR a.apellido_materno LIKE :filtro
+                u.usuario LIKE :filtro_usuario
+                OR a.nombres LIKE :filtro_nombres
+                OR a.apellido_paterno LIKE :filtro_paterno
+                OR a.apellido_materno LIKE :filtro_materno
             )";
-            $params[':filtro'] = '%' . $filtros['filtro'] . '%';
+            $like = '%' . $filtros['filtro'] . '%';
+            $params[':filtro_usuario'] = $like;
+            $params[':filtro_nombres'] = $like;
+            $params[':filtro_paterno'] = $like;
+            $params[':filtro_materno'] = $like;
         }
 
         $sql .= " ORDER BY u.id DESC";
