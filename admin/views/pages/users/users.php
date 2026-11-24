@@ -12,7 +12,7 @@
     <form method="get" class="users-filters">
 
         <input type="hidden" name="pagina" id="pagina" value="1">
-        <input type="hidden" name="limite" id="limite" value="10">
+        <input type="hidden" name="limite" id="limiteFiltro" value="10">
 
         <div class="search-box">
             <i class="fas fa-search"></i>
@@ -63,7 +63,7 @@
                 <tr>
                     <th>USUARIO</th>
                     <th>ROL</th>
-                    <th>CONTACTO</th>
+                    <th>CUENTA</th>
                     <th>LIGA</th>
                     <th>EQUIPO</th>
                     <th>ESTADO</th>
@@ -92,22 +92,22 @@
                     </td>
                     <td> <?= htmlspecialchars($user['rol'] ?? 'Sin rol'); ?> </td>
                     <td>
-                    <div> <?= htmlspecialchars($user['correo']) ?></div>
-                    <small class="text-muted"><?= htmlspecialchars($user['telefono']); ?></small>
+                    <div>@<?= htmlspecialchars($user['usuario']) ?></div>
+                    <small class="text-muted">ID <?= (int) $user['id'] ?></small>
                     </td>
                     <td> <?= $user['liga'] ?? '-'; ?> </td>
                     <td> <?=  $user['equipo'] ?? '-'; ?> </td>
                     <td class="text-center">
                         <span id="status-<?= $user['id'] ?>" class="user-status 
-                        <?= $user['estado'] ? 'active' : 'inactive' ?>">
-                            <?= $user['estado'] ? 'ACTIVO' : 'INACTIVO' ?>
+                        <?= $user['estado'] === 'activo' ? 'active' : 'inactive' ?>">
+                            <?= $user['estado'] === 'activo' ? 'ACTIVO' : 'INACTIVO' ?>
                         </span>
                     </td>
 
                     <td class="text-center">
                     <label class="switch">
                         <input type="checkbox" class="toggle-user" data-id="<?= $user['id'] ?>"
-                        <?= $user['estado'] ? 'checked' : '' ?>>
+                        <?= $user['estado'] === 'activo' ? 'checked' : '' ?>>
                         <span class="slider"></span>
                     </label>
 
