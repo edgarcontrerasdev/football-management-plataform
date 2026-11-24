@@ -300,61 +300,152 @@ class UsersController {
     }
 
     /* ============ EDITAR USUARIO ============ */
-    public function edit($id) {
-        Auth::requireRole([1,2]);
-        $user = $this->userModel->findById($id);
+    private function datosFormularioEdicion(): array
+    {
+        $roles = (new Role($this->db))->all();
+        $ligas = $this->db->query("SELECT id, nombre FROM tb_ligas ORDER BY nombre")->fetchAll(PDO::FETCH_ASSOC);
+        $equipos = $this->db->query("SELECT id, nombre, liga_id FROM tb_equipos ORDER BY nombre")->fetchAll(PDO::FETCH_ASSOC);
+        return compact('roles', 'ligas', 'equipos');
+    }
 
-        if(!$user){
+    public function edit($id)
+    {
+        Auth::requireRole([1, 2]);
+        $user = $this->userModel->findById((int) $id);
+
+        if (!$user) {
             header("Location: index.php?page=users");
             exit;
         }
 
+        $data = ['errors' => []];
+        $viewPath = ROOT_PATH . '/admin/views/pages/users/edit.php';
+        extract($this->datosFormularioEdicion());
+        include ROOT_PATH . '/admin/views/layout.php';
+    }
+
+    public function update($id): void
+    {
+        Auth::requireRole([1, 2]);
+        $id = (int) $id;
+        $user = $this->userModel->findById($id);
+
+        if (!$user) {
+            header('Location: index.php?page=users');
+            exit;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: index.php?page=users&action=edit&id=' . $id);
+            exit;
+        }
+
+        $input = [
+            'nombre' => trim((string) ($_POST['nombre'] ?? '')),
+            'correo' => trim((string) ($_POST['correo'] ?? '')),
+            'telefono' => trim((string) ($_POST['telefono'] ?? '')),
+            'usuario' => trim((string) ($_POST['usuario'] ?? '')),
+            'rol_id' => (int) ($_POST['rol_id'] ?? 0),
+            'liga_id' => !empty($_POST['liga_id']) ? (int) $_POST['liga_id'] : null,
+            'equipo_id' => !empty($_POST['equipo_id']) ? (int) $_POST['equipo_id'] : null
+        ];
+        $errors = [];
+
+        if ($input['nombre'] === '' || $input['usuario'] === '') {
+            $errors[] = 'El nombre y el usuario son obligatorios.';
+        }
+        if ($input['correo'] !== '' && !filter_var($input['correo'], FILTER_VALIDATE_EMAIL)) {
+            $errors[] = 'El correo electrónico no tiene un formato válido.';
+        }
+        if ($this->userModel->usuarioExiste($input['usuario'], $id)) {
+            $errors[] = 'El nombre de usuario ya está registrado.';
+        }
+
         $roles = (new Role($this->db))->all();
-
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Validar datos del formulario
-            $usuario = trim($_POST['usuario'] ?? '');
-            $rol = $_POST['rol'] ?? '';
-            $estado = $_POST['estado'];
-            $password = $_POST['password'];
-
-            // Validar si los campos son vacíos
-            if (!$usuario ) $errors[]="Usuario obligatorio";
-
-            //evitar duplicados excepto el mismo usuario
-            if($this->userModel->usuarioExiste($usuario, $id)){
-                $errors[] = "El nombre de usuario ya existe";
+        $rolesValidos = array_map(static fn($rol) => (int) $rol['id'], $roles);
+        if (!in_array($input['rol_id'], $rolesValidos, true)) {
+            $errors[] = 'Selecciona un rol válido.';
+        } elseif (in_array($input['rol_id'], [1, 2], true)) {
+            $input['liga_id'] = null;
+            $input['equipo_id'] = null;
+        } elseif ($input['rol_id'] === 3) {
+            if (!$input['liga_id']) {
+                $errors[] = 'Selecciona la liga para este usuario.';
             }
-
-            if (empty($errors)){
-                $data = [
-                    'usuario'=> $usuario,
-                    'rol' => $rol,
-                    'estado' => $estado
-                ];
-            }
-
-            //resvisamos que el password no venga vacio y lo encriptamos para agregar a data
-            if(!empty($password))
-            {
-                $hashedPassword = password_hash($password,PASSWORD_BCRYPT);
-                $data['password'] = $hashedPassword;
-            }
-
-            // Actualizar usuario
-            $result = $this->userModel->update($id, $data);
-
-            if ($result) {
-                header("Location: /afec/admin/index.php?page=users"); // Redirigir a lista de usuarios
+            $input['equipo_id'] = null;
+        } elseif ($input['rol_id'] === 4) {
+            if (!$input['liga_id'] || !$input['equipo_id']) {
+                $errors[] = 'Selecciona una liga y un equipo para este usuario.';
             } else {
-                echo "Error al actualizar el usuario";
+                $check = $this->db->prepare('SELECT COUNT(*) FROM tb_equipos WHERE id = :equipo AND liga_id = :liga');
+                $check->execute([':equipo' => $input['equipo_id'], ':liga' => $input['liga_id']]);
+                if ((int) $check->fetchColumn() === 0) {
+                    $errors[] = 'El equipo seleccionado no pertenece a la liga indicada.';
+                }
             }
         }
 
-        // Mostrar el formulario para editar usuario
-        $viewPath = ROOT_PATH.'/admin/views/pages/users/edit.php';
-        include ROOT_PATH. '/admin/views/layout.php';
+        $avatar = $user['avatar'] ?? null;
+        $archivo = $_FILES['avatar'] ?? null;
+        $rutaNuevoAvatar = null;
+        if ($archivo && ($archivo['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+            if ($archivo['error'] !== UPLOAD_ERR_OK || $archivo['size'] > 2 * 1024 * 1024) {
+                $errors[] = 'El avatar no se pudo recibir o supera los 2 MB.';
+            } else {
+                $mime = (new finfo(FILEINFO_MIME_TYPE))->file($archivo['tmp_name']);
+                $extensiones = ['image/jpeg' => 'jpg', 'image/png' => 'png'];
+                if (!isset($extensiones[$mime]) || @getimagesize($archivo['tmp_name']) === false) {
+                    $errors[] = 'El avatar debe ser una imagen JPG o PNG válida.';
+                } else {
+                    $directorio = ROOT_PATH . '/public/assets/img/avatars/';
+                    if (!is_dir($directorio) && !mkdir($directorio, 0755, true) && !is_dir($directorio)) {
+                        $errors[] = 'No está disponible la carpeta de avatares.';
+                    } else {
+                        $avatar = 'avatar_' . bin2hex(random_bytes(12)) . '.' . $extensiones[$mime];
+                        $rutaNuevoAvatar = $directorio . $avatar;
+                        if (!move_uploaded_file($archivo['tmp_name'], $rutaNuevoAvatar)) {
+                            $errors[] = 'No fue posible guardar el avatar.';
+                            $rutaNuevoAvatar = null;
+                            $avatar = $user['avatar'] ?? null;
+                        }
+                    }
+                }
+            }
+        }
 
+        if ($errors) {
+            $user = array_merge($user, $input);
+            $data = ['errors' => $errors];
+            $viewPath = ROOT_PATH . '/admin/views/pages/users/edit.php';
+            extract($this->datosFormularioEdicion());
+            include ROOT_PATH . '/admin/views/layout.php';
+            return;
+        }
+
+        $update = $input + ['avatar' => $avatar];
+        $password = (string) ($_POST['password'] ?? '');
+        if ($password !== '') {
+            $update['password'] = password_hash($password, PASSWORD_DEFAULT);
+        }
+
+        try {
+            if (!$this->userModel->update($id, $update)) {
+                throw new RuntimeException('No se pudo actualizar el usuario.');
+            }
+            $_SESSION['success'] = 'El usuario se actualizó correctamente.';
+            header('Location: index.php?page=users');
+            exit;
+        } catch (Throwable $e) {
+            if ($rutaNuevoAvatar && is_file($rutaNuevoAvatar)) {
+                unlink($rutaNuevoAvatar);
+            }
+            error_log('Error al actualizar usuario: ' . $e->getMessage());
+            $user = array_merge($user, $input);
+            $data = ['errors' => ['No fue posible guardar los cambios del usuario.']];
+            $viewPath = ROOT_PATH . '/admin/views/pages/users/edit.php';
+            extract($this->datosFormularioEdicion());
+            include ROOT_PATH . '/admin/views/layout.php';
+        }
     }
 
     /* =========== DESACTIVAR USUARIO ============ */
