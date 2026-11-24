@@ -1,0 +1,13 @@
+/* Selector único de imágenes para logotipos, escudos y avatares */
+.afec-image-upload { display:flex; flex-direction:column; align-items:center; gap:.65rem; width:100%; }
+.afec-image-upload__preview { position:relative; display:flex; align-items:center; justify-content:center; width:190px; height:190px; max-width:100%; margin:0; padding:12px; overflow:hidden; cursor:pointer; border:2px dashed #b9cce4; border-radius:18px; background:linear-gradient(145deg,#f8fbff,#edf4fc); transition:border-color .2s ease, background .2s ease, transform .2s ease; }
+.afec-image-upload__preview:hover,.afec-image-upload__preview:focus-visible { border-color:#2874c8; background:#eaf3ff; outline:none; }
+.afec-image-upload__preview img { display:block; width:100%; height:100%; object-fit:contain; }
+.afec-image-upload__overlay { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.4rem; color:#fff; background:rgba(9,45,91,.72); opacity:0; transition:opacity .2s ease; }
+.afec-image-upload__overlay i { font-size:1.8rem; }
+.afec-image-upload__overlay small { font-size:.8rem; font-weight:700; }
+.afec-image-upload__preview:hover .afec-image-upload__overlay,.afec-image-upload__preview:focus-visible .afec-image-upload__overlay { opacity:1; }
+.afec-image-upload--circle .afec-image-upload__preview { width:176px; height:176px; border-radius:50%; }
+.afec-image-upload--circle .afec-image-upload__preview img { border-radius:50%; }
+.afec-image-upload__hint { max-width:260px; color:#718096; font-size:.78rem; line-height:1.5; text-align:center; }
+@media(max-width:575.98px){.afec-image-upload__preview{width:160px;height:160px}.afec-image-upload--circle .afec-image-upload__preview{width:148px;height:148px}}
