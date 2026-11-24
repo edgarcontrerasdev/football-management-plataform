@@ -61,7 +61,7 @@
     <?php
     $imageUploadId = 'logo';
     $imageUploadName = 'logo';
-    $imageUploadSrc = !empty($old['logo']) ? ASSETS . '/img/organismos/' . rawurlencode($old['logo']) : ASSETS . '/img/organismos/default.png';
+    $imageUploadSrc = !empty($old['logo']) ? ASSETS . '/img/organismos/' . rawurlencode($old['logo']) : ASSETS . '/img/ligas/default.png';
     $imageUploadLabel = 'Cambiar logotipo';
     $imageUploadAlt = 'Logotipo del organismo';
     $imageUploadHint = 'Opcional. JPG, PNG o WEBP. Máximo 2 MB.';
