@@ -45,10 +45,17 @@ class Equipo{
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function getByLiga($ligaId){
-        $sql = "SELECT * FROM tb_equipos e WHERE e.liga_id = :ligaId";
+    public public function getByLiga($ligaId){
+        $sql = "SELECT DISTINCT e.id, e.nombre
+                FROM tb_equipos e
+                INNER JOIN tb_liga_equipos le ON le.equipo_id = e.id
+                INNER JOIN tb_liga_temporadas lt ON lt.id = le.liga_temporada_id
+                WHERE lt.liga_id = :ligaId
+                  AND lt.estado = 'activo'
+                  AND le.estado_participacion = 'activo'
+                ORDER BY e.nombre";
         $stm = $this->pdo->prepare($sql);
-        $stm->execute([':ligaId' => $ligaId]);
+        $stm->execute([':ligaId' => (int) $ligaId]);
         return $stm->fetchAll(PDO::FETCH_ASSOC);
     }
 
