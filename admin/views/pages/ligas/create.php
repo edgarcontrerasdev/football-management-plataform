@@ -51,16 +51,17 @@ $value = static fn(string $key, string $default = ''): string =>
                 <hr class="my-4">
                 <section class="mb-4">
                     <h5 class="form-section-title mb-3"><i class="bi bi-image me-2"></i>Logotipo</h5>
-                    <div class="row align-items-center g-3">
-                        <div class="col-auto">
-                            <div class="liga-logo-preview">
-                                <img id="ligaLogoPreview" src="<?= ASSETS ?>/img/ligas/default.png" alt="Vista previa del logotipo">
-                            </div>
-                        </div>
-                        <div class="col">
-                            <label class="form-label" for="logo">Seleccionar logotipo</label>
-                            <input class="form-control" type="file" id="logo" name="logo" accept="image/png,image/jpeg,image/webp">
-                            <small class="text-muted">Opcional. Formatos JPG, PNG o WEBP. Máximo 2 MB.</small>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <?php
+                            $imageUploadId = 'logo';
+                            $imageUploadName = 'logo';
+                            $imageUploadSrc = ASSETS . '/img/ligas/default.png';
+                            $imageUploadLabel = 'Cambiar logotipo';
+                            $imageUploadAlt = 'Logotipo de la liga';
+                            $imageUploadHint = 'Opcional. JPG, PNG o WEBP. Máximo 2 MB.';
+                            include ROOT_PATH . '/admin/views/components/image-upload.php';
+                            ?>
                         </div>
                     </div>
                 </section>
