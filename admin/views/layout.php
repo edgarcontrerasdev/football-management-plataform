@@ -3,6 +3,8 @@
         die('Vista no definida');
     }
     $page = $_GET['page'] ?? 'dashboard';
+    $isAdminManager = in_array(Auth::role(), ['ADMIN', 'SUPERVISOR'], true);
+    $isActivePage = static fn(string $key): string => $page === $key ? ' active' : '';
 ?>
 
 <!DOCTYPE html>
@@ -96,30 +98,29 @@
 
         <div class="section-title">Navegación</div>
 
-            <a href="index.php?page=dashboard" class="nav-item active" data-key="dashboard"><i class="bi bi-speedometer2"></i><span class="label">Panel</span></a>
-            <a href="index.php?page=ligas" class="nav-item" data-key="ligas"><i class="bi bi-trophy"></i><span class="label">Ligas</span></a>
-            <a href="index.php?page=equipos" class="nav-item" data-key="equipos"><i class="bi bi-people"></i><span class="label">Equipos</span></a>
+            <a href="index.php?page=dashboard" class="nav-item<?= $isActivePage('dashboard') ?>" data-key="dashboard"><i class="bi bi-speedometer2"></i><span class="label">Panel</span></a>
+            <a href="index.php?page=ligas" class="nav-item<?= $isActivePage('ligas') ?>" data-key="ligas"><i class="bi bi-trophy"></i><span class="label">Ligas</span></a>
+            <a href="index.php?page=equipos" class="nav-item<?= $isActivePage('equipos') ?>" data-key="equipos"><i class="bi bi-people"></i><span class="label">Equipos</span></a>
             <?php if (in_array(Auth::role(), ['ADMIN', 'SUPERVISOR'], true)): ?>
-            <a href="index.php?page=clubes" class="nav-item" data-key="clubes"><i class="bi bi-shield"></i><span class="label">Clubes</span></a>
+            <a href="index.php?page=clubes" class="nav-item<?= $isActivePage('clubes') ?>" data-key="clubes"><i class="bi bi-shield"></i><span class="label">Clubes</span></a>
             <?php endif; ?>
             <?php if (in_array(Auth::role(), ['ADMIN', 'SUPERVISOR'], true)): ?>
-            <a href="index.php?page=organismos" class="nav-item" data-key="organismos"><i class="bi bi-diagram-3"></i><span class="label">Organismos</span></a>
+            <a href="index.php?page=organismos" class="nav-item<?= $isActivePage('organismos') ?>" data-key="organismos"><i class="bi bi-diagram-3"></i><span class="label">Organismos</span></a>
             <?php endif; ?>
-            <a href="index.php?page=torneos" class="nav-item" data-key="torneos"><i class="bi bi-flag"></i><span class="label">Torneos</span></a>
-            <a href="#" class="nav-item" data-key="partidos"><i class="bi bi-calendar-week"></i><span class="label">Partidos</span></a>
-            <a href="index.php?page=temporadas" class="nav-item" data-key="temporadas"><i class="fas fa-calendar"></i><span class="label">Temporadas</span></a>
+            <a href="index.php?page=torneos" class="nav-item<?= $isActivePage('torneos') ?>" data-key="torneos"><i class="bi bi-flag"></i><span class="label">Torneos</span></a>
+            <a href="#" class="nav-item<?= $isActivePage('partidos') ?>" data-key="partidos"><i class="bi bi-calendar-week"></i><span class="label">Partidos</span></a>
+            <a href="index.php?page=temporadas" class="nav-item<?= $isActivePage('temporadas') ?>" data-key="temporadas"><i class="fas fa-calendar"></i><span class="label">Temporadas</span></a>
     
             <div class="section-title">Administración</div>
 
                 <a href="#" class="nav-item" data-key="amonestaciones"><i class="bi bi-card-list"></i><span class="label">Amonestaciones</span></a>
                 <a href="#" class="nav-item" data-key="finanzas"><i class="bi bi-currency-dollar"></i><span class="label">Finanzas</span></a>
         
-                <?php if (in_array(Auth::user()['rol'], ['1','2'])): ?>
-                    <a href="index.php?page=users" class="nav-item" data-key="usuarios">
-                    <i class="bi bi-person-gear"></i><span class="label">Usuarios</span></a>
+                <?php if ($isAdminManager): ?>
+                    <a href="index.php?page=users" class="nav-item<?= $isActivePage('users') ?>" data-key="users">
+                        <i class="bi bi-person-gear"></i><span class="label">Usuarios</span>
+                    </a>
                 <?php endif; ?>
-            </div>
-        </div>
     </aside>
 
     <!-- MAIN -->
