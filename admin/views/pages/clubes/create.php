@@ -64,17 +64,15 @@
                             <i class="fa-solid fa-image me-2"></i>Logo del club
                         </h6>
 
-                        <label for="logo" class="club-logo-picker" title="Seleccionar logo">
-                            <img id="clubLogoPreview" src="<?= ASSETS ?>/img/ligas/default.png" alt="Vista previa del logo">
-                            <span class="club-logo-overlay">
-                                <i class="fa-solid fa-camera"></i>
-                                <small>Seleccionar logo</small>
-                            </span>
-                        </label>
-                        <input type="file" id="logo" name="logo" accept="image/png,image/jpeg,image/webp" hidden>
-                        <small class="form-text text-muted d-block mt-2">
-                            Opcional. Formatos PNG, JPG o WEBP. Tamaño máximo: 2 MB.
-                        </small>
+                        <?php
+                        $imageUploadId = 'logo';
+                        $imageUploadName = 'logo';
+                        $imageUploadSrc = ASSETS . '/img/clubes/default.png';
+                        $imageUploadLabel = 'Cambiar logotipo';
+                        $imageUploadAlt = 'Logotipo del club';
+                        $imageUploadHint = 'Opcional. JPG, PNG o WEBP. Máximo 2 MB.';
+                        include ROOT_PATH . '/admin/views/components/image-upload.php';
+                        ?>
                     </section>
                 </aside>
             </div>
