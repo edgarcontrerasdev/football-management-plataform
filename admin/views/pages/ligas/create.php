@@ -128,9 +128,3 @@ $value = static fn(string $key, string $default = ''): string =>
     </div>
 </div>
 
-<script>
-document.getElementById('logo')?.addEventListener('change', function () {
-    const file = this.files && this.files[0];
-    if (file) document.getElementById('ligaLogoPreview').src = URL.createObjectURL(file);
-});
-</script>
