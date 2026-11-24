@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () =>
         const loader = document.getElementById('loader-overlay');
         const tbody = document.getElementById('tabla-body');
         const pagina = document.getElementById('pagina');
-        const limite = document.getElementById('limite');
+        const limite = document.querySelector('#paginacion select#limite');
         const paginacion = document.getElementById('paginacion');
         const inputFiltro = document.getElementById("inputFiltro");
         const filtroEstado = document.getElementById("filtroEstado");
@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () =>
 
         let timer = null;
 
-        function mostrarSkeleton(filas = 5, columnas = 7){
+        const escapeHTML = value => String(value ?? '').replace(/[&<>\"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',\"'\":'&#39;'}[char]));\n\n        function mostrarSkeleton(filas = 5, columnas = 7){
         tbody.innerHTML = '';
         for(let i=0;i<filas;i++){
             const tr = document.createElement('tr');
@@ -158,19 +158,19 @@ document.addEventListener('DOMContentLoaded', () =>
                                 </div>
                             </div>
                         </td>
-                        <td>${u.rol ?? 'Sin rol'}</td>
+                        <td>${escapeHTML(u.rol_nombre ?? 'Sin rol')}</td>
                         <td>
                             <div>${u.correo}</div>
                             <small class="text-muted">${u.telefono ?? ''}</small>
                         </td>
 
-                        <td>${u.liga ?? '-'}</td>
-                        <td>${u.equipo ?? '-'}</td>
+                        <td>${escapeHTML(u.liga ?? '-')}</td>
+                        <td>${escapeHTML(u.equipo ?? '-')}</td>
 
                         <td class="text-center">
                             <span id="status-${u.id}" 
-                                class="user-status ${u.estado == 1 ? 'active' : 'inactive'}">
-                                ${u.estado == 1 ? 'ACTIVO' : 'INACTIVO'}
+                                class="user-status ${u.estado === 'activo' ? 'active' : 'inactive'}">
+                                ${u.estado === 'activo' ? 'ACTIVO' : 'INACTIVO'}
                             </span>
                         </td>
 
@@ -179,7 +179,7 @@ document.addEventListener('DOMContentLoaded', () =>
                                 <input type="checkbox"
                                     class="toggle-user"
                                     data-id="${u.id}"
-                                    ${u.estado == 1 ? 'checked' : ''}>
+                                    ${u.estado === 'activo' ? 'checked' : ''}>
                                 <span class="slider"></span>
                             </label>
 
