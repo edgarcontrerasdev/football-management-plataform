@@ -49,14 +49,15 @@ $escudoUrl = ASSETS . '/img/equipos/' . rawurlencode($escudo ?: 'default.png');
                     <aside class="col-lg-4 p-4 equipo-create-aside">
                         <section class="equipo-form-section">
                             <h6 class="text-uppercase fw-bold mb-3"><i class="fa-solid fa-image me-2"></i>Escudo del equipo</h6>
-                            <label for="escudo" class="equipo-crest-picker" title="Cambiar escudo">
-                                <img id="equipoCrestPreview" src="<?= htmlspecialchars($escudoUrl, ENT_QUOTES, 'UTF-8') ?>" alt="Escudo actual del equipo">
-                                <span class="equipo-crest-overlay">
-                                    <i class="fa-solid fa-camera"></i>
-                                    <small>Cambiar escudo</small>
-                                </span>
-                            </label>
-                            <input type="file" id="escudo" name="escudo" accept="image/png,image/jpeg,image/webp" hidden>
+                            <?php
+                            $imageUploadId = 'escudo';
+                            $imageUploadName = 'escudo';
+                            $imageUploadSrc = $escudoUrl;
+                            $imageUploadLabel = 'Cambiar escudo';
+                            $imageUploadAlt = 'Escudo actual del equipo';
+                            $imageUploadHint = 'Opcional. Si no seleccionas otra imagen, se conservará la actual. JPG, PNG o WEBP; máximo 2 MB.';
+                            include ROOT_PATH . '/admin/views/components/image-upload.php';
+                            ?>
                             <small class="form-text text-muted d-block mt-2">Opcional. PNG, JPG o WEBP. Tamaño máximo: 2 MB.</small>
                             <p class="equipo-crest-note mt-3 mb-0">El escudo corresponde a la identidad permanente del equipo. Los cambios de imagen por temporada se administrarán por separado.</p>
                         </section>
