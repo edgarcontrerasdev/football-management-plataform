@@ -258,33 +258,32 @@ class UsersController {
         // Hash de contraseña
         $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
 
-        /* ===============================
-        AVATAR
-        ===============================*/
-        if (!empty($_FILES['avatar']['name'])) {
-
-            $permitidos = ['image/jpeg', 'image/png'];
-            $tipo = $_FILES['avatar']['type'];
-
-            if (!in_array($tipo, $permitidos)) {
-                echo json_encode([
-                    'success' => false,
-                    'mensaje' => 'Formato de imagen no permitido'
-                ]);
+        /* Avatar: misma política de formatos y tamaño que el selector compartido. */
+        if (isset($_FILES['avatar']) && ($_FILES['avatar']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+            $archivo = $_FILES['avatar'];
+            if ($archivo['error'] !== UPLOAD_ERR_OK || $archivo['size'] > 2 * 1024 * 1024) {
+                echo json_encode(['success' => false, 'mensaje' => 'El avatar debe cargarse correctamente y no superar 2 MB']);
                 exit;
             }
 
-            $nombreArchivo = uniqid('avatar_') . '.png';
-            $ruta = __DIR__ . '/../../public/assets/img/avatars/' . $nombreArchivo;
-
-            if (!move_uploaded_file($_FILES['avatar']['tmp_name'], $ruta)) {
-                echo json_encode([
-                    'success' => false,
-                    'mensaje' => 'Error al subir el avatar'
-                ]);
+            $mime = (new finfo(FILEINFO_MIME_TYPE))->file($archivo['tmp_name']);
+            $formatos = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+            if (!isset($formatos[$mime]) || @getimagesize($archivo['tmp_name']) === false) {
+                echo json_encode(['success' => false, 'mensaje' => 'El avatar debe ser una imagen JPG, PNG o WEBP válida']);
                 exit;
             }
 
+            $directorio = ROOT_PATH . '/public/assets/img/avatars/';
+            if (!is_dir($directorio) && !mkdir($directorio, 0755, true) && !is_dir($directorio)) {
+                echo json_encode(['success' => false, 'mensaje' => 'No está disponible la carpeta de avatares']);
+                exit;
+            }
+            $nombreArchivo = 'avatar_' . bin2hex(random_bytes(12)) . '.' . $formatos[$mime];
+            $ruta = $directorio . $nombreArchivo;
+            if (!move_uploaded_file($archivo['tmp_name'], $ruta)) {
+                echo json_encode(['success' => false, 'mensaje' => 'No fue posible guardar el avatar']);
+                exit;
+            }
             $data['avatar'] = $nombreArchivo;
         }
 
@@ -393,7 +392,7 @@ class UsersController {
                 $errors[] = 'El avatar no se pudo recibir o supera los 2 MB.';
             } else {
                 $mime = (new finfo(FILEINFO_MIME_TYPE))->file($archivo['tmp_name']);
-                $extensiones = ['image/jpeg' => 'jpg', 'image/png' => 'png'];
+                $extensiones = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
                 if (!isset($extensiones[$mime]) || @getimagesize($archivo['tmp_name']) === false) {
                     $errors[] = 'El avatar debe ser una imagen JPG o PNG válida.';
                 } else {
