@@ -45,7 +45,7 @@ class AjaxController {
 
         $filtros = [
             'filtro' => $_GET['filtro'] ?? '',
-            'estado' => isset($_GET['estado']) && $_GET['estado'] !== '' ? (int)$_GET['estado'] : null,
+            'estado' => $_GET['estado'] ?? 'all',
             'rol'    => $_GET['rol'] ?? null,
             'liga'   => $_GET['liga'] ?? null,
             'pagina' => isset($_GET['pagina']) ? (int)$_GET['pagina'] : 1,
