@@ -52,7 +52,7 @@ class Router
 
         'users' => [
             'controller' => 'UsersController',
-            'permission' => 'usuarios.ver'
+            'permission' => null
         ],
 
         'torneos' => [
