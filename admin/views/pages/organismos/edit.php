@@ -6,7 +6,7 @@ $valor = static fn(string $campo, $default = '') => $old[$campo] ?? ($organismo[
 <p class="page-details mb-0">Actualiza los datos generales sin alterar sus relaciones con ligas.</p></div></div>
 <?php if (!empty($error)): ?><div class="alert alert-danger"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div><?php endif; ?>
 <div class="card border-0 shadow-sm"><div class="card-body p-4">
-<form action="index.php?page=organismos&action=actualizar&id=<?= (int) $organismo['id'] ?>" method="POST">
+<form action="index.php?page=organismos&action=actualizar&id=<?= (int) $organismo['id'] ?>" method="POST" enctype="multipart/form-data">
 <div class="row g-3">
 <div class="col-md-8"><label class="form-label" for="nombre">Nombre *</label><input class="form-control" id="nombre" name="nombre" maxlength="150" required value="<?= htmlspecialchars((string) $valor('nombre'), ENT_QUOTES, 'UTF-8') ?>"></div>
 <div class="col-md-4"><label class="form-label" for="siglas">Siglas</label><input class="form-control" id="siglas" name="siglas" maxlength="30" value="<?= htmlspecialchars((string) $valor('siglas'), ENT_QUOTES, 'UTF-8') ?>"></div>
@@ -18,6 +18,18 @@ $valor = static fn(string $campo, $default = '') => $old[$campo] ?? ($organismo[
 <div class="col-md-4"><label class="form-label" for="telefono">Teléfono</label><input class="form-control" id="telefono" name="telefono" maxlength="30" value="<?= htmlspecialchars((string) $valor('telefono'), ENT_QUOTES, 'UTF-8') ?>"></div>
 <div class="col-md-4"><label class="form-label" for="sitio_web">Sitio web</label><input type="url" class="form-control" id="sitio_web" name="sitio_web" maxlength="255" value="<?= htmlspecialchars((string) $valor('sitio_web'), ENT_QUOTES, 'UTF-8') ?>"></div>
 <div class="col-12"><label class="form-label" for="descripcion">Descripción</label><textarea class="form-control" id="descripcion" name="descripcion" rows="3"><?= htmlspecialchars((string) $valor('descripcion'), ENT_QUOTES, 'UTF-8') ?></textarea></div>
+</div>
+<div class="col-12 mt-3">
+    <h5 class="form-section-title mb-3"><i class="fa-solid fa-image me-2"></i>Logotipo del organismo</h5>
+    <?php
+    $imageUploadId = 'logo';
+    $imageUploadName = 'logo';
+    $imageUploadSrc = !empty($organismo['logo']) ? ASSETS . '/img/organismos/' . rawurlencode($organismo['logo']) : ASSETS . '/img/organismos/default.png';
+    $imageUploadLabel = 'Cambiar logotipo';
+    $imageUploadAlt = 'Logotipo del organismo';
+    $imageUploadHint = 'Opcional. JPG, PNG o WEBP. Máximo 2 MB.';
+    include ROOT_PATH . '/admin/views/components/image-upload.php';
+    ?>
 </div>
 <div class="d-flex justify-content-end gap-2 mt-4"><a href="index.php?page=organismos&action=detalles&id=<?= (int) $organismo['id'] ?>" class="btn btn-light">Cancelar</a><button class="btn btn-primary" type="submit"><i class="fas fa-save me-1"></i>Guardar cambios</button></div>
 </form></div></div>
