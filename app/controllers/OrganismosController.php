@@ -100,7 +100,9 @@ class OrganismosController
             'correo' => trim((string) ($_POST['correo'] ?? '')),
             'telefono' => trim((string) ($_POST['telefono'] ?? '')),
             'sitio_web' => trim((string) ($_POST['sitio_web'] ?? '')),
-            'fecha_creacion' => trim((string) ($_POST['fecha_creacion'] ?? ''))
+            'fecha_creacion' => trim((string) ($_POST['fecha_creacion'] ?? '')),
+            // El formulario de edición no cambia el logotipo; conservar el existente.
+            'logo' => $organismo['logo'] ?? null
         ];
 
         $_SESSION['organismo_old'] = $data;
