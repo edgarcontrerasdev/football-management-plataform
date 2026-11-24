@@ -38,7 +38,7 @@ class AjaxController {
     }
 
     
-   public function usersFilter() {
+   public function usersFilter() {\n        Auth::requireRole(['ADMIN', 'SUPERVISOR']);
         require_once __DIR__ . '/../models/User.php';
         require_once __DIR__ . '/../../config/database.php';
 
