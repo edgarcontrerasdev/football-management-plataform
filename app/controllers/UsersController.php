@@ -304,7 +304,7 @@ class UsersController {
     {
         $roles = (new Role($this->db))->all();
         $ligas = $this->db->query("SELECT id, nombre FROM tb_ligas ORDER BY nombre")->fetchAll(PDO::FETCH_ASSOC);
-        $equipos = $this->db->query("SELECT id, nombre, liga_id FROM tb_equipos ORDER BY nombre")->fetchAll(PDO::FETCH_ASSOC);
+        $equipos = $this->db->query("SELECT DISTINCT e.id, e.nombre, le.liga_id FROM tb_equipos e INNER JOIN tb_liga_equipos le ON le.equipo_id = e.id WHERE le.estado_participacion = 'activo' ORDER BY e.nombre")->fetchAll(PDO::FETCH_ASSOC);
         return compact('roles', 'ligas', 'equipos');
     }
 
