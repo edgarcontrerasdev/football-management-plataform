@@ -8,6 +8,15 @@
         const preview = component && component.querySelector('img');
         if (!preview) return;
         const original = preview.getAttribute('src');
+        const trigger = component.querySelector('.afec-image-upload__preview');
+        if (trigger) {
+            trigger.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    input.click();
+                }
+            });
+        }
 
         input.addEventListener('change', function () {
             const file = input.files && input.files[0];
