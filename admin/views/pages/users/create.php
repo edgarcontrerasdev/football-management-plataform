@@ -21,21 +21,16 @@
 
                 <!-- Avatar -->
                 <div class="avatar-column">
-                    <label for="avatar" class="avatar-box">
-                        <img id="avatarPreview"
-                             src="/afec/public/assets/img/avatars/default.png">
-                        <div class="avatar-overlay">
-                            <span>📷</span>
-                            <small>Cambiar avatar</small>
-                        </div>
-                    </label>
-
-                    <input type="file" name="avatar" id="avatar" accept="image/png,image/jpeg" hidden>
-                    <p>
-                        Imagen de perfil del usuario.<br>
-                        <strong>PNG, JPG</strong><br>
-                        Máx. recomendado <strong>2MB</strong>
-                    </p>
+                    <?php
+                    $imageUploadId = 'avatar';
+                    $imageUploadName = 'avatar';
+                    $imageUploadSrc = ASSETS . '/img/avatars/default.png';
+                    $imageUploadLabel = 'Cambiar avatar';
+                    $imageUploadAlt = 'Avatar del usuario';
+                    $imageUploadHint = 'Opcional. JPG, PNG o WEBP. Máximo 2 MB.';
+                    $imageUploadShape = 'circle';
+                    include ROOT_PATH . '/admin/views/components/image-upload.php';
+                    ?>
                 </div>
         
             <!-- 🟩 Columna formulario -->
