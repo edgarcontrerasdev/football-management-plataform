@@ -25,7 +25,7 @@ $valor = static fn(string $campo, $default = ''): string =>
 
     <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
-            <form action="index.php?page=ligas&action=actualizar&id=<?= (int) $liga['id'] ?>" method="POST">
+            <form action="index.php?page=ligas&action=actualizar&id=<?= (int) $liga['id'] ?>" method="POST" enctype="multipart/form-data">
                 <h5 class="mb-3">Identidad de la liga</h5>
                 <div class="row g-3">
                     <div class="col-md-8">
@@ -43,6 +43,22 @@ $valor = static fn(string $campo, $default = ''): string =>
                             <option value="inactivo" <?= $valor('estado') === 'inactivo' ? 'selected' : '' ?>>Inactiva</option>
                             <option value="suspendido" <?= $valor('estado') === 'suspendido' ? 'selected' : '' ?>>Suspendida</option>
                         </select>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+                <h5 class="mb-3">Logotipo de la liga</h5>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <?php
+                        $imageUploadId = 'logo';
+                        $imageUploadName = 'logo';
+                        $imageUploadSrc = !empty($liga['logo']) ? ASSETS . '/img/ligas/' . rawurlencode($liga['logo']) : ASSETS . '/img/ligas/default.png';
+                        $imageUploadLabel = 'Cambiar logotipo';
+                        $imageUploadAlt = 'Logotipo actual de la liga';
+                        $imageUploadHint = 'Opcional. Si no seleccionas otra imagen, se conservará la actual. JPG, PNG o WEBP; máximo 2 MB.';
+                        include ROOT_PATH . '/admin/views/components/image-upload.php';
+                        ?>
                     </div>
                 </div>
 
