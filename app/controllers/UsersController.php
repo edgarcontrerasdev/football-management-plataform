@@ -1,530 +1,330 @@
 <?php
 
-require_once __DIR__.'../../models/User.php';
-require_once __DIR__.'../../models/Rol.php';
-require_once __DIR__.'../../models/Liga.php';
-require_once __DIR__.'../../core/Auth.php';
+require_once __DIR__ . '/../models/User.php';
+require_once __DIR__ . '/../models/Rol.php';
+require_once __DIR__ . '/../models/Liga.php';
+require_once __DIR__ . '/../core/Auth.php';
 
-class UsersController {
+class UsersController
+{
     private PDO $db;
-    private $userModel;
-    private $rolesModel;
-    private $ligasModel;
+    private User $userModel;
 
-    public function __construct(PDO $db) {
+    public function __construct(PDO $db)
+    {
         $this->db = $db;
         $this->userModel = new User($db);
     }
 
-    //LISTAR USUARIOS 
-    public function index() {
-        // Verificar que el usuario esté logueado y tenga permisos
-        if (!Auth::check()) {
-            header("Location: /afec/public/index.php?page=login");
-            exit;
-        }
-
-        $estado = $_GET['filtroEstado'] ?? 'all';
-        $rol = $_GET['filtroRol'] ?? null;
-        $filtro = $_GET['filtro'] ?? '';
-
-        $this->rolesModel = new Role($this->db);
-        $this->ligasModel = new Liga($this->db);
-        $roles = $this->rolesModel->all();
-        $ligas = $this->ligasModel->all();
-
-        $users = $this->userModel->filtrar([
-            'estado' => $estado,
-            'rol' => $rol,
-            'filtro' => $filtro
-        ]);
-
-        // Pasar $users y $roles a la vista para renderizar la tabla
-        // Vista que se cargará DENTRO del layout
-        $viewPath = ROOT_PATH.'/admin/views/pages/users/users.php';
-
-        // El layout tendrá acceso a $users, $roles y $viewPath
-        include ROOT_PATH.'/admin/views/layout.php';
-    }
-
-    // FORM PARA CREAR USUARIO   
-    public function create() 
+    private function requireManager(): void
     {
-       
-         // 🔐 Validar permisos (solo los admin)
-        if (!in_array(Auth::user()['rol'], [1])) 
-        {
-            header("Location: index.php?page=dashboard");
-            exit;
-        }
-
-        // Datos que se enviarán a la vista
-        $data = [];
-
-        //obtengo catalogo de roles para mostrar en el formulario
-        $rolesModel = new Role($this->db);
-        $roles = $rolesModel->all();
-        $data['roles'] = $roles;
-
-        // Si es POST, procesar el formulario
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') 
-        {
-            $nombre = trim($_POST['nombre'] ?? '');
-            $usuario = trim($_POST['usuario'] ?? '');
-            $password = $_POST['password'] ?? '';
-            $rol_id = $_POST['rol_id'] ?? 0;
-            $estado = $_POST['estado'] ?? 1;
-            $liga_id = $_POST['liga_id'] ?? null;
-            $equipo_id = $_POST['equipo_id'] ?? null;
-
-            // Validar campos obligatorios
-            $errors = [];
-            if (!$usuario) $errors[] = "El usuario es obligatorio";
-            if (!$password) $errors[] = "La contraseña es obligatoria";
-            if (!$rol_id)  $errors[] = "El rol es obligatorio";
-
-            //verificar que exista el id del rol
-            $rol_valido = false;
-            foreach($roles as $r){
-                if($r['id'] == $rol_id){
-                    $rol_valido = true;
-                    break;
-                }
-            }
-
-            if(!$rol_valido) $errors[] = "El rol seleccionado no es valido";
-
-            //validaciones por rol
-            switch($rol_id){
-                case 1: //admin
-                case 2: //supervisor
-                    $liga_id=null;
-                    $equipo_id=null;
-                break;
-                case 3: //usuario liga
-                    if(empty($liga_id)){
-                    $errors[] = 'Para crear usuario con rol de liga es obligatorio seleccionar una liga.';
-                    return;
-                    }
-                    $equipo_id=null;
-                break;
-                case 4:
-                    if(empty($liga_id) || empty($equipo_id)){
-                        $errors[]='Para crear usuario con rol de equipo es obligatorio seleccionar una liga y un equipo.';
-                        return;
-                    }
-                break;
-                default:
-                    $errors[] = "El rol no es valido";
-                    return;   
-            }
-            //verificar que no se repita el nombre del usuario
-
-            if($this->userModel->usuarioExiste($usuario)){
-                $errors[] = "El nombre del usuario ya existe";
-            }
-
-            //si no hay errores crear el usuario
-            if (empty($errors)) {
-                // Hashear contraseña
-                $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
-                try{
-                    // Crear usuario
-                    $result = $this->userModel->create([
-                        'nombre'   => $nombre,
-                        'usuario'  => $usuario,
-                        'password' => $hashedPassword,
-                        'rol_id'   => $rol_id,
-                        'liga_id'  => $liga_id,
-                        'equipo_id' => $equipo_id,
-                        'estado'   => $estado
-                    ]);
-
-                    if ($result) {
-                        // Redirigir a lista de usuarios
-                        header("Location: /afec/admin/index.php?page=users");
-                        exit;
-                    } else {
-                        $errors[] = "Error al crear el usuario en la base de datos";
-                    }
-                }catch(PDOException $e){
-                    if ($e->getCode() == 2300){
-                        $data['errors'][]= "El nombre de usuario ya existe.";
-                    }else{
-                        $data['errors'][] = "Error al gurdar el usuario";
-                    }
-                }
-            }
-
-
-            // Si hay errores, enviarlos a la vista
-            $data['errors'] = $errors;
-        }
-
-        $viewPath = ROOT_PATH . '/admin/views/pages/users/create.php';
-        include ROOT_PATH.'/admin/views/layout.php';
-
-        // Retornar los datos al Router para que los pase a la vista
-        return $data;
-    }
-    
-   /* ===== GUARDAR USUARIO  ====== */
-
-    public function save()
-    {
-
-        header('Content-Type: application/json; charset=utf-8');
-
-        // Seguridad básica
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            echo json_encode([
-                'success' => false,
-                'mensaje' => 'Método no permitido'
-            ]);
-            exit;
-        }
-
-       
-        //validacion de permisos
-        if (!in_array(Auth::user()['rol'], [1, 2])) {
-            echo json_encode([
-                'success' => false,
-                'mensaje' => 'No tienes permisos para esta acción'
-            ]);
-            exit;
-        }
-
-        // Datos del formulario
-        $data = [
-            'nombre'   => trim($_POST['nombre'] ?? ''),
-            'usuario'  => trim($_POST['usuario'] ?? ''),
-            'password' => $_POST['password'] ?? '',
-            'rol_id'   => $_POST['rol_id'] ?? null,
-            'correo'   => trim($_POST['correo'] ?? ''),
-            'telefono' => trim($_POST['telefono'] ?? ''),
-            'avatar'   => null,
-            'liga_id'  => !empty($_POST['liga_id']) ? $_POST['liga_id'] : null,
-            'equipo_id'=> !empty($_POST['equipo_id']) ? $_POST['equipo_id'] : null
-        ];
-
-
-        // Validaciones
-        if (empty($data['nombre']) || empty($data['usuario']) || empty($data['password']) || empty($data['rol_id']))
-        {
-            echo json_encode([
-                'success' => false,
-                'mensaje' => 'Todos los campos obligatorios deben completarse'
-            ]);
-            exit;
-        }
-
-        //validacion de roles
-        switch ($_POST['rol_id']) {
-            case 1: // Admin
-            case 2: // Supervisor
-                $data['liga_id'] = null;
-                $data['equipo_id'] = null;
-            break;
-            case 3: // Usuario liga
-                if (empty($data['liga_id'])) 
-                {
-                    echo json_encode([
-                        'success' => false,
-                        'mensaje' => 'Debe seleccionar una liga'
-                    ]);
-                    exit;
-                }
-                $data['equipo_id'] = null;
-            break;
-            case 4: // Usuario equipo
-                if (empty($data['liga_id']) || empty($data['equipo_id'])) 
-                {
-                    echo json_encode([
-                        'success' => false,
-                        'mensaje' => 'Debe seleccionar liga y equipo'
-                    ]);
-                    exit;
-                }
-            break;
-            default:
-                echo json_encode([
-                    'success' => false,
-                    'mensaje' => 'Rol no válido'
-                ]);
-            exit;
-        }
-
-        
-        // Hash de contraseña
-        $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
-
-        /* Avatar: misma política de formatos y tamaño que el selector compartido. */
-        if (isset($_FILES['avatar']) && ($_FILES['avatar']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
-            $archivo = $_FILES['avatar'];
-            if ($archivo['error'] !== UPLOAD_ERR_OK || $archivo['size'] > 2 * 1024 * 1024) {
-                echo json_encode(['success' => false, 'mensaje' => 'El avatar debe cargarse correctamente y no superar 2 MB']);
-                exit;
-            }
-
-            $mime = (new finfo(FILEINFO_MIME_TYPE))->file($archivo['tmp_name']);
-            $formatos = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
-            if (!isset($formatos[$mime]) || @getimagesize($archivo['tmp_name']) === false) {
-                echo json_encode(['success' => false, 'mensaje' => 'El avatar debe ser una imagen JPG, PNG o WEBP válida']);
-                exit;
-            }
-
-            $directorio = ROOT_PATH . '/public/assets/img/avatars/';
-            if (!is_dir($directorio) && !mkdir($directorio, 0755, true) && !is_dir($directorio)) {
-                echo json_encode(['success' => false, 'mensaje' => 'No está disponible la carpeta de avatares']);
-                exit;
-            }
-            $nombreArchivo = 'avatar_' . bin2hex(random_bytes(12)) . '.' . $formatos[$mime];
-            $ruta = $directorio . $nombreArchivo;
-            if (!move_uploaded_file($archivo['tmp_name'], $ruta)) {
-                echo json_encode(['success' => false, 'mensaje' => 'No fue posible guardar el avatar']);
-                exit;
-            }
-            $data['avatar'] = $nombreArchivo;
-        }
-
-        // Guardar usuario
-        $this->userModel->create($data);
-
-        // RESPUESTA FINAL
-        echo json_encode([
-            'success' => true,
-            'mensaje' => 'Usuario creado correctamente'
-        ]);
-        exit;
+        Auth::requireRole(['ADMIN', 'SUPERVISOR']);
     }
 
-    /* ============ EDITAR USUARIO ============ */
-    private function datosFormularioEdicion(): array
+    private function catalogos(): array
     {
         $roles = (new Role($this->db))->all();
         $ligas = $this->db->query("SELECT id, nombre FROM tb_ligas ORDER BY nombre")->fetchAll(PDO::FETCH_ASSOC);
-        $equipos = $this->db->query("SELECT DISTINCT e.id, e.nombre, le.liga_id FROM tb_equipos e INNER JOIN tb_liga_equipos le ON le.equipo_id = e.id WHERE le.estado_participacion = 'activo' ORDER BY e.nombre")->fetchAll(PDO::FETCH_ASSOC);
+        $equipos = $this->db->query("
+            SELECT DISTINCT e.id, e.nombre, lt.liga_id
+            FROM tb_equipos e
+            INNER JOIN tb_liga_equipos le ON le.equipo_id = e.id
+            INNER JOIN tb_liga_temporadas lt ON lt.id = le.liga_temporada_id
+            WHERE le.estado_participacion = 'activo'
+            ORDER BY e.nombre
+        ")->fetchAll(PDO::FETCH_ASSOC);
         return compact('roles', 'ligas', 'equipos');
     }
 
-    public function edit($id)
+    private function roleKey(int $roleId): ?string
     {
-        Auth::requireRole([1, 2]);
-        $user = $this->userModel->findById((int) $id);
+        $stmt = $this->db->prepare("SELECT clave FROM tb_roles WHERE id = :id AND estado = 'activo' LIMIT 1");
+        $stmt->execute([':id' => $roleId]);
+        $key = $stmt->fetchColumn();
+        return $key ? strtoupper((string) $key) : null;
+    }
 
-        if (!$user) {
-            header("Location: index.php?page=users");
-            exit;
+    private function validateScope(int $roleId, ?int $ligaId, ?int $equipoId): array
+    {
+        $errors = [];
+        $key = $this->roleKey($roleId);
+
+        if (!$key) {
+            return ['El rol seleccionado no existe o está inactivo.'];
         }
 
+        if (in_array($key, ['ADMIN', 'SUPERVISOR'], true)) {
+            return [];
+        }
+
+        if ($key === 'LIGA') {
+            if (!$ligaId) {
+                $errors[] = 'Selecciona la liga que tendrá asignada esta cuenta.';
+            }
+            return $errors;
+        }
+
+        if ($key === 'EQUIPO') {
+            if (!$ligaId || !$equipoId) {
+                $errors[] = 'Selecciona la liga y el equipo que tendrá asignados esta cuenta.';
+                return $errors;
+            }
+
+            $stmt = $this->db->prepare("
+                SELECT COUNT(*)
+                FROM tb_liga_equipos le
+                INNER JOIN tb_liga_temporadas lt ON lt.id = le.liga_temporada_id
+                WHERE lt.liga_id = :liga_id
+                  AND le.equipo_id = :equipo_id
+                  AND le.estado_participacion = 'activo'
+                  AND lt.estado = 'activo'
+            ");
+            $stmt->execute([':liga_id' => $ligaId, ':equipo_id' => $equipoId]);
+            if ((int) $stmt->fetchColumn() === 0) {
+                $errors[] = 'El equipo no tiene una inscripción activa en la liga seleccionada.';
+            }
+            return $errors;
+        }
+
+        $errors[] = 'El rol seleccionado no tiene un flujo de acceso configurado.';
+        return $errors;
+    }
+
+    private function saveAvatar(?array $file, ?string $current = null): ?string
+    {
+        if (!$file || ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+            return $current;
+        }
+        if (($file['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK || ($file['size'] ?? 0) > 2 * 1024 * 1024) {
+            throw new RuntimeException('El avatar debe cargarse correctamente y no superar 2 MB.');
+        }
+
+        $mime = (new finfo(FILEINFO_MIME_TYPE))->file($file['tmp_name']);
+        $formats = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+        if (!isset($formats[$mime]) || @getimagesize($file['tmp_name']) === false) {
+            throw new RuntimeException('El avatar debe ser una imagen JPG, PNG o WEBP válida.');
+        }
+
+        $directory = ROOT_PATH . '/public/assets/img/avatars/';
+        if (!is_dir($directory) && !mkdir($directory, 0755, true) && !is_dir($directory)) {
+            throw new RuntimeException('No está disponible la carpeta de avatares.');
+        }
+
+        $filename = 'avatar_' . bin2hex(random_bytes(12)) . '.' . $formats[$mime];
+        if (!move_uploaded_file($file['tmp_name'], $directory . $filename)) {
+            throw new RuntimeException('No fue posible guardar el avatar.');
+        }
+        return $filename;
+    }
+
+    public function index(): void
+    {
+        Auth::requireLogin();
+        $roles = (new Role($this->db))->all();
+        $ligas = (new Liga($this->db))->all();
+        $users = $this->userModel->filtrar([
+            'estado' => $_GET['filtroEstado'] ?? 'all',
+            'rol' => $_GET['filtroRol'] ?? null,
+            'filtro' => trim((string) ($_GET['filtro'] ?? ''))
+        ]);
+        $viewPath = ROOT_PATH . '/admin/views/pages/users/users.php';
+        include ROOT_PATH . '/admin/views/layout.php';
+    }
+
+    public function create(): void
+    {
+        $this->requireManager();
         $data = ['errors' => []];
+        extract($this->catalogos());
+        $viewPath = ROOT_PATH . '/admin/views/pages/users/create.php';
+        include ROOT_PATH . '/admin/views/layout.php';
+    }
+
+    public function save(): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        try {
+            $this->requireManager();
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new RuntimeException('Método no permitido.');
+            }
+
+            $usuario = trim((string) ($_POST['usuario'] ?? ''));
+            $password = (string) ($_POST['password'] ?? '');
+            $rolId = (int) ($_POST['rol_id'] ?? 0);
+            $ligaId = !empty($_POST['liga_id']) ? (int) $_POST['liga_id'] : null;
+            $equipoId = !empty($_POST['equipo_id']) ? (int) $_POST['equipo_id'] : null;
+
+            if ($usuario === '' || $password === '' || !$rolId) {
+                throw new RuntimeException('Usuario, contraseña y rol son obligatorios.');
+            }
+            if (mb_strlen($usuario) > 100) {
+                throw new RuntimeException('El nombre de usuario no puede superar 100 caracteres.');
+            }
+            if ($this->userModel->usuarioExiste($usuario)) {
+                throw new RuntimeException('El nombre de usuario ya está registrado.');
+            }
+
+            $errors = $this->validateScope($rolId, $ligaId, $equipoId);
+            if ($errors) {
+                throw new RuntimeException(implode(' ', $errors));
+            }
+
+            $avatar = $this->saveAvatar($_FILES['avatar'] ?? null);
+            $this->userModel->create([
+                'usuario' => $usuario,
+                'password' => password_hash($password, PASSWORD_DEFAULT),
+                'rol_id' => $rolId,
+                'estado' => 'activo',
+                'avatar' => $avatar,
+                'liga_id' => $ligaId,
+                'equipo_id' => $equipoId
+            ]);
+
+            echo json_encode(['success' => true, 'mensaje' => 'Usuario creado correctamente.']);
+        } catch (Throwable $e) {
+            error_log('Error al crear usuario: ' . $e->getMessage());
+            echo json_encode(['success' => false, 'mensaje' => $e instanceof RuntimeException ? $e->getMessage() : 'No fue posible crear el usuario.']);
+        }
+        exit;
+    }
+
+    public function edit($id): void
+    {
+        $this->requireManager();
+        $user = $this->userModel->findById((int) $id);
+        if (!$user) {
+            header('Location: index.php?page=users');
+            exit;
+        }
+        $data = ['errors' => []];
+        extract($this->catalogos());
         $viewPath = ROOT_PATH . '/admin/views/pages/users/edit.php';
-        extract($this->datosFormularioEdicion());
         include ROOT_PATH . '/admin/views/layout.php';
     }
 
     public function update($id): void
     {
-        Auth::requireRole([1, 2]);
+        $this->requireManager();
         $id = (int) $id;
         $user = $this->userModel->findById($id);
-
         if (!$user) {
             header('Location: index.php?page=users');
             exit;
         }
-
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: index.php?page=users&action=edit&id=' . $id);
             exit;
         }
 
-        $input = [
-            'nombre' => trim((string) ($_POST['nombre'] ?? '')),
-            'correo' => trim((string) ($_POST['correo'] ?? '')),
-            'telefono' => trim((string) ($_POST['telefono'] ?? '')),
-            'usuario' => trim((string) ($_POST['usuario'] ?? '')),
-            'rol_id' => (int) ($_POST['rol_id'] ?? 0),
-            'liga_id' => !empty($_POST['liga_id']) ? (int) $_POST['liga_id'] : null,
-            'equipo_id' => !empty($_POST['equipo_id']) ? (int) $_POST['equipo_id'] : null
-        ];
+        $usuario = trim((string) ($_POST['usuario'] ?? ''));
+        $rolId = (int) ($_POST['rol_id'] ?? 0);
+        $ligaId = !empty($_POST['liga_id']) ? (int) $_POST['liga_id'] : null;
+        $equipoId = !empty($_POST['equipo_id']) ? (int) $_POST['equipo_id'] : null;
         $errors = [];
 
-        if ($input['nombre'] === '' || $input['usuario'] === '') {
-            $errors[] = 'El nombre y el usuario son obligatorios.';
+        if ($usuario === '') {
+            $errors[] = 'El nombre de usuario es obligatorio.';
+        } elseif (mb_strlen($usuario) > 100) {
+            $errors[] = 'El nombre de usuario no puede superar 100 caracteres.';
         }
-        if ($input['correo'] !== '' && !filter_var($input['correo'], FILTER_VALIDATE_EMAIL)) {
-            $errors[] = 'El correo electrónico no tiene un formato válido.';
-        }
-        if ($this->userModel->usuarioExiste($input['usuario'], $id)) {
+        if ($this->userModel->usuarioExiste($usuario, $id)) {
             $errors[] = 'El nombre de usuario ya está registrado.';
         }
+        $errors = array_merge($errors, $this->validateScope($rolId, $ligaId, $equipoId));
 
-        $roles = (new Role($this->db))->all();
-        $rolesValidos = array_map(static fn($rol) => (int) $rol['id'], $roles);
-        if (!in_array($input['rol_id'], $rolesValidos, true)) {
-            $errors[] = 'Selecciona un rol válido.';
-        } elseif (in_array($input['rol_id'], [1, 2], true)) {
-            $input['liga_id'] = null;
-            $input['equipo_id'] = null;
-        } elseif ($input['rol_id'] === 3) {
-            if (!$input['liga_id']) {
-                $errors[] = 'Selecciona la liga para este usuario.';
-            }
-            $input['equipo_id'] = null;
-        } elseif ($input['rol_id'] === 4) {
-            if (!$input['liga_id'] || !$input['equipo_id']) {
-                $errors[] = 'Selecciona una liga y un equipo para este usuario.';
-            } else {
-                $check = $this->db->prepare("SELECT COUNT(*) FROM tb_liga_equipos WHERE equipo_id = :equipo AND liga_id = :liga AND estado_participacion = 'activo'");
-                $check->execute([':equipo' => $input['equipo_id'], ':liga' => $input['liga_id']]);
-                if ((int) $check->fetchColumn() === 0) {
-                    $errors[] = 'El equipo seleccionado no pertenece a la liga indicada.';
+        $newAvatar = null;
+        try {
+            if (!$errors) {
+                $avatar = $this->saveAvatar($_FILES['avatar'] ?? null, $user['avatar'] ?? null);
+                if ($avatar !== ($user['avatar'] ?? null)) {
+                    $newAvatar = $avatar;
                 }
-            }
-        }
 
-        $avatar = $user['avatar'] ?? null;
-        $archivo = $_FILES['avatar'] ?? null;
-        $rutaNuevoAvatar = null;
-        if ($archivo && ($archivo['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
-            if ($archivo['error'] !== UPLOAD_ERR_OK || $archivo['size'] > 2 * 1024 * 1024) {
-                $errors[] = 'El avatar no se pudo recibir o supera los 2 MB.';
-            } else {
-                $mime = (new finfo(FILEINFO_MIME_TYPE))->file($archivo['tmp_name']);
-                $extensiones = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
-                if (!isset($extensiones[$mime]) || @getimagesize($archivo['tmp_name']) === false) {
-                    $errors[] = 'El avatar debe ser una imagen JPG o PNG válida.';
-                } else {
-                    $directorio = ROOT_PATH . '/public/assets/img/avatars/';
-                    if (!is_dir($directorio) && !mkdir($directorio, 0755, true) && !is_dir($directorio)) {
-                        $errors[] = 'No está disponible la carpeta de avatares.';
-                    } else {
-                        $avatar = 'avatar_' . bin2hex(random_bytes(12)) . '.' . $extensiones[$mime];
-                        $rutaNuevoAvatar = $directorio . $avatar;
-                        if (!move_uploaded_file($archivo['tmp_name'], $rutaNuevoAvatar)) {
-                            $errors[] = 'No fue posible guardar el avatar.';
-                            $rutaNuevoAvatar = null;
-                            $avatar = $user['avatar'] ?? null;
-                        }
+                $update = [
+                    'usuario' => $usuario,
+                    'rol_id' => $rolId,
+                    'liga_id' => $ligaId,
+                    'equipo_id' => $equipoId,
+                    'avatar' => $avatar
+                ];
+                $password = (string) ($_POST['password'] ?? '');
+                if ($password !== '') {
+                    $update['password'] = password_hash($password, PASSWORD_DEFAULT);
+                }
+
+                $this->userModel->update($id, $update);
+                if (!empty($user['avatar']) && $newAvatar) {
+                    $oldPath = ROOT_PATH . '/public/assets/img/avatars/' . basename($user['avatar']);
+                    if (is_file($oldPath)) {
+                        unlink($oldPath);
                     }
                 }
+                $_SESSION['success'] = 'El usuario se actualizó correctamente.';
+                header('Location: index.php?page=users');
+                exit;
             }
-        }
-
-        if ($errors) {
-            if ($rutaNuevoAvatar && is_file($rutaNuevoAvatar)) {
-                unlink($rutaNuevoAvatar);
-                $rutaNuevoAvatar = null;
-            }
-            $user = array_merge($user, $input);
-            $data = ['errors' => $errors];
-            $viewPath = ROOT_PATH . '/admin/views/pages/users/edit.php';
-            extract($this->datosFormularioEdicion());
-            include ROOT_PATH . '/admin/views/layout.php';
-            return;
-        }
-
-        $update = $input + ['avatar' => $avatar];
-        $password = (string) ($_POST['password'] ?? '');
-        if ($password !== '') {
-            $update['password'] = password_hash($password, PASSWORD_DEFAULT);
-        }
-
-        try {
-            if (!$this->userModel->update($id, $update)) {
-                throw new RuntimeException('No se pudo actualizar el usuario.');
-            }
-            $_SESSION['success'] = 'El usuario se actualizó correctamente.';
-            header('Location: index.php?page=users');
-            exit;
         } catch (Throwable $e) {
-            if ($rutaNuevoAvatar && is_file($rutaNuevoAvatar)) {
-                unlink($rutaNuevoAvatar);
-            }
             error_log('Error al actualizar usuario: ' . $e->getMessage());
-            $user = array_merge($user, $input);
-            $data = ['errors' => ['No fue posible guardar los cambios del usuario.']];
-            $viewPath = ROOT_PATH . '/admin/views/pages/users/edit.php';
-            extract($this->datosFormularioEdicion());
-            include ROOT_PATH . '/admin/views/layout.php';
+            $errors[] = 'No fue posible guardar los cambios del usuario.';
         }
-    }
 
-    /* =========== DESACTIVAR USUARIO ============ */
-    public function disable($id) {
-        $result = $this->userModel->disable($id);
-
-        if ($result) {
-            header("Location: /afec/admin/index.php?page=users");
-        } else {
-            echo "Error al desactivar el usuario";
-        }
-    }
-
-    /* ========== CAMBIAR CONTRASEÑA ============== */
-    public function changePassword($id) {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $newPassword = $_POST['password'] ?? '';
-
-            // Validar que la contraseña no esté vacía
-            if (!$newPassword) {
-                echo "La nueva contraseña es obligatoria";
-                return;
-            }
-
-            // Hashear la nueva contraseña
-            $hashedPassword = password_hash($newPassword, PASSWORD_BCRYPT);
-
-            // Actualizar contraseña
-            $result = $this->userModel->changePassword($id, $hashedPassword);
-
-            if ($result) {
-                echo "Contraseña cambiada con éxito";
-            } else {
-                echo "Error al cambiar la contraseña";
+        if ($newAvatar) {
+            $newPath = ROOT_PATH . '/public/assets/img/avatars/' . basename($newAvatar);
+            if (is_file($newPath)) {
+                unlink($newPath);
             }
         }
-
-        // Mostrar formulario para cambiar la contraseña
-        include __DIR__ . '/../../admin/views/pages/users/change_password.php';
+        $user = array_merge($user, [
+            'usuario' => $usuario,
+            'rol_id' => $rolId,
+            'liga_id' => $ligaId,
+            'equipo_id' => $equipoId
+        ]);
+        $data = ['errors' => $errors];
+        extract($this->catalogos());
+        $viewPath = ROOT_PATH . '/admin/views/pages/users/edit.php';
+        include ROOT_PATH . '/admin/views/layout.php';
     }
 
-    /* ============== funcion para boton toggle del estado de un usuario */
-    public function toggleState() {
-        Auth::requireRole([1]); // solo admin
-
-        $id = $_POST['id'] ?? null;
-        $estado = $_POST['estado'] ?? null;
-
-        if (!$id || !isset($estado)) {
-            echo json_encode(['success' => false]);
-            return;
-        }
-
-        $result = $this->userModel->update($id, ['estado' => $estado]);
-
-        echo json_encode(['success' => $result ? true : false]);
-    }
-
-    //funcion para aplicar filtros
-    public function filter()
+    public function toggleState(): void
     {
-        Auth::requireRole([1,2]);
-
-        $data = json_decode(file_get_contents("php://input"), true);
-
-        $search = trim($data['search'] ?? '');
-        $estado = $data['estado'] ?? 'all';
-        $rol    = $data['rol'] ?? null;
-
-        $users = $this->userModel->filter($search, $estado, $rol);
-
-        $viewPath = ROOT_PATH . '/admin/views/pages/users/partials/table_rows.php';
+        header('Content-Type: application/json; charset=utf-8');
+        try {
+            $this->requireManager();
+            $id = (int) ($_POST['id'] ?? 0);
+            $active = (string) ($_POST['estado'] ?? '') === '1';
+            if (!$id) {
+                throw new RuntimeException('Usuario no válido.');
+            }
+            $this->userModel->update($id, ['estado' => $active ? 'activo' : 'inactivo']);
+            echo json_encode(['success' => true]);
+        } catch (Throwable $e) {
+            echo json_encode(['success' => false, 'mensaje' => 'No fue posible cambiar el estado.']);
+        }
         exit;
     }
 
-    
-}
+    public function disable($id): void
+    {
+        $this->requireManager();
+        $this->userModel->disable((int) $id);
+        header('Location: index.php?page=users');
+        exit;
+    }
 
-?>
+    public function changePassword($id): void
+    {
+        $this->requireManager();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $password = (string) ($_POST['password'] ?? '');
+            if ($password === '') {
+                throw new RuntimeException('La nueva contraseña es obligatoria.');
+            }
+            $this->userModel->changePassword((int) $id, password_hash($password, PASSWORD_DEFAULT));
+            header('Location: index.php?page=users');
+            exit;
+        }
+        include ROOT_PATH . '/admin/views/pages/users/change_password.php';
+    }
+}
