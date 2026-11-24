@@ -149,6 +149,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script src="<?= ASSETS ?>/js/admin/layout/admin-layout.js"></script>
+    <script src="<?= ASSETS ?>/js/admin/components/image-upload.js"></script>
     <script src="<?= ASSETS ?>/js/admin/tables/table-manager.js"></script>
 
 
