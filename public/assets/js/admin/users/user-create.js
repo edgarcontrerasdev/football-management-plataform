@@ -42,58 +42,7 @@
 
     });
 
-//script para manejar previsulaizacion de avatar de usuarios
-
-    document.addEventListener('DOMContentLoaded', () => {
-
-        const inputAvatar = document.getElementById('avatar');
-
-        if (!inputAvatar) return;
-
-        const tiposPermitidos = [
-            'image/jpeg',
-            'image/png'
-        ];
-
-        const maxSize = 2 * 1024 * 1024; // 2MB
-
-        inputAvatar.addEventListener('change', function () {
-
-            const file = this.files[0];
-            if (!file) return;
-
-            // ❌ Tipo no permitido
-            if (!tiposPermitidos.includes(file.type)) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Archivo no permitido',
-                    text: 'Solo se permiten imágenes JPG, PNG o WEBP',
-                });
-                this.value = '';
-                return;
-            }
-
-            // ❌ Tamaño excedido
-            if (file.size > maxSize) {
-                Swal.fire({
-                    icon: 'error',
-                        title: 'Archivo demasiado grande',
-                text: 'El avatar no debe superar los 2 MB',
-                });
-                this.value = '';
-                return;
-            }
-
-            // ✅ Preview del avatar
-            const reader = new FileReader();
-            reader.onload = e => {
-                document.getElementById('avatarPreview').src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-
-        });
-
-    });
+// La vista previa y validación del avatar se gestionan desde image-upload.js.
 
 //script para detectar cambio en select de rol
     //y hacer ver u ocultar los list de liga y equipos
