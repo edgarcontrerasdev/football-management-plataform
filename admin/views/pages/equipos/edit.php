@@ -58,7 +58,6 @@ $escudoUrl = ASSETS . '/img/equipos/' . rawurlencode($escudo ?: 'default.png');
                             $imageUploadHint = 'Opcional. Si no seleccionas otra imagen, se conservará la actual. JPG, PNG o WEBP; máximo 2 MB.';
                             include ROOT_PATH . '/admin/views/components/image-upload.php';
                             ?>
-                            <small class="form-text text-muted d-block mt-2">Opcional. PNG, JPG o WEBP. Tamaño máximo: 2 MB.</small>
                             <p class="equipo-crest-note mt-3 mb-0">El escudo corresponde a la identidad permanente del equipo. Los cambios de imagen por temporada se administrarán por separado.</p>
                         </section>
                     </aside>
@@ -73,9 +72,3 @@ $escudoUrl = ASSETS . '/img/equipos/' . rawurlencode($escudo ?: 'default.png');
     </div>
 </div>
 
-<script>
-document.getElementById('escudo')?.addEventListener('change', function () {
-    const file = this.files && this.files[0];
-    if (file) document.getElementById('equipoCrestPreview').src = URL.createObjectURL(file);
-});
-</script>
