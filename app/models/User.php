@@ -25,6 +25,23 @@ class User
                     SELECT ua.entidad_id
                     FROM tb_usuario_alcances ua
                     WHERE ua.usuario_id = u.id
+                      AND ua.tipo_entidad = 'organismo'
+                      AND ua.estado = 'activo'
+                    ORDER BY ua.id DESC LIMIT 1
+                ) AS organismo_id,
+                (
+                    SELECT o.nombre
+                    FROM tb_usuario_alcances ua
+                    INNER JOIN tb_organismos o ON o.id = ua.entidad_id
+                    WHERE ua.usuario_id = u.id
+                      AND ua.tipo_entidad = 'organismo'
+                      AND ua.estado = 'activo'
+                    ORDER BY ua.id DESC LIMIT 1
+                ) AS organismo,
+                (
+                    SELECT ua.entidad_id
+                    FROM tb_usuario_alcances ua
+                    WHERE ua.usuario_id = u.id
                       AND ua.tipo_entidad = 'liga'
                       AND ua.estado = 'activo'
                     ORDER BY ua.id DESC LIMIT 1
@@ -153,6 +170,16 @@ class User
             $params[':liga_id'] = (int) $filtros['liga'];
         }
 
+        if (!empty($filtros['organismo'])) {
+            $sql .= " AND EXISTS (
+                SELECT 1 FROM tb_usuario_alcances uoa
+                WHERE uoa.usuario_id = u.id
+                  AND uoa.organismo_id = :organismo_id
+                  AND uoa.estado = 'activo'
+            )";
+            $params[':organismo_id'] = (int) $filtros['organismo'];
+        }
+
         if ($filtros['filtro'] !== '') {
             $sql .= " AND (
                 u.usuario LIKE :filtro_usuario
@@ -252,19 +279,30 @@ class User
             UPDATE tb_usuario_alcances
             SET estado = 'inactivo', fecha_fin = COALESCE(fecha_fin, CURDATE())
             WHERE usuario_id = :usuario_id
-              AND tipo_entidad IN ('liga', 'equipo')
               AND estado = 'activo'
         ")->execute([':usuario_id' => $userId]);
 
         $insert = $this->pdo->prepare("
             INSERT INTO tb_usuario_alcances
-                (usuario_id, tipo_entidad, entidad_id, estado, fecha_inicio)
-            VALUES (:usuario_id, :tipo_entidad, :entidad_id, 'activo', CURDATE())
+                (usuario_id, organismo_id, tipo_entidad, entidad_id, estado, fecha_inicio)
+            VALUES (:usuario_id, :organismo_id, :tipo_entidad, :entidad_id, 'activo', CURDATE())
         ");
+
+        $organismoId = !empty($data['organismo_id']) ? (int) $data['organismo_id'] : null;
+
+        if ($organismoId && !empty($data['organismo_scope'])) {
+            $insert->execute([
+                ':usuario_id' => $userId,
+                ':organismo_id' => $organismoId,
+                ':tipo_entidad' => 'organismo',
+                ':entidad_id' => $organismoId
+            ]);
+        }
 
         if (!empty($data['liga_id'])) {
             $insert->execute([
                 ':usuario_id' => $userId,
+                ':organismo_id' => $organismoId,
                 ':tipo_entidad' => 'liga',
                 ':entidad_id' => (int) $data['liga_id']
             ]);
@@ -273,6 +311,7 @@ class User
         if (!empty($data['equipo_id'])) {
             $insert->execute([
                 ':usuario_id' => $userId,
+                ':organismo_id' => $organismoId,
                 ':tipo_entidad' => 'equipo',
                 ':entidad_id' => (int) $data['equipo_id']
             ]);
