@@ -26,6 +26,7 @@ class TableService {
                         $col['textField'],
                         $col['title'],
                         $col['subField'] ?? null,
+                        $col['defaultImage'] ?? null,
                     );
                 break;
 
