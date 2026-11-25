@@ -13,6 +13,21 @@ WHERE NOT EXISTS (
     SELECT 1 FROM tb_roles WHERE clave = 'ORGANISMO'
 );
 
+UPDATE tb_roles
+SET nombre = 'Administrador de plataforma',
+    descripcion = 'Administración global y excepcional de la plataforma.'
+WHERE clave = 'ADMIN';
+
+UPDATE tb_roles
+SET nombre = 'Administrador de liga',
+    descripcion = 'Operación de una liga dentro de sus alcances.'
+WHERE clave = 'LIGA';
+
+UPDATE tb_roles
+SET nombre = 'Administrador de equipo',
+    descripcion = 'Operación de un equipo dentro de sus alcances.'
+WHERE clave = 'EQUIPO';
+
 -- Asocia alcances de liga existentes con su organismo cuando la relación es única.
 UPDATE tb_usuario_alcances ua
 INNER JOIN (
