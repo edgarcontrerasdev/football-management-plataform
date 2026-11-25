@@ -146,6 +146,7 @@ class User
     public function filtrar(array $filtros)
     {
         $filtros = array_merge(['estado' => 'all', 'rol' => null, 'filtro' => ''], $filtros);
+        $rolesPermitidos = $filtros['roles_permitidos'] ?? null;
         $sql = $this->selectBase() . " WHERE 1=1";
         $params = [];
 
@@ -158,6 +159,16 @@ class User
         if ($filtros['rol'] !== null && $filtros['rol'] !== '') {
             $sql .= " AND u.rol_id = :rol";
             $params[':rol'] = (int) $filtros['rol'];
+        }
+
+        if (is_array($rolesPermitidos) && $rolesPermitidos) {
+            $placeholders = [];
+            foreach (array_values($rolesPermitidos) as $index => $roleKey) {
+                $placeholder = ':rol_permitido_' . $index;
+                $placeholders[] = $placeholder;
+                $params[$placeholder] = strtoupper((string) $roleKey);
+            }
+            $sql .= " AND r.clave IN (" . implode(', ', $placeholders) . ")";
         }
 
         if (!empty($filtros['liga'])) {
@@ -351,7 +362,8 @@ class User
             'estado' => $params['estado'] ?? 'all',
             'rol' => $params['rol'] ?? null,
             'liga' => $params['liga'] ?? null,
-            'organismo' => $params['organismo'] ?? null
+            'organismo' => $params['organismo'] ?? null,
+            'roles_permitidos' => $params['roles_permitidos'] ?? null
         ];
         $todos = $this->filtrar($filtros);
         $total = count($todos);
