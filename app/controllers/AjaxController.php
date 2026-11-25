@@ -14,17 +14,49 @@ class AjaxController
         $this->pdo = $pdo;
     }
 
+    private function currentOrganismoId(): ?int
+    {
+        if (Auth::role() === 'ADMIN') {
+            return null;
+        }
+        $stmt = $this->pdo->prepare("
+            SELECT entidad_id
+            FROM tb_usuario_alcances
+            WHERE usuario_id = :usuario_id
+              AND tipo_entidad = 'organismo'
+              AND estado = 'activo'
+              AND (fecha_inicio IS NULL OR fecha_inicio <= CURDATE())
+              AND (fecha_fin IS NULL OR fecha_fin >= CURDATE())
+            ORDER BY id DESC LIMIT 1
+        ");
+        $stmt->execute([':usuario_id' => Auth::id()]);
+        $id = $stmt->fetchColumn();
+        return $id ? (int) $id : null;
+    }
+
     public function ligas(): void
     {
-        Auth::requireRole(['ADMIN', 'SUPERVISOR']);
+        Auth::requireRole(['ADMIN', 'ORGANISMO']);
         header('Content-Type: application/json; charset=utf-8');
+        $organismoId = $this->currentOrganismoId();
 
-        $stmt = $this->pdo->query("
-            SELECT id, nombre
-            FROM tb_ligas
-            WHERE estado = 'activo'
-            ORDER BY nombre
-        ");
+        if ($organismoId === null) {
+            $stmt = $this->pdo->query("
+                SELECT id, nombre FROM tb_ligas
+                WHERE estado = 'activo' ORDER BY nombre
+            ");
+        } else {
+            $stmt = $this->pdo->prepare("
+                SELECT DISTINCT l.id, l.nombre
+                FROM tb_ligas l
+                INNER JOIN tb_liga_organismos lo ON lo.liga_id = l.id
+                WHERE l.estado = 'activo'
+                  AND lo.estado = 'activo'
+                  AND lo.organismo_id = :organismo_id
+                ORDER BY l.nombre
+            ");
+            $stmt->execute([':organismo_id' => $organismoId]);
+        }
 
         echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC), JSON_UNESCAPED_UNICODE);
         exit;
@@ -32,13 +64,42 @@ class AjaxController
 
     public function equipos(): void
     {
-        Auth::requireRole(['ADMIN', 'SUPERVISOR']);
+        Auth::requireRole(['ADMIN', 'ORGANISMO']);
         header('Content-Type: application/json; charset=utf-8');
-
         $ligaId = (int) ($_GET['liga_id'] ?? 0);
-        $equipos = $ligaId > 0 ? (new Equipo($this->pdo))->getByLiga($ligaId) : [];
+        $organismoId = $this->currentOrganismoId();
 
-        echo json_encode($equipos, JSON_UNESCAPED_UNICODE);
+        if ($ligaId <= 0) {
+            echo json_encode([]);
+            exit;
+        }
+
+        $sql = "
+            SELECT DISTINCT e.id, e.nombre
+            FROM tb_equipos e
+            INNER JOIN tb_liga_equipos le ON le.equipo_id = e.id
+            INNER JOIN tb_liga_temporadas lt ON lt.id = le.liga_temporada_id
+            INNER JOIN tb_ligas l ON l.id = lt.liga_id
+            WHERE lt.liga_id = :liga_id
+              AND lt.estado = 'activo'
+              AND le.estado_participacion = 'activo'
+              AND l.estado = 'activo'
+        ";
+        $params = [':liga_id' => $ligaId];
+        if ($organismoId !== null) {
+            $sql .= " AND EXISTS (
+                SELECT 1 FROM tb_liga_organismos lo
+                WHERE lo.liga_id = l.id
+                  AND lo.organismo_id = :organismo_id
+                  AND lo.estado = 'activo'
+            )";
+            $params[':organismo_id'] = $organismoId;
+        }
+        $sql .= " ORDER BY e.nombre";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+
+        echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC), JSON_UNESCAPED_UNICODE);
         exit;
     }
 
@@ -49,7 +110,7 @@ class AjaxController
 
     public function usersFilter(): void
     {
-        Auth::requireRole(['ADMIN', 'SUPERVISOR']);
+        Auth::requireRole(['ADMIN', 'ORGANISMO']);
 
         header('Content-Type: application/json; charset=utf-8');
 
@@ -61,6 +122,7 @@ class AjaxController
                 'liga' => $_GET['liga'] ?? null,
                 'pagina' => max(1, (int) ($_GET['pagina'] ?? 1)),
                 'limite' => min(100, max(1, (int) ($_GET['limite'] ?? 10))),
+                'organismo' => $this->currentOrganismoId(),
             ];
 
             $resultado = (new User($this->pdo))->filterUsers($filtros);
