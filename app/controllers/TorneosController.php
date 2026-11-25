@@ -70,6 +70,32 @@ class TorneosController{
         return $this->puedeGestionarLiga((int) ($torneo['liga_id'] ?? 0));
     }
 
+    private function temporadaPerteneceALiga(int $temporadaId, int $ligaId): bool
+    {
+        if ($temporadaId <= 0 || $ligaId <= 0) return false;
+        $stmt = $this->db->prepare("
+            SELECT 1
+            FROM tb_temporadas t
+            WHERE t.id = :temporada_id
+              AND (
+                    (t.ambito_tipo = 'liga' AND t.liga_propietaria_id = :liga_propietaria_id)
+                    OR EXISTS (
+                        SELECT 1 FROM tb_liga_temporadas lt
+                        WHERE lt.temporada_id = t.id
+                          AND lt.liga_id = :liga_vinculada_id
+                          AND lt.estado = 'activo'
+                    )
+              )
+            LIMIT 1
+        ");
+        $stmt->execute([
+            ':temporada_id' => $temporadaId,
+            ':liga_propietaria_id' => $ligaId,
+            ':liga_vinculada_id' => $ligaId
+        ]);
+        return (bool) $stmt->fetchColumn();
+    }
+
     private function exigirTorneo(int $torneoId, bool $json = false): ?array
     {
         $torneo = $this->torneoModel->getById($torneoId);
@@ -344,10 +370,33 @@ class TorneosController{
             ]);
             return;
         }
-        if (!$this->exigirTorneo((int) $torneoId, true)) return;
-        //BORRAMOS Y REINSERTAMOS
+        $torneo = $this->exigirTorneo((int) $torneoId, true);
+        if (!$torneo) return;
+        $equipoIds = array_values(array_unique(array_filter(array_map('intval', (array) $equipos), fn($id) => $id > 0)));
+        if ($equipoIds) {
+            $holders = [];
+            $params = [':liga_id' => (int) $torneo['liga_id']];
+            foreach ($equipoIds as $i => $equipoId) {
+                $holders[] = ":equipo{$i}";
+                $params[":equipo{$i}"] = $equipoId;
+            }
+            $stmt = $this->db->prepare("
+                SELECT COUNT(DISTINCT equipo_id)
+                FROM tb_liga_equipos
+                WHERE liga_id = :liga_id
+                  AND estado_participacion = 'activo'
+                  AND equipo_id IN (" . implode(',', $holders) . ")
+            ");
+            $stmt->execute($params);
+            if ((int) $stmt->fetchColumn() !== count($equipoIds)) {
+                http_response_code(422);
+                echo json_encode(['success' => false, 'msj' => 'Uno o más equipos no pertenecen a la liga o no tienen participación activa.']);
+                return;
+            }
+        }
+        // Solo reemplazar inscripciones después de validar todos los equipos.
         $this->torneoModel->limpiarEquipos($torneoId);
-        foreach($equipos as $equipoId){
+        foreach($equipoIds as $equipoId){
             $this->torneoModel->asignarEquipo($torneoId, $equipoId);
         }
         echo json_encode([
@@ -371,11 +420,19 @@ class TorneosController{
             return;
         }
 
+        $ligaId = (int) ($_POST['liga_id'] ?? 0);
+        $temporadaId = (int) ($_POST['temporada_id'] ?? 0);
+        if (!$this->temporadaPerteneceALiga($temporadaId, $ligaId)) {
+            http_response_code(422);
+            echo json_encode(['success' => false, 'message' => 'La temporada seleccionada no pertenece a la liga o no está vinculada activamente.']);
+            return;
+        }
+
         $data = [
-            'liga_id'      => $_POST['liga_id'] ?? null,
-            'temporada_id' => $_POST['temporada_id'] ?? null,
-            'nombre'       => $_POST['nombre_torneo'],
-            'tipo'         => $_POST['tipo_torneo'],
+            'liga_id'      => $ligaId,
+            'temporada_id' => $temporadaId,
+            'nombre'       => $_POST['nombre_torneo'] ?? '',
+            'tipo'         => $_POST['tipo_torneo'] ?? '',
         ];
 
         // 👉 SI NO EXISTE WIZARD ACTIVO
