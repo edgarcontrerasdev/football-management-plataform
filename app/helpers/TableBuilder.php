@@ -20,11 +20,11 @@ class TableBuilder{
         return $this->title;
     }
 
-    public function image($folder, $imageField, $textField, $title, $subField = null)
+    public function image($folder, $imageField, $textField, $title, $subField = null, $defaultImage = null)
     {
         $this->headers[] = $title;
 
-        $this->columns[] = function($row) use ($folder, $imageField, $textField, $subField){
+        $this->columns[] = function($row) use ($folder, $imageField, $textField, $subField, $defaultImage){
 
             $image = $row[$imageField] ?? null;
             $text  = $row[$textField] ?? '';
@@ -34,22 +34,22 @@ class TableBuilder{
 
             $img = $image
                 ? $base.$image
-                : $base.'default.png';
+                : '/afec/public/assets/img/'.ltrim(($defaultImage ?: $folder.'/default.png'), '/');
 
             $html = '<div class="cell-flex">';
 
             $html .= '<div class="cell-avatar">';
-            $html .= '<img src="'.$img.'" class="avatar">';
+            $html .= '<img src="'.htmlspecialchars($img, ENT_QUOTES, 'UTF-8').'" class="avatar" alt="'.htmlspecialchars((string) $text, ENT_QUOTES, 'UTF-8').'">';
             $html .= '</div>';
 
             $html .= '<div class="cell-text">';
 
             if($text){
-            $html .= '<div class="cell-title">'.$text.'</div>';
+            $html .= '<div class="cell-title">'.htmlspecialchars((string) $text, ENT_QUOTES, 'UTF-8').'</div>';
             }
 
             if($sub){
-            $html .= '<div class="cell-subtitle">'.$sub.'</div>';
+            $html .= '<div class="cell-subtitle">'.htmlspecialchars((string) $sub, ENT_QUOTES, 'UTF-8').'</div>';
             }
 
             $html .= '</div>';
