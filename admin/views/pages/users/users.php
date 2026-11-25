@@ -63,6 +63,7 @@
                 <tr>
                     <th>USUARIO</th>
                     <th>ROL</th>
+                    <th>ORGANISMO</th>
                     <th>CUENTA</th>
                     <th>LIGA</th>
                     <th>EQUIPO</th>
@@ -91,6 +92,7 @@
                         </div>
                     </td>
                     <td> <?= htmlspecialchars($user['rol_nombre'] ?? 'Sin rol'); ?> </td>
+                    <td> <?= htmlspecialchars($user['organismo'] ?? '-', ENT_QUOTES, 'UTF-8'); ?> </td>
                     <td>
                     <div>@<?= htmlspecialchars($user['usuario']) ?></div>
                     <small class="text-muted">ID <?= (int) $user['id'] ?></small>
@@ -129,7 +131,7 @@
                 <?php endforeach; ?>
                 <?php else: ?>
                 <tr>
-                <td colspan="7" class="users-empty-cell">No hay resultados</td>
+                <td colspan="8" class="users-empty-cell">No hay resultados</td>
                 </tr>
                 <?php endif; ?>
             </tbody>
