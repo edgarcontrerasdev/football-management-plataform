@@ -271,7 +271,7 @@ class UsersController
                   AND l.estado = 'activo'
                   AND NOT EXISTS (
                       SELECT 1 FROM tb_liga_organismos lo
-                      WHERE lo.liga_id = l.id AND lo.estado = 'activo' AND lo.es_gestor = 1
+                      WHERE lo.liga_id = l.id AND lo.estado = 'activo'
                   )
             ");
             $ligaCheck->execute([':liga_id' => $ligaId]);
