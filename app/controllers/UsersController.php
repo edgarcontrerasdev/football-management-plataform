@@ -18,30 +18,109 @@ class UsersController
 
     private function requireManager(): void
     {
-        Auth::requireRole(['ADMIN', 'SUPERVISOR']);
+        Auth::requireRole(['ADMIN', 'ORGANISMO']);
+    }
+
+    private function isPlatformAdmin(): bool
+    {
+        return Auth::role() === 'ADMIN';
+    }
+
+    private function currentOrganismoId(): ?int
+    {
+        if ($this->isPlatformAdmin()) {
+            return null;
+        }
+
+        $stmt = $this->db->prepare("
+            SELECT entidad_id
+            FROM tb_usuario_alcances
+            WHERE usuario_id = :usuario_id
+              AND tipo_entidad = 'organismo'
+              AND estado = 'activo'
+              AND (fecha_inicio IS NULL OR fecha_inicio <= CURDATE())
+              AND (fecha_fin IS NULL OR fecha_fin >= CURDATE())
+            ORDER BY id DESC
+            LIMIT 1
+        ");
+        $stmt->execute([':usuario_id' => Auth::id()]);
+        $id = $stmt->fetchColumn();
+        return $id ? (int) $id : null;
+    }
+
+    private function assertCanManageUser(array $user): void
+    {
+        if ($this->isPlatformAdmin()) {
+            return;
+        }
+
+        $organismoId = $this->currentOrganismoId();
+        if (!$organismoId || (int) ($user['organismo_id'] ?? 0) !== $organismoId) {
+            http_response_code(403);
+            view('403.php');
+            exit;
+        }
+
+        if (!in_array(strtoupper((string) ($user['rol_clave'] ?? '')), ['LIGA', 'EQUIPO'], true)) {
+            http_response_code(403);
+            view('403.php');
+            exit;
+        }
     }
 
     private function catalogos(): array
     {
-        $roles = (new Role($this->db))->all();
-        $ligas = $this->db->query("
-            SELECT id, nombre
-            FROM tb_ligas
-            WHERE estado = 'activo'
-            ORDER BY nombre
-        ")->fetchAll(PDO::FETCH_ASSOC);
-        $equipos = $this->db->query("
+        $organismoId = $this->currentOrganismoId();
+        if ($this->isPlatformAdmin()) {
+            $roles = (new Role($this->db))->all();
+            $organismos = $this->db->query("
+                SELECT id, nombre
+                FROM tb_organismos
+                WHERE estado = 'activo'
+                ORDER BY nombre
+            ")->fetchAll(PDO::FETCH_ASSOC);
+            $ligaWhere = "l.estado = 'activo'";
+            $params = [];
+        } else {
+            $roles = array_values(array_filter(
+                (new Role($this->db))->all(),
+                static fn($role) => in_array(strtoupper((string) ($role['clave'] ?? '')), ['LIGA', 'EQUIPO'], true)
+                    && ($role['estado'] ?? 'activo') === 'activo'
+            ));
+            $organismos = [];
+            $ligaWhere = "l.estado = 'activo' AND lo.organismo_id = :organismo_id AND lo.estado = 'activo'";
+            $params = [':organismo_id' => $organismoId];
+        }
+
+        $sqlLigas = "
+            SELECT DISTINCT l.id, l.nombre
+            FROM tb_ligas l
+            " . ($this->isPlatformAdmin() ? "" : "INNER JOIN tb_liga_organismos lo ON lo.liga_id = l.id") . "
+            WHERE {$ligaWhere}
+            ORDER BY l.nombre
+        ";
+        $stmt = $this->db->prepare($sqlLigas);
+        $stmt->execute($params);
+        $ligas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $sqlEquipos = "
             SELECT DISTINCT e.id, e.nombre, lt.liga_id
             FROM tb_equipos e
             INNER JOIN tb_liga_equipos le ON le.equipo_id = e.id
             INNER JOIN tb_liga_temporadas lt ON lt.id = le.liga_temporada_id
             INNER JOIN tb_ligas l ON l.id = lt.liga_id
+            " . ($this->isPlatformAdmin() ? "" : "INNER JOIN tb_liga_organismos lo ON lo.liga_id = l.id") . "
             WHERE le.estado_participacion = 'activo'
               AND lt.estado = 'activo'
               AND l.estado = 'activo'
+              " . ($this->isPlatformAdmin() ? "" : "AND lo.organismo_id = :organismo_id AND lo.estado = 'activo'") . "
             ORDER BY e.nombre
-        ")->fetchAll(PDO::FETCH_ASSOC);
-        return compact('roles', 'ligas', 'equipos');
+        ";
+        $stmt = $this->db->prepare($sqlEquipos);
+        $stmt->execute($params);
+        $equipos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return compact('roles', 'ligas', 'equipos', 'organismos', 'organismoId');
     }
 
     private function roleKey(int $roleId): ?string
@@ -52,56 +131,90 @@ class UsersController
         return $key ? strtoupper((string) $key) : null;
     }
 
-    private function validateScope(int $roleId, ?int $ligaId, ?int $equipoId): array
+    private function validateScope(int $roleId, ?int $organismoId, ?int $ligaId, ?int $equipoId): array
     {
-        $errors = [];
         $key = $this->roleKey($roleId);
-
         if (!$key) {
             return ['El rol seleccionado no existe o está inactivo.'];
         }
 
-        if (in_array($key, ['ADMIN', 'SUPERVISOR'], true)) {
-            return [];
+        if (!$this->isPlatformAdmin()) {
+            $currentOrg = $this->currentOrganismoId();
+            if (!$currentOrg || $organismoId !== $currentOrg) {
+                return ['No tienes autorización para asignar usuarios a otro organismo.'];
+            }
+            if (!in_array($key, ['LIGA', 'EQUIPO'], true)) {
+                return ['Tu organismo solo puede crear cuentas de liga y equipo.'];
+            }
         }
 
-        if ($key === 'LIGA') {
+        if ($key === 'ADMIN' || $key === 'SUPERVISOR') {
+            return $this->isPlatformAdmin() ? [] : ['No tienes autorización para crear cuentas de administración global.'];
+        }
+
+        if (!$organismoId) {
+            return ['Selecciona el organismo al que pertenecerá esta cuenta.'];
+        }
+
+        $orgCheck = $this->db->prepare("SELECT COUNT(*) FROM tb_organismos WHERE id = :id AND estado = 'activo'");
+        $orgCheck->execute([':id' => $organismoId]);
+        if ((int) $orgCheck->fetchColumn() === 0) {
+            return ['El organismo seleccionado no existe o está inactivo.'];
+        }
+
+        if ($key === 'ORGANISMO') {
+            return $this->isPlatformAdmin()
+                ? []
+                : ['Solo el administrador de plataforma puede crear administradores de organismo.'];
+        }
+
+        if ($key === 'LIGA' || $key === 'EQUIPO') {
             if (!$ligaId) {
-                $errors[] = 'Selecciona la liga que tendrá asignada esta cuenta.';
-            } else {
-                $check = $this->db->prepare("SELECT COUNT(*) FROM tb_ligas WHERE id = :id AND estado = 'activo'");
-                $check->execute([':id' => $ligaId]);
-                if ((int) $check->fetchColumn() === 0) {
-                    $errors[] = 'La liga seleccionada no existe o está inactiva.';
-                }
+                return ['Selecciona la liga que tendrá asignada esta cuenta.'];
             }
-            return $errors;
+
+            $ligaCheck = $this->db->prepare("
+                SELECT COUNT(*)
+                FROM tb_ligas l
+                INNER JOIN tb_liga_organismos lo ON lo.liga_id = l.id
+                WHERE l.id = :liga_id
+                  AND l.estado = 'activo'
+                  AND lo.organismo_id = :organismo_id
+                  AND lo.estado = 'activo'
+            ");
+            $ligaCheck->execute([':liga_id' => $ligaId, ':organismo_id' => $organismoId]);
+            if ((int) $ligaCheck->fetchColumn() === 0) {
+                return ['La liga no pertenece al organismo autorizado o está inactiva.'];
+            }
         }
 
         if ($key === 'EQUIPO') {
-            if (!$ligaId || !$equipoId) {
-                $errors[] = 'Selecciona la liga y el equipo que tendrá asignados esta cuenta.';
-                return $errors;
+            if (!$equipoId) {
+                return ['Selecciona el equipo que tendrá asignado esta cuenta.'];
             }
-
-            $stmt = $this->db->prepare("
+            $teamCheck = $this->db->prepare("
                 SELECT COUNT(*)
                 FROM tb_liga_equipos le
                 INNER JOIN tb_liga_temporadas lt ON lt.id = le.liga_temporada_id
+                INNER JOIN tb_liga_organismos lo ON lo.liga_id = lt.liga_id
                 WHERE lt.liga_id = :liga_id
                   AND le.equipo_id = :equipo_id
+                  AND lo.organismo_id = :organismo_id
+                  AND lo.estado = 'activo'
                   AND le.estado_participacion = 'activo'
                   AND lt.estado = 'activo'
             ");
-            $stmt->execute([':liga_id' => $ligaId, ':equipo_id' => $equipoId]);
-            if ((int) $stmt->fetchColumn() === 0) {
-                $errors[] = 'El equipo no tiene una inscripción activa en la liga seleccionada.';
+            $teamCheck->execute([
+                ':liga_id' => $ligaId,
+                ':equipo_id' => $equipoId,
+                ':organismo_id' => $organismoId
+            ]);
+            if ((int) $teamCheck->fetchColumn() === 0) {
+                return ['El equipo no tiene una inscripción activa en una liga de ese organismo.'];
             }
-            return $errors;
         }
 
-        $errors[] = 'El rol seleccionado no tiene un flujo de acceso configurado.';
-        return $errors;
+        return [];
     }
 
     private function saveAvatar(?array $file, ?string $current = null): ?string
