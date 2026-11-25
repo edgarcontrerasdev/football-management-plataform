@@ -45,7 +45,7 @@ class UsersController
         ");
         $stmt->execute([':usuario_id' => Auth::id()]);
         $id = $stmt->fetchColumn();
-        return $id ? (int) $id : null;
+        return $id ? (int) $id : 0;
     }
 
     private function assertCanManageUser(array $user): void
