@@ -8,11 +8,74 @@ require_once __DIR__ . '/../models/Temporada.php';
 class TemporadasController{
 
     private PDO $db;
+    private AuthorizationService $authorization;
+
+    private function idsTemporadasAutorizadas(): ?array
+    {
+        $user = Auth::user();
+        if (!$user) return [];
+        if (($user['rol_clave'] ?? '') === 'ADMIN') return null;
+
+        $temporadaIds = $this->authorization->getScopedEntityIds('temporada') ?? [];
+        $organismoIds = $this->authorization->getScopedEntityIds('organismo') ?? [];
+        $ligaIds = $this->authorization->getScopedEntityIds('liga') ?? [];
+        $conditions = [];
+        $params = [];
+
+        foreach ($organismoIds as $i => $id) {
+            $conditions[] = "(ambito_tipo = 'organismo' AND organismo_id = :org{$i})";
+            $params[":org{$i}"] = (int) $id;
+        }
+        foreach ($ligaIds as $i => $id) {
+            $conditions[] = "(ambito_tipo = 'liga' AND liga_propietaria_id = :liga{$i})";
+            $params[":liga{$i}"] = (int) $id;
+        }
+        if ($temporadaIds) {
+            $holders = [];
+            foreach ($temporadaIds as $i => $id) {
+                $holders[] = ":temp{$i}";
+                $params[":temp{$i}"] = (int) $id;
+            }
+            $conditions[] = "id IN (" . implode(',', $holders) . ")";
+        }
+        if (!$conditions) return [];
+
+        $stmt = $this->db->prepare("SELECT id FROM tb_temporadas WHERE " . implode(' OR ', $conditions));
+        $stmt->execute($params);
+        return array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+    }
+
+    private function puedeGestionarTemporada(array $temporada): bool
+    {
+        $user = Auth::user();
+        if (!$user) return false;
+        if (($user['rol_clave'] ?? '') === 'ADMIN') return true;
+        if ($this->authorization->hasScope('temporada', (int) $temporada['id'])) return true;
+
+        if (($temporada['ambito_tipo'] ?? '') === 'organismo' && !empty($temporada['organismo_id'])) {
+            return $this->authorization->hasScope('organismo', (int) $temporada['organismo_id']);
+        }
+        if (($temporada['ambito_tipo'] ?? '') === 'liga' && !empty($temporada['liga_propietaria_id'])) {
+            return $this->authorization->hasScope('liga', (int) $temporada['liga_propietaria_id']);
+        }
+        return false;
+    }
+
+    private function exigirAccesoTemporada(?array $temporada): void
+    {
+        if (!$temporada || !$this->puedeGestionarTemporada($temporada)) {
+            http_response_code(403);
+            flashError('No tienes permisos para administrar esta temporada.');
+            redirectRoute('temporadas');
+            exit;
+        }
+    }
     private $temporadaModel;
 
     public function __construct(PDO $db){
         $this->db = $db;
         $this->temporadaModel = new Temporada($db);
+        $this->authorization = new AuthorizationService($db);
     }
 
     public function index(){
@@ -33,7 +96,8 @@ class TemporadasController{
         //configuracion de filtros
         $filtros = [
             'estado'    =>  $_GET['estado'] ?? null,
-            'buscar'    =>  $_GET['buscar'] ?? null
+            'buscar'    =>  $_GET['buscar'] ?? null,
+            'ids'       =>  $this->idsTemporadasAutorizadas()
         ];
 
         //configuracion de  paginacion
@@ -95,6 +159,13 @@ class TemporadasController{
         $errors = $_SESSION['errors'] ?? [];
         $old    = $_SESSION['old'] ?? [];
         $propietarios = $this->temporadaModel->listarPropietarios();
+        $user = Auth::user();
+        if (($user['rol_clave'] ?? '') !== 'ADMIN') {
+            $orgIds = $this->authorization->getScopedEntityIds('organismo') ?? [];
+            $ligaIds = $this->authorization->getScopedEntityIds('liga') ?? [];
+            $propietarios['organismos'] = array_values(array_filter($propietarios['organismos'], fn($item) => in_array((int) $item['id'], $orgIds, true)));
+            $propietarios['ligas'] = array_values(array_filter($propietarios['ligas'], fn($item) => in_array((int) $item['id'], $ligaIds, true)));
+        }
         unset($_SESSION['errors'], $_SESSION['old']);
 
         view('pages.temporadas.create.php',[
@@ -151,6 +222,12 @@ class TemporadasController{
         if (!in_array($ambitoTipo, ['organismo', 'liga'], true) || $propietarioId <= 0) {
             $errors[] = 'Selecciona el organismo o liga propietaria de la temporada';
         }
+        if ($propietarioId > 0 && $ambitoTipo === 'organismo' && !$this->authorization->hasScope('organismo', $propietarioId)) {
+            $errors[] = 'No tienes permisos sobre el organismo seleccionado';
+        }
+        if ($propietarioId > 0 && $ambitoTipo === 'liga' && !$this->authorization->hasScope('liga', $propietarioId)) {
+            $errors[] = 'No tienes permisos sobre la liga seleccionada';
+        }
 
         if ($temporada !== '' && $propietarioId > 0 && $this->temporadaModel->existeNombre($temporada, null, $ambitoTipo, $propietarioId)) {
             $errors[] = 'Ya existe una temporada con ese nombre';
@@ -205,7 +282,8 @@ class TemporadasController{
         }
 
         // si el ID no viene vacio 
-        $temporada = $this->temporadaModel->getById($_GET['id']);   // llamamos al modelo para obtener la temporada con el ID enviado
+        $temporada = $this->temporadaModel->getById($_GET['id']);
+        $this->exigirAccesoTemporada($temporada);   // llamamos al modelo para obtener la temporada con el ID enviado
 
         // si no existe la temporada
         if (!$temporada) {
@@ -250,6 +328,7 @@ class TemporadasController{
         $id = $_POST['id'];
 
         $temporadaActual = $this->temporadaModel->getById($id);
+        $this->exigirAccesoTemporada($temporadaActual);
 
         if (!$temporadaActual) {
             flashError('No existe la temporada solicitada.');
@@ -318,6 +397,7 @@ class TemporadasController{
 
     public function activar($id){
         $temporada = $this->temporadaModel->getById($id);
+        $this->exigirAccesoTemporada($temporada);
         if(!$temporada){
             flashError('No existe una temporada con el ID solicitado');
             redirectRoute('temporadas');
@@ -349,6 +429,7 @@ class TemporadasController{
         }
 
         $temporada = $this->temporadaModel->getById($id);
+        $this->exigirAccesoTemporada($temporada);
 
         if (!$temporada) {
             header('Location: index.php?page=temporadas');
@@ -386,6 +467,7 @@ class TemporadasController{
         //obtenemos el id de la temporada y la buscamos en la base de datos
         $id = $_GET['id'];
         $temporada = $this->temporadaModel->getById($id);
+        $this->exigirAccesoTemporada($temporada);
 
         //si no se obtuvo resultado en la consulta
         if(!$temporada){
@@ -432,6 +514,7 @@ class TemporadasController{
         }
 
         $temporada = $this->temporadaModel->getById($id);
+        $this->exigirAccesoTemporada($temporada);
 
         if (!$temporada) {
             flashError('ERROR. El ID recibido no es válido o no existe.');
@@ -468,6 +551,7 @@ class TemporadasController{
 
         $id = $_GET['id'];
         $temporada = $this->temporadaModel->getById($id);
+        $this->exigirAccesoTemporada($temporada);
 
         if(!$temporada){
             flashError('ERROR. El ID recibido no es valido o no existe');
