@@ -1,3 +1,16 @@
+<?php
+
+declare(strict_types=1);
+
+class Organismo
+{
+    private PDO $pdo;
+
+    public function __construct(PDO $pdo)
+    {
+        $this->pdo = $pdo;
+    }
+
 public function listar(array $filtros = [], int $limit = 10, int $offset = 0): array
     {
         $where = ['1 = 1'];
