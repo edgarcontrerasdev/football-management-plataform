@@ -61,13 +61,39 @@ class UsersController
         }
 
         $organismoId = $this->currentOrganismoId();
-        if (!$organismoId || (int) ($user['organismo_id'] ?? 0) !== $organismoId) {
+        if (
+            !$organismoId
+            || (int) ($user['organismo_id'] ?? 0) !== $organismoId
+            || !in_array(strtoupper((string) ($user['rol_clave'] ?? '')), ['LIGA', 'EQUIPO'], true)
+        ) {
             http_response_code(403);
             view('403.php');
             exit;
         }
 
-        if (!in_array(strtoupper((string) ($user['rol_clave'] ?? '')), ['LIGA', 'EQUIPO'], true)) {
+        // La cuenta no puede conservar alcances activos fuera del organismo gestor.
+        $scopeCheck = $this->db->prepare("
+            SELECT COUNT(*)
+            FROM tb_usuario_alcances ua
+            WHERE ua.usuario_id = :usuario_id
+              AND ua.estado = 'activo'
+              AND (
+                    COALESCE(
+                        ua.organismo_id,
+                        CASE WHEN ua.tipo_entidad = 'organismo' THEN ua.entidad_id END
+                    ) IS NULL
+                    OR COALESCE(
+                        ua.organismo_id,
+                        CASE WHEN ua.tipo_entidad = 'organismo' THEN ua.entidad_id END
+                    ) <> :organismo_id
+              )
+        ");
+        $scopeCheck->execute([
+            ':usuario_id' => (int) $user['id'],
+            ':organismo_id' => $organismoId
+        ]);
+
+        if ((int) $scopeCheck->fetchColumn() > 0) {
             http_response_code(403);
             view('403.php');
             exit;
