@@ -171,7 +171,7 @@ class User
             $params[':liga_id'] = (int) $filtros['liga'];
         }
 
-        if (!empty($filtros['organismo'])) {
+        if (array_key_exists('organismo', $filtros) && $filtros['organismo'] !== null && $filtros['organismo'] !== '') {
             $sql .= " AND EXISTS (
                 SELECT 1 FROM tb_usuario_alcances uoa
                 WHERE uoa.usuario_id = u.id
