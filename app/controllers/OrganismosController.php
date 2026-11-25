@@ -184,6 +184,7 @@ class OrganismosController
             'organismo' => $organismo,
             'ligas' => $this->organismoModel->obtenerLigas($id),
             'ligasDisponibles' => $this->organismoModel->listarLigasDisponibles($id),
+            'solicitudesVinculacion' => $this->organismoModel->listarSolicitudesVinculacion($id),
             'errorRelacion' => $errorRelacion
         ]);
     }
@@ -265,7 +266,11 @@ class OrganismosController
     public function vincularLiga($id): void
     {
         $organismoId = (int) $id;
-        $this->verificarAcceso($organismoId);
+        if (Auth::role() !== 'ORGANISMO' || !$this->authorization->hasScope('organismo', $organismoId)) {
+            http_response_code(403);
+            view('403.php');
+            return;
+        }
         $url = 'index.php?page=organismos&action=detalles&id=' . $organismoId;
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ' . $url);
@@ -298,6 +303,48 @@ class OrganismosController
                 : 'No fue posible vincular la liga. Intenta nuevamente.';
         }
         header('Location: ' . $url);
+        exit;
+    }
+
+    public function resolverSolicitudVinculacion($id): void
+    {
+        $organismoId = (int) $id;
+        if (Auth::role() !== 'ORGANISMO' || !$this->authorization->hasScope('organismo', $organismoId)) {
+            http_response_code(403);
+            view('403.php');
+            return;
+        }
+        $url = 'index.php?page=organismos&action=detalles&id=' . $organismoId;
+        $solicitudId = (int) ($_POST['solicitud_id'] ?? 0);
+        $decision = trim((string) ($_POST['decision'] ?? ''));
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || $solicitudId <= 0 || !in_array($decision, ['aprobar', 'rechazar'], true)) {
+            $_SESSION['organismo_relacion_error'] = 'La solicitud o decisión no es válida.';
+            header('Location: ' . $url);
+            exit;
+        }
+        try {
+            $this->organismoModel->resolverSolicitudVinculacion(
+                $organismoId,
+                $solicitudId,
+                (int) Auth::id(),
+                $decision,
+                [
+                    'tipo_relacion' => $_POST['tipo_relacion'] ?? 'afiliacion',
+                    'es_gestor' => isset($_POST['es_gestor']),
+                    'observaciones' => trim((string) ($_POST['observaciones'] ?? '')),
+                    'respuesta' => trim((string) ($_POST['respuesta'] ?? ''))
+                ]
+            );
+            $_SESSION['success'] = $decision === 'aprobar'
+                ? 'La solicitud fue aprobada y la relación institucional quedó registrada.'
+                : 'La solicitud fue rechazada.';
+        } catch (Throwable $e) {
+            error_log('Error al resolver solicitud de vinculación: ' . $e->getMessage());
+            $_SESSION['organismo_relacion_error'] = $e instanceof InvalidArgumentException
+                ? $e->getMessage()
+                : 'No fue posible resolver la solicitud.';
+        }
+        header('Location: ' . $url . '#solicitudes-vinculacion');
         exit;
     }
 
