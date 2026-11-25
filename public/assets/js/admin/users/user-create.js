@@ -28,10 +28,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const loadLeagues = async () => {
         if (!league) return;
-        fill(league, [], 'Cargando ligas...');
         fill(team, [], 'Selecciona un equipo');
-        const params = new URLSearchParams({page: 'ajax', action: 'ligas'});
-        if (orgId()) params.set('organismo_id', orgId());
+        if (!orgId()) {
+            fill(league, [], 'Selecciona primero un organismo');
+            return;
+        }
+        fill(league, [], 'Cargando ligas...');
+        const params = new URLSearchParams({page: 'ajax', action: 'ligas', organismo_id: orgId()});
         const response = await fetch('index.php?' + params.toString(), {headers: {'Accept': 'application/json'}});
         const items = await response.json();
         if (!response.ok || !Array.isArray(items)) throw new Error(items.mensaje || 'No fue posible cargar las ligas.');
