@@ -285,6 +285,7 @@ class User
             UPDATE tb_usuario_alcances
             SET estado = 'inactivo', fecha_fin = COALESCE(fecha_fin, CURDATE())
             WHERE usuario_id = :usuario_id
+              AND tipo_entidad IN ('organismo', 'liga', 'equipo')
               AND estado = 'activo'
         ")->execute([':usuario_id' => $userId]);
 
