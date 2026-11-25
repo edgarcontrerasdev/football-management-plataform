@@ -32,9 +32,40 @@ class LigasController
      * Listado de ligas respetando alcance.
      */
 
+    /**
+     * Ligas administrables: ADMIN global, ORGANISMO mediante sus relaciones gestoras,
+     * y los demás roles mediante sus alcances directos.
+     */
+    private function ligasAutorizadas(): ?array
+    {
+        $rol = Auth::role();
+        if ($rol === 'ORGANISMO') {
+            $organismos = $this->authorization->getScopedEntityIds('organismo') ?? [];
+            if (!$organismos) {
+                return [];
+            }
+            $marks = [];
+            $params = [];
+            foreach (array_values($organismos) as $i => $id) {
+                $key = ':organismo_' . $i;
+                $marks[] = $key;
+                $params[$key] = (int) $id;
+            }
+            $stmt = $this->db->prepare(
+                "SELECT DISTINCT liga_id FROM tb_liga_organismos
+                 WHERE organismo_id IN (" . implode(',', $marks) . ")
+                   AND estado = 'activo' AND es_gestor = 1
+                 ORDER BY liga_id"
+            );
+            $stmt->execute($params);
+            return array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+        }
+        return $this->authorization->getScopedEntityIds('liga');
+    }
+
     public function index(): void
     {
-        $scopeIds = $this->authorization ->getScopedEntityIds('liga');
+        $scopeIds = $this->ligasAutorizadas();
 
         $filtros = [
             'estado' => trim( (string) ($_GET['estado'] ?? '')),
@@ -99,7 +130,7 @@ class LigasController
 
         //creamos el toolbox
         $toolbox = [
-            'create' => 'index.php?page=ligas&action=crear',
+            'create' => in_array(Auth::role(), ['ADMIN', 'ORGANISMO'], true) ? 'index.php?page=ligas&action=crear' : null,
             'filters' => [
                 [
                     'type' => 'select',
@@ -158,6 +189,12 @@ class LigasController
      */
     public function crear(): void
     {
+        if (!in_array(Auth::role(), ['ADMIN', 'ORGANISMO'], true)) {
+            http_response_code(403);
+            view('403.php');
+            return;
+        }
+
         $errors = $_SESSION['errors'] ?? [];
         $old = $_SESSION['old'] ?? [];
         unset($_SESSION['errors'], $_SESSION['old']);
@@ -173,6 +210,22 @@ class LigasController
      */
     public function store(): void
     {
+        $rol = Auth::role();
+        $organismoId = null;
+        if ($rol === 'ORGANISMO') {
+            $organismos = $this->authorization->getScopedEntityIds('organismo') ?? [];
+            if (count($organismos) !== 1) {
+                http_response_code(403);
+                view('403.php');
+                return;
+            }
+            $organismoId = (int) $organismos[0];
+        } elseif ($rol !== 'ADMIN') {
+            http_response_code(403);
+            view('403.php');
+            return;
+        }
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: index.php?page=ligas');
             exit;
@@ -277,7 +330,7 @@ class LigasController
         }
 
         try {
-            if (!$this->ligaModel->crear($data)) {
+            if (!$this->ligaModel->crear($data, $organismoId)) {
                 throw new RuntimeException('La creación de la liga no se completó.');
             }
             flashSuccess('La liga se creó correctamente.');
@@ -301,7 +354,7 @@ class LigasController
     public function editar($id): void
     {
         $id = (int) $id;
-        $scopeIds = $this->authorization->getScopedEntityIds('liga');
+        $scopeIds = $this->ligasAutorizadas();
         $liga = $this->ligaModel->getById($id, $scopeIds);
 
         if (!$liga) {
@@ -332,7 +385,7 @@ class LigasController
             exit;
         }
 
-        $scopeIds = $this->authorization->getScopedEntityIds('liga');
+        $scopeIds = $this->ligasAutorizadas();
         $liga = $this->ligaModel->getById($id, $scopeIds);
 
         if (!$liga) {
@@ -447,7 +500,7 @@ class LigasController
 
     public function miLiga(): void
     {
-        $scopeIds = $this->authorization->getScopedEntityIds('liga');
+        $scopeIds = $this->ligasAutorizadas();
 
         // El usuario no tiene ninguna liga asignada.
         if (empty($scopeIds)) {
@@ -470,7 +523,7 @@ class LigasController
     {
         $id = (int) $id;
 
-        $scopeIds = $this->authorization->getScopedEntityIds('liga');
+        $scopeIds = $this->ligasAutorizadas();
 
         $liga = $this->ligaModel->getById(
             $id,
@@ -586,7 +639,7 @@ class LigasController
     {
         $ligaId = (int) ($_POST['liga_id'] ?? 0);
         $temporadaId = (int) ($_POST['temporada_id'] ?? 0);
-        $scopeIds = $this->authorization->getScopedEntityIds('liga');
+        $scopeIds = $this->ligasAutorizadas();
         $liga = $this->ligaModel->getById($ligaId, $scopeIds);
 
         if (!$liga || $temporadaId <= 0) {
@@ -697,7 +750,7 @@ class LigasController
         $equipoId = (int) ($_POST['equipo_id'] ?? 0);
         $numeroRegistro = trim((string) ($_POST['numero_registro'] ?? ''));
 
-        $scopeIds = $this->authorization->getScopedEntityIds('liga');
+        $scopeIds = $this->ligasAutorizadas();
         $liga = $this->ligaModel->getById($ligaId, $scopeIds);
 
         if (!$liga || $temporadaId <= 0 || $equipoId <= 0) {
@@ -761,7 +814,7 @@ class LigasController
         $ligaEquipoId = (int) ($_POST['liga_equipo_id'] ?? 0);
         $decision = trim((string) ($_POST['decision'] ?? ''));
 
-        $scopeIds = $this->authorization->getScopedEntityIds('liga');
+        $scopeIds = $this->ligasAutorizadas();
         $liga = $this->ligaModel->getById($ligaId, $scopeIds);
 
         if (!$liga || $ligaEquipoId <= 0 || !in_array($decision, ['aprobar', 'rechazar'], true)) {
