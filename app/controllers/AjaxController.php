@@ -39,8 +39,15 @@ class AjaxController
         Auth::requireRole(['ADMIN', 'ORGANISMO']);
         header('Content-Type: application/json; charset=utf-8');
         $organismoId = $this->currentOrganismoId();
+        if (Auth::role() === 'ORGANISMO' && !$organismoId) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'mensaje' => 'La cuenta no tiene un organismo asignado.']);
+            exit;
+        }
 
-        $requestedOrganismoId = $organismoId ?? (!empty($_GET['organismo_id']) ? (int) $_GET['organismo_id'] : null);
+        $requestedOrganismoId = $organismoId !== null
+            ? $organismoId
+            : (array_key_exists('organismo_id', $_GET) ? (int) $_GET['organismo_id'] : null);
         if ($organismoId !== null && $requestedOrganismoId !== $organismoId) {
             http_response_code(403);
             echo json_encode(['success' => false, 'mensaje' => 'Organismo no autorizado.']);
@@ -50,14 +57,16 @@ class AjaxController
         $sql = "
             SELECT DISTINCT l.id, l.nombre, lo.organismo_id
             FROM tb_ligas l
-            INNER JOIN tb_liga_organismos lo ON lo.liga_id = l.id
+            LEFT JOIN tb_liga_organismos lo
+                ON lo.liga_id = l.id AND lo.estado = 'activo'
             WHERE l.estado = 'activo'
-              AND lo.estado = 'activo'
         ";
         $params = [];
-        if ($requestedOrganismoId !== null) {
+        if ($requestedOrganismoId !== null && $requestedOrganismoId > 0) {
             $sql .= " AND lo.organismo_id = :organismo_id";
             $params[':organismo_id'] = $requestedOrganismoId;
+        } elseif ($requestedOrganismoId === 0) {
+            $sql .= " AND lo.id IS NULL";
         }
         $sql .= " ORDER BY l.nombre";
         $stmt = $this->pdo->prepare($sql);
@@ -73,7 +82,14 @@ class AjaxController
         header('Content-Type: application/json; charset=utf-8');
         $ligaId = (int) ($_GET['liga_id'] ?? 0);
         $organismoId = $this->currentOrganismoId();
-        $requestedOrganismoId = $organismoId ?? (!empty($_GET['organismo_id']) ? (int) $_GET['organismo_id'] : null);
+        if (Auth::role() === 'ORGANISMO' && !$organismoId) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'mensaje' => 'La cuenta no tiene un organismo asignado.']);
+            exit;
+        }
+        $requestedOrganismoId = $organismoId !== null
+            ? $organismoId
+            : (array_key_exists('organismo_id', $_GET) ? (int) $_GET['organismo_id'] : null);
 
         if ($ligaId <= 0) {
             echo json_encode([]);
@@ -97,7 +113,7 @@ class AjaxController
             echo json_encode(['success' => false, 'mensaje' => 'Organismo no autorizado.']);
             exit;
         }
-        if ($requestedOrganismoId !== null) {
+        if ($requestedOrganismoId !== null && $requestedOrganismoId > 0) {
             $sql .= " AND EXISTS (
                 SELECT 1 FROM tb_liga_organismos lo
                 WHERE lo.liga_id = l.id
@@ -105,6 +121,11 @@ class AjaxController
                   AND lo.estado = 'activo'
             )";
             $params[':organismo_id'] = $requestedOrganismoId;
+        } elseif ($requestedOrganismoId === 0) {
+            $sql .= " AND NOT EXISTS (
+                SELECT 1 FROM tb_liga_organismos lo
+                WHERE lo.liga_id = l.id AND lo.estado = 'activo'
+            )";
         }
         $sql .= " ORDER BY e.nombre";
         $stmt = $this->pdo->prepare($sql);
