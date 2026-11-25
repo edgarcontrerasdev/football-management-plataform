@@ -13,8 +13,13 @@ $e = static fn($v) => htmlspecialchars((string) ($v ?? ''), ENT_QUOTES, 'UTF-8')
         <div class="alert alert-warning">No se encontró el organismo solicitado.</div>
     <?php else: ?>
         <div class="card border-0 shadow-sm mb-4"><div class="card-body p-4">
-            <div class="d-flex flex-wrap justify-content-between gap-3">
-                <div><h4 class="fw-bold mb-1"><?= $e($organismo['nombre']) ?></h4><div class="text-muted"><?= $e($organismo['siglas'] ?: 'Sin siglas') ?></div></div>
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="organismo-logo-detail d-flex align-items-center justify-content-center rounded-3 bg-light border p-2" style="width:104px;height:104px;flex:0 0 104px;">
+                        <img src="<?= $e(!empty($organismo['logo']) ? ASSETS . '/img/organismos/' . rawurlencode($organismo['logo']) : ASSETS . '/img/ligas/default.png') ?>" alt="Logotipo de <?= $e($organismo['nombre']) ?>" style="width:100%;height:100%;object-fit:contain;">
+                    </div>
+                    <div><h4 class="fw-bold mb-1"><?= $e($organismo['nombre']) ?></h4><div class="text-muted"><?= $e($organismo['siglas'] ?: 'Sin siglas') ?></div></div>
+                </div>
                 <div><span class="badge bg-<?= $organismo['estado'] === 'activo' ? 'success' : 'secondary' ?>"><?= $e(ucfirst($organismo['estado'])) ?></span></div>
             </div>
             <hr><div class="row g-3">
