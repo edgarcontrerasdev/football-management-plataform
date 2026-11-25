@@ -430,6 +430,82 @@ class Liga
         return $liga;
     }
 
+    public function listarOrganismosDisponibles(): array
+    {
+        $stmt = $this->pdo->query("
+            SELECT id, nombre, siglas
+            FROM tb_organismos
+            WHERE estado = 'activo'
+            ORDER BY nombre ASC
+        ");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function listarSolicitudesOrganismo(int $ligaId): array
+    {
+        $stmt = $this->pdo->prepare("
+            SELECT s.id, s.organismo_id, o.nombre AS organismo_nombre, o.siglas,
+                   s.estado, s.fecha_solicitud, s.fecha_resolucion, s.respuesta
+            FROM tb_liga_organismo_solicitudes s
+            INNER JOIN tb_organismos o ON o.id = s.organismo_id
+            WHERE s.liga_id = :liga_id
+            ORDER BY s.fecha_solicitud DESC, s.id DESC
+        ");
+        $stmt->execute([':liga_id' => $ligaId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function solicitarVinculacionOrganismo(
+        int $ligaId,
+        int $organismoId,
+        int $usuarioId,
+        string $rol,
+        string $observaciones = ''
+    ): void {
+        $stmt = $this->pdo->prepare("
+            SELECT id FROM tb_ligas WHERE id = :liga_id AND estado = 'activo'
+        ");
+        $stmt->execute([':liga_id' => $ligaId]);
+        if (!$stmt->fetchColumn()) {
+            throw new InvalidArgumentException('La liga no existe o está inactiva.');
+        }
+        $org = $this->pdo->prepare("SELECT id FROM tb_organismos WHERE id = :id AND estado = 'activo'");
+        $org->execute([':id' => $organismoId]);
+        if (!$org->fetchColumn()) {
+            throw new InvalidArgumentException('El organismo seleccionado no existe o está inactivo.');
+        }
+        $check = $this->pdo->prepare("
+            SELECT id FROM tb_liga_organismos
+            WHERE liga_id = :liga_id AND organismo_id = :organismo_id AND estado = 'activo'
+            LIMIT 1
+        ");
+        $check->execute([':liga_id' => $ligaId, ':organismo_id' => $organismoId]);
+        if ($check->fetchColumn()) {
+            throw new InvalidArgumentException('La liga ya está vinculada a ese organismo.');
+        }
+        $pending = $this->pdo->prepare("
+            SELECT id FROM tb_liga_organismo_solicitudes
+            WHERE liga_id = :liga_id AND organismo_id = :organismo_id AND estado = 'pendiente'
+            LIMIT 1
+        ");
+        $pending->execute([':liga_id' => $ligaId, ':organismo_id' => $organismoId]);
+        if ($pending->fetchColumn()) {
+            throw new InvalidArgumentException('Ya existe una solicitud pendiente para ese organismo.');
+        }
+        $insert = $this->pdo->prepare("
+            INSERT INTO tb_liga_organismo_solicitudes
+                (liga_id, organismo_id, solicitante_usuario_id, solicitante_rol, estado, observaciones)
+            VALUES (:liga_id, :organismo_id, :usuario_id, :rol, 'pendiente', :observaciones)
+        ");
+        $insert->execute([
+            ':liga_id' => $ligaId,
+            ':organismo_id' => $organismoId,
+            ':usuario_id' => $usuarioId,
+            ':rol' => $rol,
+            ':observaciones' => trim($observaciones) ?: null
+        ]);
+    }
+
     /**
      * Compatibilidad para consultas generales existentes.
      */
