@@ -144,6 +144,24 @@
                 <?php endif; ?>
             </div>
             <div class="card-body small">
+                <?php if (in_array(Auth::role(), ['ADMIN', 'LIGA'], true)): ?>
+                    <div class="border rounded-3 p-3 mb-3">
+                        <h6 class="fw-semibold mb-2">Solicitar vinculación a un organismo</h6>
+                        <p class="text-muted mb-3">La solicitud será enviada al organismo seleccionado. La relación solo se activará si el organismo la aprueba.</p>
+                        <?php $pendientesOrg = array_filter($solicitudesOrganismo ?? [], static fn($s) => ($s['estado'] ?? '') === 'pendiente'); ?>
+                        <?php if (!empty($organismosDisponibles) && count($pendientesOrg) < count($organismosDisponibles)): ?>
+                            <form method="POST" action="index.php?page=ligas&action=solicitarVinculacionOrganismo" class="row g-2 align-items-end">
+                                <input type="hidden" name="liga_id" value="<?= (int) $liga['id'] ?>">
+                                <div class="col-md-5"><label class="form-label" for="organismo_solicitado">Organismo *</label><select class="form-select" id="organismo_solicitado" name="organismo_id" required><option value="">Selecciona un organismo</option><?php foreach ($organismosDisponibles as $orgDisponible): ?><option value="<?= (int) $orgDisponible['id'] ?>"><?= htmlspecialchars($orgDisponible['nombre'] . (!empty($orgDisponible['siglas']) ? ' (' . $orgDisponible['siglas'] . ')' : ''), ENT_QUOTES, 'UTF-8') ?></option><?php endforeach; ?></select></div>
+                                <div class="col-md-5"><label class="form-label" for="observaciones_solicitud">Motivo (opcional)</label><input class="form-control" id="observaciones_solicitud" name="observaciones" maxlength="500" placeholder="Motivo de la solicitud"></div>
+                                <div class="col-md-2"><button class="btn btn-primary w-100" type="submit">Solicitar</button></div>
+                            </form>
+                        <?php else: ?><p class="text-muted mb-0">No hay organismos disponibles para solicitar o ya existen solicitudes pendientes.</p><?php endif; ?>
+                    </div>
+                <?php endif; ?>
+                <?php if (!empty($solicitudesOrganismo)): ?>
+                    <div class="mb-3"><strong>Historial de solicitudes</strong><?php foreach ($solicitudesOrganismo as $solicitudOrg): ?><div class="d-flex flex-wrap justify-content-between border-bottom py-2 gap-2"><span><?= htmlspecialchars($solicitudOrg['organismo_nombre'], ENT_QUOTES, 'UTF-8') ?><?= !empty($solicitudOrg['siglas']) ? ' (' . htmlspecialchars($solicitudOrg['siglas'], ENT_QUOTES, 'UTF-8') . ')' : '' ?></span><span class="badge bg-<?= $solicitudOrg['estado'] === 'aprobada' ? 'success' : ($solicitudOrg['estado'] === 'rechazada' ? 'danger' : 'warning text-dark') ?>"><?= htmlspecialchars(ucfirst($solicitudOrg['estado']), ENT_QUOTES, 'UTF-8') ?></span></div><?php endforeach; ?></div>
+                <?php endif; ?>
                 <?php if (empty($liga['organismos'])): ?>
                     <p class="text-muted mb-0">Esta liga no tiene organismos vinculados actualmente.</p>
                 <?php else: ?>
