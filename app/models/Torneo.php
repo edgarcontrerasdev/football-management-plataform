@@ -64,6 +64,21 @@ class Torneo{
     public function contar($filtros = []){
         $sql = "SELECT COUNT(*) total FROM tb_torneos t WHERE 1=1";
         $params = [];
+        if (isset($filtros['liga_ids'])) {
+            $ids = array_values(array_unique(array_filter(array_map('intval', (array) $filtros['liga_ids']), fn($id) => $id > 0)));
+            if (!$ids) {
+                $sql .= " AND 1 = 0";
+            } else {
+                $holders = [];
+                foreach ($ids as $i => $id) {
+                    $key = ':scope_liga_' . $i;
+                    $holders[] = $key;
+                    $params[$key] = $id;
+                }
+                $sql .= " AND t.liga_id IN (" . implode(',', $holders) . ")";
+            }
+        }
+
         if(!empty($filtros['estado'])){
             $sql.= "AND t.estado = :estado";
             $params['estado'] = $filtros['estado'];
