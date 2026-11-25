@@ -40,23 +40,28 @@ class AjaxController
         header('Content-Type: application/json; charset=utf-8');
         $organismoId = $this->currentOrganismoId();
 
-        if ($organismoId === null) {
-            $stmt = $this->pdo->query("
-                SELECT id, nombre FROM tb_ligas
-                WHERE estado = 'activo' ORDER BY nombre
-            ");
-        } else {
-            $stmt = $this->pdo->prepare("
-                SELECT DISTINCT l.id, l.nombre
-                FROM tb_ligas l
-                INNER JOIN tb_liga_organismos lo ON lo.liga_id = l.id
-                WHERE l.estado = 'activo'
-                  AND lo.estado = 'activo'
-                  AND lo.organismo_id = :organismo_id
-                ORDER BY l.nombre
-            ");
-            $stmt->execute([':organismo_id' => $organismoId]);
+        $requestedOrganismoId = $organismoId ?? (!empty($_GET['organismo_id']) ? (int) $_GET['organismo_id'] : null);
+        if ($organismoId !== null && $requestedOrganismoId !== $organismoId) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'mensaje' => 'Organismo no autorizado.']);
+            exit;
         }
+
+        $sql = "
+            SELECT DISTINCT l.id, l.nombre, lo.organismo_id
+            FROM tb_ligas l
+            INNER JOIN tb_liga_organismos lo ON lo.liga_id = l.id
+            WHERE l.estado = 'activo'
+              AND lo.estado = 'activo'
+        ";
+        $params = [];
+        if ($requestedOrganismoId !== null) {
+            $sql .= " AND lo.organismo_id = :organismo_id";
+            $params[':organismo_id'] = $requestedOrganismoId;
+        }
+        $sql .= " ORDER BY l.nombre";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
 
         echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC), JSON_UNESCAPED_UNICODE);
         exit;
@@ -68,6 +73,7 @@ class AjaxController
         header('Content-Type: application/json; charset=utf-8');
         $ligaId = (int) ($_GET['liga_id'] ?? 0);
         $organismoId = $this->currentOrganismoId();
+        $requestedOrganismoId = $organismoId ?? (!empty($_GET['organismo_id']) ? (int) $_GET['organismo_id'] : null);
 
         if ($ligaId <= 0) {
             echo json_encode([]);
@@ -86,14 +92,19 @@ class AjaxController
               AND l.estado = 'activo'
         ";
         $params = [':liga_id' => $ligaId];
-        if ($organismoId !== null) {
+        if ($organismoId !== null && $requestedOrganismoId !== $organismoId) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'mensaje' => 'Organismo no autorizado.']);
+            exit;
+        }
+        if ($requestedOrganismoId !== null) {
             $sql .= " AND EXISTS (
                 SELECT 1 FROM tb_liga_organismos lo
                 WHERE lo.liga_id = l.id
                   AND lo.organismo_id = :organismo_id
                   AND lo.estado = 'activo'
             )";
-            $params[':organismo_id'] = $organismoId;
+            $params[':organismo_id'] = $requestedOrganismoId;
         }
         $sql .= " ORDER BY e.nombre";
         $stmt = $this->pdo->prepare($sql);
