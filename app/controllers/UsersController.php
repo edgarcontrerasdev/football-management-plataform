@@ -166,25 +166,24 @@ class UsersController
             return ['El rol Supervisor aún no está habilitado para creación de cuentas; requiere asignación explícita de alcances.'];
         }
 
-        if (!$organismoId) {
-            return ['Selecciona el organismo al que pertenecerá esta cuenta.'];
-        }
-
-        $orgCheck = $this->db->prepare("SELECT COUNT(*) FROM tb_organismos WHERE id = :id AND estado = 'activo'");
-        $orgCheck->execute([':id' => $organismoId]);
-        if ((int) $orgCheck->fetchColumn() === 0) {
-            return ['El organismo seleccionado no existe o está inactivo.'];
-        }
-
         if ($key === 'ORGANISMO') {
-            return $this->isPlatformAdmin()
-                ? []
-                : ['Solo el administrador de plataforma puede crear administradores de organismo.'];
+            if (!$this->isPlatformAdmin() || !$organismoId) {
+                return ['Solo el administrador de plataforma puede crear administradores de organismo y debe seleccionar su organismo.'];
+            }
+            $orgCheck = $this->db->prepare("SELECT COUNT(*) FROM tb_organismos WHERE id = :id AND estado = 'activo'");
+            $orgCheck->execute([':id' => $organismoId]);
+            return (int) $orgCheck->fetchColumn() > 0 ? [] : ['El organismo seleccionado no existe o está inactivo.'];
         }
 
-        if ($key === 'LIGA' || $key === 'EQUIPO') {
-            if (!$ligaId) {
-                return ['Selecciona la liga que tendrá asignada esta cuenta.'];
+        if (!in_array($key, ['LIGA', 'EQUIPO'], true) || !$ligaId) {
+            return ['Selecciona una liga válida para esta cuenta.'];
+        }
+
+        if ($organismoId !== null) {
+            $orgCheck = $this->db->prepare("SELECT COUNT(*) FROM tb_organismos WHERE id = :id AND estado = 'activo'");
+            $orgCheck->execute([':id' => $organismoId]);
+            if ((int) $orgCheck->fetchColumn() === 0) {
+                return ['El organismo seleccionado no existe o está inactivo.'];
             }
 
             $ligaCheck = $this->db->prepare("
@@ -197,34 +196,70 @@ class UsersController
                   AND lo.estado = 'activo'
             ");
             $ligaCheck->execute([':liga_id' => $ligaId, ':organismo_id' => $organismoId]);
-            if ((int) $ligaCheck->fetchColumn() === 0) {
-                return ['La liga no pertenece al organismo autorizado o está inactiva.'];
+        } else {
+            if (!$this->isPlatformAdmin()) {
+                return ['Solo el administrador de plataforma puede asignar cuentas a ligas independientes.'];
             }
+            $ligaCheck = $this->db->prepare("
+                SELECT COUNT(*)
+                FROM tb_ligas l
+                WHERE l.id = :liga_id
+                  AND l.estado = 'activo'
+                  AND NOT EXISTS (
+                      SELECT 1 FROM tb_liga_organismos lo
+                      WHERE lo.liga_id = l.id AND lo.estado = 'activo'
+                  )
+            ");
+            $ligaCheck->execute([':liga_id' => $ligaId]);
+        }
+
+        if ((int) $ligaCheck->fetchColumn() === 0) {
+            return ['La liga no pertenece al organismo seleccionado o no está disponible para asignación independiente.'];
         }
 
         if ($key === 'EQUIPO') {
             if (!$equipoId) {
                 return ['Selecciona el equipo que tendrá asignado esta cuenta.'];
             }
-            $teamCheck = $this->db->prepare("
-                SELECT COUNT(*)
-                FROM tb_liga_equipos le
-                INNER JOIN tb_liga_temporadas lt ON lt.id = le.liga_temporada_id
-                INNER JOIN tb_liga_organismos lo ON lo.liga_id = lt.liga_id
-                WHERE lt.liga_id = :liga_id
-                  AND le.equipo_id = :equipo_id
-                  AND lo.organismo_id = :organismo_id
-                  AND lo.estado = 'activo'
-                  AND le.estado_participacion = 'activo'
-                  AND lt.estado = 'activo'
-            ");
-            $teamCheck->execute([
-                ':liga_id' => $ligaId,
-                ':equipo_id' => $equipoId,
-                ':organismo_id' => $organismoId
-            ]);
+            if ($organismoId !== null) {
+                $teamCheck = $this->db->prepare("
+                    SELECT COUNT(*)
+                    FROM tb_liga_equipos le
+                    INNER JOIN tb_liga_temporadas lt ON lt.id = le.liga_temporada_id
+                    INNER JOIN tb_liga_organismos lo ON lo.liga_id = lt.liga_id
+                    WHERE lt.liga_id = :liga_id
+                      AND le.equipo_id = :equipo_id
+                      AND lo.organismo_id = :organismo_id
+                      AND lo.estado = 'activo'
+                      AND le.estado_participacion = 'activo'
+                      AND lt.estado = 'activo'
+                ");
+                $teamCheck->execute([
+                    ':liga_id' => $ligaId,
+                    ':equipo_id' => $equipoId,
+                    ':organismo_id' => $organismoId
+                ]);
+            } else {
+                $teamCheck = $this->db->prepare("
+                    SELECT COUNT(*)
+                    FROM tb_liga_equipos le
+                    INNER JOIN tb_liga_temporadas lt ON lt.id = le.liga_temporada_id
+                    WHERE lt.liga_id = :liga_id
+                      AND le.equipo_id = :equipo_id
+                      AND le.estado_participacion = 'activo'
+                      AND lt.estado = 'activo'
+                      AND NOT EXISTS (
+                          SELECT 1 FROM tb_liga_organismos lo
+                          WHERE lo.liga_id = lt.liga_id AND lo.estado = 'activo'
+                      )
+                ");
+                $teamCheck->execute([
+                    ':liga_id' => $ligaId,
+                    ':equipo_id' => $equipoId
+                ]);
+            }
             if ((int) $teamCheck->fetchColumn() === 0) {
-                return ['El equipo no tiene una inscripción activa en una liga de ese organismo.'];
+                return ['El equipo no tiene una inscripción activa en la liga y organismo seleccionados.'];
             }
         }
 
