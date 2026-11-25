@@ -578,11 +578,9 @@ class TorneosController{
             exit;
         }
 
-        $temporadaActiva = $this->temporadaModel->getActiva();
-
         $bloquesDisponibles = $this->torneoModel->getBloquesDisponibles(
             $torneo['liga_id'],
-            $temporadaActiva['id']
+            $torneo['temporada_id']
         );
 
         $bloquesTorneo = $this->torneoModel->getBloquesPorTorneo($torneoId);
