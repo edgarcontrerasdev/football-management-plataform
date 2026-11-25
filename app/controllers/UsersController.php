@@ -93,9 +93,9 @@ class UsersController
         }
 
         $sqlLigas = "
-            SELECT DISTINCT l.id, l.nombre
+            SELECT DISTINCT l.id, l.nombre, lo.organismo_id
             FROM tb_ligas l
-            " . ($this->isPlatformAdmin() ? "" : "INNER JOIN tb_liga_organismos lo ON lo.liga_id = l.id") . "
+            INNER JOIN tb_liga_organismos lo ON lo.liga_id = l.id
             WHERE {$ligaWhere}
             ORDER BY l.nombre
         ";
@@ -109,11 +109,12 @@ class UsersController
             INNER JOIN tb_liga_equipos le ON le.equipo_id = e.id
             INNER JOIN tb_liga_temporadas lt ON lt.id = le.liga_temporada_id
             INNER JOIN tb_ligas l ON l.id = lt.liga_id
-            " . ($this->isPlatformAdmin() ? "" : "INNER JOIN tb_liga_organismos lo ON lo.liga_id = l.id") . "
+            INNER JOIN tb_liga_organismos lo ON lo.liga_id = l.id
             WHERE le.estado_participacion = 'activo'
               AND lt.estado = 'activo'
               AND l.estado = 'activo'
-              " . ($this->isPlatformAdmin() ? "" : "AND lo.organismo_id = :organismo_id AND lo.estado = 'activo'") . "
+              AND lo.estado = 'activo'
+              " . ($this->isPlatformAdmin() ? "" : "AND lo.organismo_id = :organismo_id") . "
             ORDER BY e.nombre
         ";
         $stmt = $this->db->prepare($sqlEquipos);
