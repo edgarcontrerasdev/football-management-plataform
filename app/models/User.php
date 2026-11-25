@@ -348,7 +348,8 @@ class User
             'filtro' => trim((string) ($params['filtro'] ?? '')),
             'estado' => $params['estado'] ?? 'all',
             'rol' => $params['rol'] ?? null,
-            'liga' => $params['liga'] ?? null
+            'liga' => $params['liga'] ?? null,
+            'organismo' => $params['organismo'] ?? null
         ];
         $todos = $this->filtrar($filtros);
         $total = count($todos);
