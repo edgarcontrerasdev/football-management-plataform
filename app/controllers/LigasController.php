@@ -628,7 +628,7 @@ class LigasController
             [
                 'liga' => $liga,
                 'kpis' => $kpis,
-                'organismosDisponibles' => $this->ligaModel->listarOrganismosDisponibles(),
+                'organismosDisponibles' => $this->ligaModel->listarOrganismosDisponibles($id),
                 'solicitudesOrganismo' => $this->ligaModel->listarSolicitudesOrganismo($id),
                 'temporadaActual' => $temporadaActual,
                 'temporadasDisponibles' => $temporadasDisponibles,
