@@ -19,6 +19,12 @@ class UsersController
     private function requireManager(): void
     {
         Auth::requireRole(['ADMIN', 'ORGANISMO']);
+
+        if (Auth::role() === 'ORGANISMO' && !$this->currentOrganismoId()) {
+            http_response_code(403);
+            view('403.php');
+            exit;
+        }
     }
 
     private function isPlatformAdmin(): bool
