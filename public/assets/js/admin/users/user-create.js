@@ -60,7 +60,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (orgBox) orgBox.classList.toggle('d-none', !needsOrg);
         if (leagueBox) leagueBox.classList.toggle('d-none', !needsLeague);
         if (teamBox) teamBox.classList.toggle('d-none', key !== 'EQUIPO');
-        if (org && org.tagName === 'SELECT') org.required = needsOrg;
+        if (org && org.tagName === 'SELECT') {
+            org.required = needsOrg;
+            const independentOption = org.querySelector('option[value="0"]');
+            if (independentOption) independentOption.hidden = key === 'ORGANISMO';
+            if (key === 'ORGANISMO' && org.value === '0') org.value = '';
+        }
         if (league) league.required = needsLeague;
         if (team) team.required = key === 'EQUIPO';
         if (!needsOrg && org && org.tagName === 'SELECT') org.value = '';
