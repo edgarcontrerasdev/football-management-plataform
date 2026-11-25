@@ -66,7 +66,11 @@ class AjaxController
             $sql .= " AND lo.organismo_id = :organismo_id";
             $params[':organismo_id'] = $requestedOrganismoId;
         } elseif ($requestedOrganismoId === 0) {
-            $sql .= " AND lo.id IS NULL";
+            $sql .= " AND lo.id IS NULL
+                      AND NOT EXISTS (
+                          SELECT 1 FROM tb_liga_organismos lo_any
+                          WHERE lo_any.liga_id = l.id AND lo_any.estado = 'activo'
+                      )";
         }
         $sql .= " ORDER BY l.nombre";
         $stmt = $this->pdo->prepare($sql);
