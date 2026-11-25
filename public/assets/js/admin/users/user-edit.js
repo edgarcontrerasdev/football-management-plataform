@@ -16,7 +16,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (orgBox) orgBox.classList.toggle('d-none', !['ORGANISMO', 'LIGA', 'EQUIPO'].includes(key));
         if (leagueBox) leagueBox.classList.toggle('d-none', !['LIGA', 'EQUIPO'].includes(key));
         if (teamBox) teamBox.classList.toggle('d-none', key !== 'EQUIPO');
-        if (org && org.tagName === 'SELECT') org.required = ['ORGANISMO', 'LIGA', 'EQUIPO'].includes(key);
+        if (org && org.tagName === 'SELECT') {
+            org.required = ['ORGANISMO', 'LIGA', 'EQUIPO'].includes(key);
+            const independentOption = org.querySelector('option[value="0"]');
+            if (independentOption) independentOption.hidden = key === 'ORGANISMO';
+            if (key === 'ORGANISMO' && org.value === '0') org.value = '';
+        }
         if (league) league.required = ['LIGA', 'EQUIPO'].includes(key);
         if (team) team.required = key === 'EQUIPO';
 
