@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const load = page => {
         pagina.value = String(page);
         if (loader) loader.style.display = 'block';
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Cargando usuarios…</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Cargando usuarios…</td></tr>';
         const params = new URLSearchParams({
             filtro: filtro?.value.trim() || '',
             estado: estado?.value || '',
@@ -94,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const users = Array.isArray(result) ? result : (result.usuarios || []);
                 const total = Number(data.total ?? result.total ?? users.length);
                 if (!users.length) {
-                    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No se encontraron usuarios.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No se encontraron usuarios.</td></tr>';
                     renderPagination(0, 1, Number(limite.value));
                     return;
                 }
@@ -106,6 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return `<tr>
                         <td><div class="user-cell"><img class="user-avatar" src="${avatar}" alt="Avatar"><div class="user-info"><span class="user-name">${escapeHTML(user.nombre)}</span><span class="user-alias">@${escapeHTML(user.usuario)}</span></div></div></td>
                         <td>${escapeHTML(user.rol_nombre || 'Sin rol')}</td>
+                        <td>${escapeHTML(user.organismo || '-')}</td>
                         <td><div>@${escapeHTML(user.usuario)}</div><small class="text-muted">ID ${id}</small></td>
                         <td>${escapeHTML(user.liga || '-')}</td>
                         <td>${escapeHTML(user.equipo || '-')}</td>
@@ -117,7 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .catch(error => {
                 console.error('Error al cargar usuarios:', error);
-                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">Error al cargar usuarios: ${escapeHTML(error.message)}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">Error al cargar usuarios: ${escapeHTML(error.message)}</td></tr>`;
             })
             .finally(() => { if (loader) loader.style.display = 'none'; });
     };
