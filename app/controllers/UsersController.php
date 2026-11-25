@@ -89,7 +89,7 @@ class UsersController
                 WHERE estado = 'activo'
                 ORDER BY nombre
             ")->fetchAll(PDO::FETCH_ASSOC);
-            $ligaWhere = "l.estado = 'activo' AND lo.estado = 'activo'";
+            $ligaWhere = "l.estado = 'activo'";
             $params = [];
         } else {
             $roles = array_values(array_filter(
