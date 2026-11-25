@@ -41,6 +41,7 @@ foreach (($roles ?? []) as $rol) {
                                 <label class="form-label" for="organismo_id">Organismo responsable</label>
                                 <select name="organismo_id" id="organismo_id" class="form-select">
                                     <option value="">Selecciona un organismo</option>
+                                    <option value="0">Liga independiente (sin organismo)</option>
                                     <?php foreach (($organismos ?? []) as $organismo): ?>
                                         <option value="<?= (int) $organismo['id'] ?>" <?= (int) ($user['organismo_id'] ?? 0) === (int) $organismo['id'] ? 'selected' : '' ?>><?= $escape($organismo['nombre']) ?></option>
                                     <?php endforeach; ?>
