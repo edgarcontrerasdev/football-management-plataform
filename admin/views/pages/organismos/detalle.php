@@ -36,7 +36,7 @@ $e = static fn($v) => htmlspecialchars((string) ($v ?? ''), ENT_QUOTES, 'UTF-8')
             <h5 class="mb-1">Vincular una liga</h5>
             <p class="text-muted small mb-3">Una liga puede relacionarse con varios organismos, pero solo tendrá un organismo gestor vigente.</p>
             <?php if (!empty($errorRelacion)): ?><div class="alert alert-danger"><?= $e($errorRelacion) ?></div><?php endif; ?>
-            <?php if (($organismo['estado'] ?? '') === 'activo' && !empty($ligasDisponibles)): ?>
+            <?php if (Auth::role() === 'ORGANISMO' && ($organismo['estado'] ?? '') === 'activo' && !empty($ligasDisponibles)): ?>
             <form action="index.php?page=organismos&action=vincularLiga&id=<?= (int) $organismo['id'] ?>" method="POST">
                 <div class="row g-3">
                     <div class="col-lg-4"><label class="form-label" for="liga_id">Liga *</label><select class="form-select" name="liga_id" id="liga_id" required><option value="">Selecciona una liga</option><?php foreach ($ligasDisponibles as $disponible): ?><option value="<?= (int) $disponible['id'] ?>"><?= $e($disponible['nombre']) ?><?= !empty($disponible['siglas']) ? ' (' . $e($disponible['siglas']) . ')' : '' ?></option><?php endforeach; ?></select></div>
@@ -47,8 +47,28 @@ $e = static fn($v) => htmlspecialchars((string) ($v ?? ''), ENT_QUOTES, 'UTF-8')
                     <div class="col-md-8"><label class="form-label" for="observaciones_relacion">Observaciones</label><input class="form-control" name="observaciones" id="observaciones_relacion" placeholder="Opcional"></div>
                 </div><div class="d-flex justify-content-end mt-3"><button class="btn btn-primary" type="submit"><i class="fa-solid fa-link me-1"></i>Vincular liga</button></div>
             </form>
+            <?php elseif (Auth::role() !== 'ORGANISMO'): ?><div class="alert alert-info mb-0">Las solicitudes de vinculación se revisan en este apartado. El administrador global y las ligas no pueden vincularse directamente; deben enviar una solicitud para aprobación del organismo.</div>
             <?php elseif (($organismo['estado'] ?? '') !== 'activo'): ?><div class="alert alert-secondary mb-0">El organismo está inactivo y no puede recibir nuevas ligas.</div>
             <?php else: ?><p class="text-muted mb-0">No hay ligas activas disponibles para vincular.</p><?php endif; ?>
+        </div></div>
+        <div class="card border-0 shadow-sm mb-4" id="solicitudes-vinculacion"><div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3"><div><h5 class="mb-1">Solicitudes de vinculación</h5><p class="text-muted small mb-0">Solo los administradores autorizados de este organismo pueden resolverlas.</p></div><span class="badge bg-warning text-dark"><?= count($solicitudesVinculacion ?? []) ?> pendientes</span></div>
+            <?php if (!empty($solicitudesVinculacion)): ?>
+                <?php foreach ($solicitudesVinculacion as $solicitud): ?>
+                    <div class="border rounded-3 p-3 mb-3">
+                        <div class="d-flex flex-wrap justify-content-between gap-2 mb-2"><div><strong><?= $e($solicitud['liga_nombre']) ?></strong> <span class="text-muted"><?= $e($solicitud['siglas'] ?? '') ?></span><div class="small text-muted">Solicitó: <?= $e($solicitud['solicitante'] ?? 'Usuario') ?> (<?= $e($solicitud['solicitante_rol']) ?>) · <?= $e(date('d/m/Y H:i', strtotime($solicitud['fecha_solicitud']))) ?></div></div><span class="badge bg-warning text-dark">Pendiente</span></div>
+                        <form method="POST" action="index.php?page=organismos&action=resolverSolicitudVinculacion&id=<?= (int) $organismo['id'] ?>">
+                            <input type="hidden" name="solicitud_id" value="<?= (int) $solicitud['id'] ?>">
+                            <div class="row g-2 align-items-end">
+                                <div class="col-md-4"><label class="form-label small">Tipo de relación</label><select class="form-select form-select-sm" name="tipo_relacion"><option value="afiliacion">Afiliación</option><option value="gestion">Gestión</option><option value="colaboracion">Colaboración</option><option value="otro">Otro</option></select></div>
+                                <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" name="es_gestor" id="gestor_solicitud_<?= (int) $solicitud['id'] ?>" value="1"><label class="form-check-label small" for="gestor_solicitud_<?= (int) $solicitud['id'] ?>">Será organismo gestor</label></div></div>
+                                <div class="col-md-5"><label class="form-label small">Respuesta (opcional)</label><input class="form-control form-control-sm" name="respuesta" maxlength="255"></div>
+                            </div>
+                            <div class="d-flex justify-content-end gap-2 mt-3"><button class="btn btn-sm btn-outline-danger" name="decision" value="rechazar" type="submit">Rechazar</button><button class="btn btn-sm btn-primary" name="decision" value="aprobar" type="submit">Aprobar y vincular</button></div>
+                        </form>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?><p class="text-muted mb-0">No hay solicitudes pendientes de revisión.</p><?php endif; ?>
         </div></div>
         <div class="card border-0 shadow-sm"><div class="card-body p-4">
             <div class="d-flex justify-content-between align-items-center mb-3"><div><h5 class="mb-1">Ligas relacionadas</h5><p class="text-muted small mb-0">Relaciones vigentes e históricas de este organismo.</p></div><span class="badge bg-light text-dark"><?= count($ligas ?? []) ?> relaciones</span></div>
