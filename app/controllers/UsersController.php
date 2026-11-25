@@ -252,7 +252,8 @@ class UsersController
         $users = $this->userModel->filtrar([
             'estado' => $_GET['filtroEstado'] ?? 'all',
             'rol' => $_GET['filtroRol'] ?? null,
-            'filtro' => trim((string) ($_GET['filtro'] ?? ''))
+            'filtro' => trim((string) ($_GET['filtro'] ?? '')),
+            'organismo' => $this->currentOrganismoId()
         ]);
         $viewPath = ROOT_PATH . '/admin/views/pages/users/users.php';
         include ROOT_PATH . '/admin/views/layout.php';
@@ -279,6 +280,9 @@ class UsersController
             $usuario = trim((string) ($_POST['usuario'] ?? ''));
             $password = (string) ($_POST['password'] ?? '');
             $rolId = (int) ($_POST['rol_id'] ?? 0);
+            $organismoId = $this->isPlatformAdmin()
+                ? (!empty($_POST['organismo_id']) ? (int) $_POST['organismo_id'] : null)
+                : $this->currentOrganismoId();
             $ligaId = !empty($_POST['liga_id']) ? (int) $_POST['liga_id'] : null;
             $equipoId = !empty($_POST['equipo_id']) ? (int) $_POST['equipo_id'] : null;
 
@@ -293,12 +297,12 @@ class UsersController
             }
 
             $key = $this->roleKey($rolId);
-            if (in_array($key, ['ADMIN', 'SUPERVISOR'], true)) {
+            if (in_array($key, ['ADMIN', 'SUPERVISOR', 'ORGANISMO'], true)) {
                 $ligaId = $equipoId = null;
             } elseif ($key === 'LIGA') {
                 $equipoId = null;
             }
-            $errors = $this->validateScope($rolId, $ligaId, $equipoId);
+            $errors = $this->validateScope($rolId, $organismoId, $ligaId, $equipoId);
             if ($errors) {
                 throw new RuntimeException(implode(' ', $errors));
             }
@@ -310,6 +314,8 @@ class UsersController
                 'rol_id' => $rolId,
                 'estado' => 'activo',
                 'avatar' => $avatar,
+                'organismo_id' => $organismoId,
+                'organismo_scope' => $key === 'ORGANISMO',
                 'liga_id' => $ligaId,
                 'equipo_id' => $equipoId
             ]);
@@ -330,6 +336,7 @@ class UsersController
             header('Location: index.php?page=users');
             exit;
         }
+        $this->assertCanManageUser($user);
         $data = ['errors' => []];
         extract($this->catalogos());
         $viewPath = ROOT_PATH . '/admin/views/pages/users/edit.php';
@@ -345,6 +352,7 @@ class UsersController
             header('Location: index.php?page=users');
             exit;
         }
+        $this->assertCanManageUser($user);
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: index.php?page=users&action=edit&id=' . $id);
             exit;
@@ -352,6 +360,9 @@ class UsersController
 
         $usuario = trim((string) ($_POST['usuario'] ?? ''));
         $rolId = (int) ($_POST['rol_id'] ?? 0);
+        $organismoId = $this->isPlatformAdmin()
+            ? (!empty($_POST['organismo_id']) ? (int) $_POST['organismo_id'] : null)
+            : $this->currentOrganismoId();
         $ligaId = !empty($_POST['liga_id']) ? (int) $_POST['liga_id'] : null;
         $equipoId = !empty($_POST['equipo_id']) ? (int) $_POST['equipo_id'] : null;
         $errors = [];
@@ -365,12 +376,12 @@ class UsersController
             $errors[] = 'El nombre de usuario ya está registrado.';
         }
         $key = $this->roleKey($rolId);
-        if (in_array($key, ['ADMIN', 'SUPERVISOR'], true)) {
+        if (in_array($key, ['ADMIN', 'SUPERVISOR', 'ORGANISMO'], true)) {
             $ligaId = $equipoId = null;
         } elseif ($key === 'LIGA') {
             $equipoId = null;
         }
-        $errors = array_merge($errors, $this->validateScope($rolId, $ligaId, $equipoId));
+        $errors = array_merge($errors, $this->validateScope($rolId, $organismoId, $ligaId, $equipoId));
 
         $newAvatar = null;
         try {
@@ -383,6 +394,8 @@ class UsersController
                 $update = [
                     'usuario' => $usuario,
                     'rol_id' => $rolId,
+                    'organismo_id' => $organismoId,
+                    'organismo_scope' => $key === 'ORGANISMO',
                     'liga_id' => $ligaId,
                     'equipo_id' => $equipoId,
                     'avatar' => $avatar
@@ -417,6 +430,7 @@ class UsersController
         $user = array_merge($user, [
             'usuario' => $usuario,
             'rol_id' => $rolId,
+            'organismo_id' => $organismoId,
             'liga_id' => $ligaId,
             'equipo_id' => $equipoId
         ]);
@@ -436,6 +450,11 @@ class UsersController
             if (!$id) {
                 throw new RuntimeException('Usuario no válido.');
             }
+            $target = $this->userModel->findById($id);
+            if (!$target) {
+                throw new RuntimeException('Usuario no encontrado.');
+            }
+            $this->assertCanManageUser($target);
             $this->userModel->update($id, ['estado' => $active ? 'activo' : 'inactivo']);
             echo json_encode(['success' => true]);
         } catch (Throwable $e) {
@@ -447,6 +466,12 @@ class UsersController
     public function disable($id): void
     {
         $this->requireManager();
+        $target = $this->userModel->findById((int) $id);
+        if (!$target) {
+            header('Location: index.php?page=users');
+            exit;
+        }
+        $this->assertCanManageUser($target);
         $this->userModel->disable((int) $id);
         header('Location: index.php?page=users');
         exit;
@@ -455,6 +480,12 @@ class UsersController
     public function changePassword($id): void
     {
         $this->requireManager();
+        $target = $this->userModel->findById((int) $id);
+        if (!$target) {
+            header('Location: index.php?page=users');
+            exit;
+        }
+        $this->assertCanManageUser($target);
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $password = (string) ($_POST['password'] ?? '');
             if ($password === '') {
