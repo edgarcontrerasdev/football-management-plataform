@@ -628,6 +628,8 @@ class LigasController
             [
                 'liga' => $liga,
                 'kpis' => $kpis,
+                'organismosDisponibles' => $this->ligaModel->listarOrganismosDisponibles(),
+                'solicitudesOrganismo' => $this->ligaModel->listarSolicitudesOrganismo($id),
                 'temporadaActual' => $temporadaActual,
                 'temporadasDisponibles' => $temporadasDisponibles,
                 'temporadasVinculadas' => $temporadasVinculadas,
@@ -637,6 +639,43 @@ class LigasController
                 'equiposDisponibles' => $equiposDisponibles
             ]
         );
+    }
+
+    /**
+     * ADMIN global y LIGA pueden solicitar la vinculación de su liga a un organismo.
+     * La relación solo se crea cuando el organismo receptor aprueba.
+     */
+    public function solicitarVinculacionOrganismo(): void
+    {
+        $ligaId = (int) ($_POST['liga_id'] ?? 0);
+        $organismoId = (int) ($_POST['organismo_id'] ?? 0);
+        $rol = Auth::role();
+        if (!in_array($rol, ['ADMIN', 'LIGA'], true) || $ligaId <= 0 || $organismoId <= 0) {
+            http_response_code(403);
+            view('403.php');
+            return;
+        }
+        $liga = $this->ligaModel->getById($ligaId, $this->ligasAutorizadas());
+        if (!$liga) {
+            http_response_code(403);
+            view('403.php');
+            return;
+        }
+        try {
+            $this->ligaModel->solicitarVinculacionOrganismo(
+                $ligaId,
+                $organismoId,
+                (int) Auth::id(),
+                $rol,
+                trim((string) ($_POST['observaciones'] ?? ''))
+            );
+            flashSuccess('La solicitud fue enviada al organismo. La liga no quedará vinculada hasta que sea aprobada.');
+        } catch (Throwable $e) {
+            flashError($e instanceof InvalidArgumentException ? $e->getMessage() : 'No fue posible enviar la solicitud.');
+            error_log('Solicitud de vinculación liga-organismo: ' . $e->getMessage());
+        }
+        header('Location: index.php?page=ligas&action=detalle&id=' . $ligaId . '#info');
+        exit;
     }
 
     /**
