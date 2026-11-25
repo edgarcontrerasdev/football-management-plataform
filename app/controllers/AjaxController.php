@@ -16,18 +16,29 @@ class AjaxController
 
     public function ligas(): void
     {
-        $ligaModel = new Liga($this->pdo);
+        Auth::requireRole(['ADMIN', 'SUPERVISOR']);
         header('Content-Type: application/json; charset=utf-8');
-        echo json_encode($ligaModel->all());
+
+        $stmt = $this->pdo->query("
+            SELECT id, nombre
+            FROM tb_ligas
+            WHERE estado = 'activo'
+            ORDER BY nombre
+        ");
+
+        echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC), JSON_UNESCAPED_UNICODE);
         exit;
     }
 
     public function equipos(): void
     {
+        Auth::requireRole(['ADMIN', 'SUPERVISOR']);
+        header('Content-Type: application/json; charset=utf-8');
+
         $ligaId = (int) ($_GET['liga_id'] ?? 0);
         $equipos = $ligaId > 0 ? (new Equipo($this->pdo))->getByLiga($ligaId) : [];
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode($equipos);
+
+        echo json_encode($equipos, JSON_UNESCAPED_UNICODE);
         exit;
     }
 
