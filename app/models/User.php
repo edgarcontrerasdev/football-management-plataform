@@ -259,7 +259,12 @@ class User
                 $stmt->execute($params);
             }
 
-            if (array_key_exists('liga_id', $data) || array_key_exists('equipo_id', $data)) {
+            if (
+                array_key_exists('organismo_id', $data)
+                || array_key_exists('organismo_scope', $data)
+                || array_key_exists('liga_id', $data)
+                || array_key_exists('equipo_id', $data)
+            ) {
                 $this->replaceScopes($id, $data);
             }
 
