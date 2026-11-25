@@ -103,6 +103,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     const active = user.estado === 'activo';
                     const avatarName = user.avatar ? String(user.avatar).split('/').pop() : 'default.png';
                     const avatar = '/afec/public/assets/img/avatars/' + encodeURIComponent(avatarName);
+                    const managerRole = tbody.dataset.managerRole || '';
+                    const canManage = managerRole === 'ADMIN' || (managerRole === 'ORGANISMO' && ['LIGA', 'EQUIPO'].includes(String(user.rol_clave || '').toUpperCase()));
+                    const actions = canManage
+                        ? `<label class="switch"><input type="checkbox" class="toggle-user" data-id="${id}" ${active ? 'checked' : ''}><span class="slider"></span></label><a href="index.php?page=users&action=edit&id=${id}" class="btn-icon edit" title="Editar usuario"><i class="fa-solid fa-pen"></i></a>`
+                        : '<span class="text-muted small">Cuenta de administración</span>';
                     return `<tr>
                         <td><div class="user-cell"><img class="user-avatar" src="${avatar}" alt="Avatar"><div class="user-info"><span class="user-name">${escapeHTML(user.nombre)}</span><span class="user-alias">@${escapeHTML(user.usuario)}</span></div></div></td>
                         <td>${escapeHTML(user.rol_nombre || 'Sin rol')}</td>
@@ -111,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <td>${escapeHTML(user.liga || '-')}</td>
                         <td>${escapeHTML(user.equipo || '-')}</td>
                         <td class="text-center"><span id="status-${id}" class="user-status ${active ? 'active' : 'inactive'}">${active ? 'ACTIVO' : 'INACTIVO'}</span></td>
-                        <td class="text-center"><label class="switch"><input type="checkbox" class="toggle-user" data-id="${id}" ${active ? 'checked' : ''}><span class="slider"></span></label><a href="index.php?page=users&action=edit&id=${id}" class="btn-icon edit" title="Editar usuario"><i class="fa-solid fa-pen"></i></a></td>
+                        <td class="text-center">${actions}</td>
                     </tr>`;
                 }).join('');
                 renderPagination(total, Number(pagina.value), Number(limite.value));
