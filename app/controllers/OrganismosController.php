@@ -3,23 +3,37 @@
 declare(strict_types=1);
 
 require_once ROOT_PATH . '/app/models/Organismo.php';
+require_once ROOT_PATH . '/app/services/AuthorizationService.php';
 
 class OrganismosController
 {
     private Organismo $organismoModel;
+    private PDO $db;
+    private AuthorizationService $authorization;
 
     public function __construct(PDO $db)
     {
+        $this->db = $db;
         $this->organismoModel = new Organismo($db);
+        $this->authorization = new AuthorizationService($db);
     }
 
-    private function verificarAcceso(): void
+    private function verificarAcceso(?int $organismoId = null, bool $soloAdmin = false): void
     {
-        if (!in_array(Auth::role(), ['ADMIN', 'SUPERVISOR'], true)) {
+        if (Auth::role() === 'ADMIN') return;
+        if ($soloAdmin || $organismoId === null ||
+            !in_array(Auth::role(), ['ORGANISMO', 'SUPERVISOR'], true) ||
+            !$this->authorization->hasScope('organismo', $organismoId)) {
             http_response_code(403);
             view('403.php');
             exit;
         }
+    }
+
+    private function organismosAutorizados(): ?array
+    {
+        return Auth::role() === 'ADMIN' ? null :
+            ($this->authorization->getScopedEntityIds('organismo') ?? []);
     }
 
     private function guardarLogo(?array $archivo, ?string $logoActual = null): array
@@ -49,12 +63,12 @@ class OrganismosController
 
     public function index(): void
     {
-        $this->verificarAcceso();
 
         $filtros = [
             'estado' => trim((string) ($_GET['estado'] ?? '')),
             'tipo' => trim((string) ($_GET['tipo'] ?? '')),
-            'buscar' => trim((string) ($_GET['buscar'] ?? ''))
+            'buscar' => trim((string) ($_GET['buscar'] ?? '')),
+            'ids' => $this->organismosAutorizados()
         ];
 
         $pagina = max(1, (int) ($_GET['p'] ?? 1));
@@ -64,7 +78,7 @@ class OrganismosController
         $offset = $pagination['offset'] ?? (($pagina - 1) * $limite);
 
         $organismos = $this->organismoModel->listar($filtros, $limite, $offset);
-        $metricas = $this->organismoModel->metricas();
+        $metricas = $this->organismoModel->metricas($filtros['ids']);
 
         $kpis = [
             ['title' => 'Organismos registrados', 'value' => $metricas['total'], 'icon' => 'fas fa-sitemap', 'class' => 'info'],
@@ -73,7 +87,7 @@ class OrganismosController
         ];
 
         $toolbox = [
-            'create' => 'index.php?page=organismos&action=crear',
+            'create' => Auth::role() === 'ADMIN' ? 'index.php?page=organismos&action=crear' : null,
             'filters' => [
                 ['type' => 'select', 'name' => 'estado', 'label' => 'Todos los estados', 'default' => '', 'options' => ['activo' => 'Activos', 'inactivo' => 'Inactivos']],
                 ['type' => 'select', 'name' => 'tipo', 'label' => 'Todos los tipos', 'default' => '', 'options' => ['asociacion' => 'Asociación', 'federacion' => 'Federación', 'comite' => 'Comité', 'otro' => 'Otro']],
@@ -99,7 +113,7 @@ class OrganismosController
 
     public function crear(): void
     {
-        $this->verificarAcceso();
+        $this->verificarAcceso(null, true);
         $error = $_SESSION['organismo_error'] ?? null;
         unset($_SESSION['organismo_error']);
         $old = $_SESSION['organismo_old'] ?? [];
@@ -109,7 +123,7 @@ class OrganismosController
 
     public function store(): void
     {
-        $this->verificarAcceso();
+        $this->verificarAcceso(null, true);
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: index.php?page=organismos');
@@ -156,8 +170,8 @@ class OrganismosController
 
     public function detalles($id): void
     {
-        $this->verificarAcceso();
         $id = (int) $id;
+        $this->verificarAcceso($id);
         $organismo = $this->organismoModel->obtenerPorId($id);
         if (!$organismo) {
             http_response_code(404);
@@ -176,7 +190,7 @@ class OrganismosController
 
     public function editar($id): void
     {
-        $this->verificarAcceso();
+        $this->verificarAcceso((int) $id);
         $organismo = $this->organismoModel->obtenerPorId((int) $id);
         if (!$organismo) {
             http_response_code(404);
@@ -192,8 +206,8 @@ class OrganismosController
 
     public function actualizar($id): void
     {
-        $this->verificarAcceso();
         $id = (int) $id;
+        $this->verificarAcceso($id);
         $organismo = $this->organismoModel->obtenerPorId($id);
         if (!$organismo) {
             header('Location: index.php?page=organismos');
@@ -250,8 +264,8 @@ class OrganismosController
 
     public function vincularLiga($id): void
     {
-        $this->verificarAcceso();
         $organismoId = (int) $id;
+        $this->verificarAcceso($organismoId);
         $url = 'index.php?page=organismos&action=detalles&id=' . $organismoId;
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ' . $url);
@@ -289,8 +303,8 @@ class OrganismosController
 
     public function finalizarRelacion($id): void
     {
-        $this->verificarAcceso();
         $organismoId = (int) $id;
+        $this->verificarAcceso($organismoId);
         $relacionId = (int) ($_POST['relacion_id'] ?? 0);
         $fechaFin = trim((string) ($_POST['fecha_fin'] ?? ''));
         $url = 'index.php?page=organismos&action=detalles&id=' . $organismoId;
