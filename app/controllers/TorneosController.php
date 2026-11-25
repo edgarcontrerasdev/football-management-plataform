@@ -6,10 +6,86 @@
     require_once __DIR__.'../../models/Liga.php';
     require_once __DIR__.'../../models/Temporada.php';
     require_once __DIR__.'../../models/Equipo.php';
+    require_once __DIR__ . '/../services/AuthorizationService.php';
 
 class TorneosController{
 
     private PDO $db;
+    private AuthorizationService $authorization;
+
+    private function idsLigasAutorizadas(): ?array
+    {
+        $user = Auth::user();
+        if (!$user) return [];
+        if (($user['rol_clave'] ?? '') === 'ADMIN') return null;
+
+        $ids = $this->authorization->getScopedEntityIds('liga') ?? [];
+        $organismos = $this->authorization->getScopedEntityIds('organismo') ?? [];
+        if ($organismos) {
+            $holders = [];
+            $params = [];
+            foreach ($organismos as $i => $id) {
+                $holders[] = ":org{$i}";
+                $params[":org{$i}"] = (int) $id;
+            }
+            $stmt = $this->db->prepare("
+                SELECT DISTINCT liga_id
+                FROM tb_liga_organismos
+                WHERE organismo_id IN (" . implode(',', $holders) . ")
+                  AND estado = 'activo' AND es_gestor = 1
+            ");
+            $stmt->execute($params);
+            $ids = array_merge($ids, array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN)));
+        }
+        return array_values(array_unique(array_map('intval', $ids)));
+    }
+
+    private function puedeGestionarLiga(int $ligaId): bool
+    {
+        $user = Auth::user();
+        if (!$user || $ligaId <= 0) return false;
+        if (($user['rol_clave'] ?? '') === 'ADMIN') return true;
+        if ($this->authorization->hasScope('liga', $ligaId)) return true;
+
+        $orgIds = $this->authorization->getScopedEntityIds('organismo') ?? [];
+        if (!$orgIds) return false;
+        $holders = [];
+        $params = [':liga_id' => $ligaId];
+        foreach ($orgIds as $i => $id) {
+            $holders[] = ":org{$i}";
+            $params[":org{$i}"] = (int) $id;
+        }
+        $stmt = $this->db->prepare("
+            SELECT 1 FROM tb_liga_organismos
+            WHERE liga_id = :liga_id
+              AND organismo_id IN (" . implode(',', $holders) . ")
+              AND estado = 'activo' AND es_gestor = 1
+            LIMIT 1
+        ");
+        $stmt->execute($params);
+        return (bool) $stmt->fetchColumn();
+    }
+
+    private function puedeGestionarTorneo(array $torneo): bool
+    {
+        return $this->puedeGestionarLiga((int) ($torneo['liga_id'] ?? 0));
+    }
+
+    private function exigirTorneo(int $torneoId, bool $json = false): ?array
+    {
+        $torneo = $this->torneoModel->getById($torneoId);
+        if (!$torneo || !$this->puedeGestionarTorneo($torneo)) {
+            http_response_code(403);
+            if ($json) {
+                echo json_encode(['success' => false, 'message' => 'No tienes permisos para administrar este torneo.']);
+                return null;
+            }
+            flashError('No tienes permisos para administrar este torneo.');
+            redirectRoute('torneos');
+            exit;
+        }
+        return $torneo;
+    }
     private $torneoModel;
     private $ligaModel;
     private $temporadaModel;
@@ -18,6 +94,10 @@ class TorneosController{
     public function __construct(PDO $db){
         $this->db = $db;
         $this->torneoModel = new Torneo($db);
+        $this->ligaModel = new Liga($db);
+        $this->temporadaModel = new Temporada($db);
+        $this->equipoModel = new Equipo($db);
+        $this->authorization = new AuthorizationService($db);
     }
 
     public function index()
@@ -39,7 +119,8 @@ class TorneosController{
         //configuramos filtros
         $filtros = [
             'estado'        =>  $_GET['estado'] ?? null,
-            'buscar'        =>  $_GET['buscar'] ?? null 
+            'buscar'        =>  $_GET['buscar'] ?? null,
+            'liga_ids'      =>  $this->idsLigasAutorizadas()
         ];
 
         //configuramos paginacion
@@ -48,7 +129,7 @@ class TorneosController{
 
         //configuramos toolbox
         $toolbox =[
-            'create'    =>  'index.php?page=torneos&action=create',
+            'create'    =>  ($this->idsLigasAutorizadas() === null || !empty($this->idsLigasAutorizadas())) ? 'index.php?page=torneos&action=create' : null,
             'filters'   =>  [
                  [
                     'type'      =>  'select',
@@ -126,6 +207,7 @@ class TorneosController{
     }
 
     public function create(){
+        if (!Auth::check()) { redirectRoute('login'); }
         unset($_SESSION['wizard_torneo']);
 
         $this->ligaModel = new Liga($this->db);
@@ -133,6 +215,10 @@ class TorneosController{
         $this->torneoModel = new Torneo($this->db);
 
         $ligas = $this->ligaModel->all();
+        $ligaIds = $this->idsLigasAutorizadas();
+        if ($ligaIds !== null) {
+            $ligas = array_values(array_filter($ligas, fn($liga) => in_array((int) $liga['id'], $ligaIds, true)));
+        }
         $temporadaActiva = $this->temporadaModel->getActiva();
         $torneos = $this->torneoModel->getAll();
 
@@ -173,6 +259,7 @@ class TorneosController{
             exit;
         }
 
+        if (!$this->exigirTorneo((int) $id, true)) return;
         $resultado = $this->torneoModel->eliminar($id);
 
         echo json_encode([
@@ -196,13 +283,12 @@ class TorneosController{
         }
 
         $temporadaActiva = $this->temporadaModel->getActiva();
-        $torneo = $this->torneoModel->getById($id);
-        $idLigaTorneo = $torneo['liga_id'];
-    
+        $torneo = $this->exigirTorneo((int) $id);
         if (!$torneo) {
             header('Location: index.php?page=torneos');
             exit;
         }
+        $idLigaTorneo = (int) $torneo['liga_id'];
 
          /**
          * CALCULAR PROGRESO DEL TORNEO
@@ -259,6 +345,7 @@ class TorneosController{
             ]);
             return;
         }
+        if (!$this->exigirTorneo((int) $torneoId, true)) return;
         //BORRAMOS Y REINSERTAMOS
         $this->torneoModel->limpiarEquipos($torneoId);
         foreach($equipos as $equipoId){
@@ -279,6 +366,11 @@ class TorneosController{
     public function guardarStep1()
     {
         header('Content-Type: application/json');
+        if (!Auth::check() || !$this->puedeGestionarLiga((int) ($_POST['liga_id'] ?? 0))) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'No tienes permisos sobre la liga seleccionada.']);
+            return;
+        }
 
         $data = [
             'liga_id'      => $_POST['liga_id'] ?? null,
@@ -308,7 +400,8 @@ class TorneosController{
         }
 
         // 👉 SI YA EXISTE, SOLO SE ACTUALIZA
-        $torneoId = $_SESSION['wizard_torneo']['torneo_id'];
+        $torneoId = (int) $_SESSION['wizard_torneo']['torneo_id'];
+        if (!$this->exigirTorneo($torneoId, true)) return;
         $data['estado'] = 'PLANEADO';
 
         $this->torneoModel->actualizar($torneoId, $data);
@@ -333,6 +426,7 @@ class TorneosController{
         }
 
         $torneoId = $_SESSION['wizard_torneo']['torneo_id'];
+        if (!$this->exigirTorneo((int) $torneoId, true)) return;
 
         $data = [
             'inscripcion'       => $_POST['inscripcion'] ?? 0,
@@ -362,6 +456,7 @@ class TorneosController{
         }
 
         $torneoId = $_SESSION['wizard_torneo']['torneo_id'];
+        if (!$this->exigirTorneo((int) $torneoId, true)) return;
         $data = [
             'modalidad' => $_POST['modalidad'] ?? 'todos contra todos',
             'tiene_liguilla' => $_POST['tiene_liguilla'] ?? 0,
@@ -390,6 +485,7 @@ class TorneosController{
         }
 
         $torneoId = $_SESSION['wizard_torneo']['torneo_id'];
+        if (!$this->exigirTorneo((int) $torneoId, true)) return;
 
         $data = [
             'tipo_bloques'     => $_POST['tipo_bloques'] ?? 'uno',
@@ -419,7 +515,7 @@ class TorneosController{
             exit;
         }
 
-        $torneo = $this->torneoModel->getById($torneoId);
+        $torneo = $this->exigirTorneo((int) $torneoId);
 
         if (!$torneo) {
             header('Location: index.php?page=torneos');
@@ -468,7 +564,7 @@ class TorneosController{
             return;
         }
 
-        $torneo = $this->torneoModel->getById($torneoId);
+        $torneo = $this->exigirTorneo((int) $torneoId, true);
 
         if (!$torneo) {
             echo json_encode([
