@@ -288,7 +288,7 @@ class Temporada
         $where = ['1 = 1'];
         $params = [];
 
-        if (array_key_exists('ids', $filtros)) {
+        if (isset($filtros['ids'])) {
             $ids = array_values(array_unique(array_filter(array_map('intval', (array) $filtros['ids']), fn($id) => $id > 0)));
             if (!$ids) {
                 $where[] = '1 = 0';
@@ -346,7 +346,7 @@ class Temporada
         $where = ['1 = 1'];
         $params = [];
 
-        if (array_key_exists('ids', $filtros)) {
+        if (isset($filtros['ids'])) {
             $ids = array_values(array_unique(array_filter(array_map('intval', (array) $filtros['ids']), fn($id) => $id > 0)));
             if (!$ids) {
                 $where[] = '1 = 0';
