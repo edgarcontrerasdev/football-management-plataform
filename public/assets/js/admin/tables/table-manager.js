@@ -1,9 +1,12 @@
 (function () {
     function renderWithAnimation(wrapper, html) {
+        const parsed = new DOMParser().parseFromString(html, 'text/html');
+        const updatedWrapper = parsed.querySelector('#table-wrapper');
         wrapper.classList.add('table-fade-exit-active');
 
         setTimeout(function () {
-            wrapper.innerHTML = html;
+            // Evita insertar un segundo #table-wrapper dentro del existente.
+            wrapper.innerHTML = updatedWrapper ? updatedWrapper.innerHTML : html;
             wrapper.classList.remove('table-fade-exit-active');
             wrapper.classList.add('table-fade-enter');
 
@@ -27,6 +30,11 @@
         `;
     }
 
+    function finishToolbarLoading() {
+        const toolbar = document.querySelector('.wrap-toolbar');
+        if (toolbar) toolbar.classList.remove('toolbar-loading');
+    }
+
     async function loadData(wrapper, url) {
         showLoader(wrapper);
         await new Promise(function (resolve) {
@@ -40,10 +48,12 @@
             const html = await response.text();
             setTimeout(function () {
                 renderWithAnimation(wrapper, html);
+                finishToolbarLoading();
             }, 300);
         } catch (error) {
             console.error('Error al cargar la tabla:', error);
             wrapper.innerHTML = '<p>Error al cargar datos</p>';
+            finishToolbarLoading();
         }
     }
 
@@ -57,12 +67,7 @@
         const wrapper = link.closest('#table-wrapper');
         if (!wrapper) return;
 
-        wrapper.innerHTML = `
-            <div class="table-ajax-loader">
-                <div class="spinner"></div>
-                <p>Cargando...</p>
-            </div>
-        `;
+        showLoader(wrapper);
 
         requestAnimationFrame(function () {
             fetch(link.getAttribute('href') + '&ajax=1')
@@ -71,13 +76,13 @@
                     return response.text();
                 })
                 .then(function (html) {
-                    setTimeout(function () {
-                        wrapper.innerHTML = html;
-                    }, 250);
+                    renderWithAnimation(wrapper, html);
+                    finishToolbarLoading();
                 })
                 .catch(function (error) {
                     console.error('Error al cambiar de página:', error);
                     wrapper.innerHTML = '<p>Error al cargar datos</p>';
+                    finishToolbarLoading();
                 });
         });
     });
