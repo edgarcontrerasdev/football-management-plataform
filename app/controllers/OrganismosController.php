@@ -351,7 +351,11 @@ class OrganismosController
     public function finalizarRelacion($id): void
     {
         $organismoId = (int) $id;
-        $this->verificarAcceso($organismoId);
+        if (Auth::role() !== 'ORGANISMO' || !$this->authorization->hasScope('organismo', $organismoId)) {
+            http_response_code(403);
+            view('403.php');
+            return;
+        }
         $relacionId = (int) ($_POST['relacion_id'] ?? 0);
         $fechaFin = trim((string) ($_POST['fecha_fin'] ?? ''));
         $url = 'index.php?page=organismos&action=detalles&id=' . $organismoId;
