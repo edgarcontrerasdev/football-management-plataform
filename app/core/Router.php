@@ -235,6 +235,26 @@ class Router
         $route = $this->routes[$this->page];
 
         /*
+         * Límites de navegación por jerarquía.
+         * Los permisos y alcances de cada entidad se validan además
+         * dentro de sus controladores; esta matriz evita entrar a módulos
+         * administrativos que no corresponden al rol.
+         */
+        $allowedPages = match ($this->rol) {
+            'ADMIN' => array_keys($this->routes),
+            'ORGANISMO' => ['dashboard', 'ligas', 'liga', 'equipos', 'temporadas', 'torneos', 'users', 'ajax'],
+            'LIGA' => ['liga', 'ligas', 'equipos', 'temporadas', 'torneos', 'ajax'],
+            'EQUIPO' => ['equipo', 'ajax'],
+            'SUPERVISOR' => ['dashboard', 'ligas', 'liga', 'equipos', 'temporadas', 'torneos', 'clubes', 'organismos', 'ajax'],
+            default => []
+        };
+
+        if (!in_array($this->page, $allowedPages, true)) {
+            $this->forbiddenPage();
+            return;
+        }
+
+        /*
          * ---------------------------------------------------------
          * VALIDAR PERMISO
          * ---------------------------------------------------------
