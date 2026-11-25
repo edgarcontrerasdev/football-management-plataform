@@ -65,7 +65,7 @@ foreach (($roles ?? []) as $rol) {
                             <select name="liga_id" id="liga_id" class="form-select">
                                 <option value="">Selecciona una liga</option>
                                 <?php foreach (($ligas ?? []) as $liga): ?>
-                                    <option value="<?= (int) $liga['id'] ?>" data-organismo="<?= (int) ($liga['organismo_id'] ?? 0) ?>" <?= (int) ($user['liga_id'] ?? 0) === (int) $liga['id'] ? 'selected' : '' ?>><?= $escape($liga['nombre']) ?></option>
+                                    <option value="<?= (int) $liga['id'] ?>" data-organismo="<?= (int) ($liga['organismo_id'] ?? 0) ?>" <?= (int) ($user['liga_id'] ?? 0) === (int) $liga['id'] && (int) ($user['organismo_id'] ?? 0) === (int) ($liga['organismo_id'] ?? 0) ? 'selected' : '' ?>><?= $escape($liga['nombre']) ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
