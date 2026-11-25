@@ -39,6 +39,13 @@ class LigasController
     private function ligasAutorizadas(): ?array
     {
         $rol = Auth::role();
+
+        // ADMIN tiene alcance global: null indica que no se debe aplicar
+        // ningún filtro por IDs de liga, incluyendo las ligas independientes.
+        if ($rol === 'ADMIN') {
+            return null;
+        }
+
         if ($rol === 'ORGANISMO') {
             $organismos = $this->authorization->getScopedEntityIds('organismo') ?? [];
             if (!$organismos) {
