@@ -8,10 +8,27 @@ class Torneo{
         $this->pdo = $pdo;
     }
 
-    public function getAll(){
-        $sql = "SELECT t.nombre,t.id,t.fecha_inicio,t.fecha_fin,t.estado,t.tipo,l.nombre AS liga 
-        FROM tb_torneos t INNER JOIN tb_ligas l WHERE t.liga_id = l.id";
-        $stm = $this->pdo->query($sql);
+    public function getAll(?array $ligaIds = null){
+        $sql = "SELECT t.nombre,t.id,t.fecha_inicio,t.fecha_fin,t.estado,t.tipo,l.nombre AS liga
+                FROM tb_torneos t INNER JOIN tb_ligas l ON t.liga_id = l.id";
+        $params = [];
+        if ($ligaIds !== null) {
+            $ids = array_values(array_unique(array_filter(array_map('intval', $ligaIds), fn($id) => $id > 0)));
+            if (!$ids) {
+                $sql .= " WHERE 1 = 0";
+            } else {
+                $holders = [];
+                foreach ($ids as $i => $id) {
+                    $key = ':liga_' . $i;
+                    $holders[] = $key;
+                    $params[$key] = $id;
+                }
+                $sql .= " WHERE t.liga_id IN (" . implode(',', $holders) . ")";
+            }
+        }
+        $sql .= " ORDER BY t.id DESC";
+        $stm = $this->pdo->prepare($sql);
+        $stm->execute($params);
         return $stm->fetchAll(PDO::FETCH_ASSOC);
     }
 
