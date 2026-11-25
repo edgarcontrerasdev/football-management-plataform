@@ -27,27 +27,32 @@ WHERE ua.tipo_entidad = 'liga'
   AND ua.estado = 'activo'
   AND ua.organismo_id IS NULL;
 
--- Para usuarios de equipo, hereda el organismo de su alcance de liga activo
--- solo cuando el usuario tiene una relación organizacional inequívoca.
+-- Prepara una tabla temporal para no actualizar y consultar la misma tabla
+-- dentro de una subconsulta correlacionada.
+DROP TEMPORARY TABLE IF EXISTS tmp_afec_usuario_equipo_org;
+CREATE TEMPORARY TABLE tmp_afec_usuario_equipo_org AS
+SELECT
+    alcance_equipo.id AS alcance_equipo_id,
+    MIN(relacion.organismo_id) AS organismo_id
+FROM tb_usuario_alcances alcance_equipo
+INNER JOIN tb_usuario_alcances alcance_liga
+    ON alcance_liga.usuario_id = alcance_equipo.usuario_id
+   AND alcance_liga.tipo_entidad = 'liga'
+   AND alcance_liga.estado = 'activo'
+INNER JOIN tb_liga_organismos relacion
+    ON relacion.liga_id = alcance_liga.entidad_id
+   AND relacion.estado = 'activo'
+WHERE alcance_equipo.tipo_entidad = 'equipo'
+  AND alcance_equipo.estado = 'activo'
+GROUP BY alcance_equipo.id
+HAVING COUNT(DISTINCT relacion.organismo_id) = 1;
+
 UPDATE tb_usuario_alcances equipo
-INNER JOIN (
-    SELECT
-        alcance_equipo.id AS alcance_equipo_id,
-        MIN(relacion.organismo_id) AS organismo_id
-    FROM tb_usuario_alcances alcance_equipo
-    INNER JOIN tb_usuario_alcances alcance_liga
-        ON alcance_liga.usuario_id = alcance_equipo.usuario_id
-       AND alcance_liga.tipo_entidad = 'liga'
-       AND alcance_liga.estado = 'activo'
-    INNER JOIN tb_liga_organismos relacion
-        ON relacion.liga_id = alcance_liga.entidad_id
-       AND relacion.estado = 'activo'
-    WHERE alcance_equipo.tipo_entidad = 'equipo'
-      AND alcance_equipo.estado = 'activo'
-    GROUP BY alcance_equipo.id
-    HAVING COUNT(DISTINCT relacion.organismo_id) = 1
-) asignacion ON asignacion.alcance_equipo_id = equipo.id
+INNER JOIN tmp_afec_usuario_equipo_org asignacion
+    ON asignacion.alcance_equipo_id = equipo.id
 SET equipo.organismo_id = asignacion.organismo_id
 WHERE equipo.organismo_id IS NULL
   AND equipo.tipo_entidad = 'equipo'
   AND equipo.estado = 'activo';
+
+DROP TEMPORARY TABLE IF EXISTS tmp_afec_usuario_equipo_org;
