@@ -468,7 +468,11 @@ class UsersController
             $errors[] = 'El nombre de usuario ya está registrado.';
         }
         $key = $this->roleKey($rolId);
-        $this->protectLastPlatformAdmin($user, $key);
+        try {
+            $this->protectLastPlatformAdmin($user, $key);
+        } catch (RuntimeException $e) {
+            $errors[] = $e->getMessage();
+        }
         if (in_array($key, ['ADMIN', 'SUPERVISOR', 'ORGANISMO'], true)) {
             $ligaId = $equipoId = null;
         } elseif ($key === 'LIGA') {
@@ -568,8 +572,13 @@ class UsersController
             exit;
         }
         $this->assertCanManageUser($target);
-        $this->protectLastPlatformAdmin($target, null, true);
-        $this->userModel->disable((int) $id);
+        try {
+            $this->protectLastPlatformAdmin($target, null, true);
+            $this->userModel->disable((int) $id);
+            $_SESSION['success'] = 'El usuario fue desactivado.';
+        } catch (RuntimeException $e) {
+            $_SESSION['error'] = $e->getMessage();
+        }
         header('Location: index.php?page=users');
         exit;
     }
