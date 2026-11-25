@@ -21,12 +21,12 @@
     </div>
 <?php endif; ?>
 
-<div class="card shadow-sm border-0 club-create-card">
+<div class="card shadow-sm border-0 club-create-card entity-form-card">
     <div class="card-body p-0">
         <form id="formCreateClub" action="index.php?page=clubes&action=store" method="POST" enctype="multipart/form-data">
-            <div class="row g-0">
-                <div class="col-lg-8 p-4">
-                    <section class="club-form-section">
+            <div class="row g-0 entity-form-grid">
+                <div class="col-lg-8 p-4 entity-form-main">
+                    <section class="club-form-section entity-form-section">
                         <h6 class="text-uppercase fw-bold mb-3">
                             <i class="fa-solid fa-circle-info me-2"></i>Identidad del club
                         </h6>
@@ -46,7 +46,7 @@
                         </div>
                     </section>
 
-                    <section class="club-form-section mt-4">
+                    <section class="club-form-section entity-form-section mt-4">
                         <h6 class="text-uppercase fw-bold mb-3">
                             <i class="fa-solid fa-file-lines me-2"></i>Información adicional
                         </h6>
@@ -58,7 +58,7 @@
                     </section>
                 </div>
 
-                <aside class="col-lg-4 p-4 club-create-aside">
+                <aside class="col-lg-4 p-4 club-create-aside entity-form-aside">
                     <section class="club-form-section">
                         <h6 class="text-uppercase fw-bold mb-3">
                             <i class="fa-solid fa-image me-2"></i>Logo del club
@@ -77,7 +77,7 @@
                 </aside>
             </div>
 
-            <div class="club-form-actions d-flex justify-content-end gap-2 p-3">
+            <div class="club-form-actions entity-form-actions d-flex justify-content-end gap-2 p-3">
                 <a href="index.php?page=clubes" class="btn btn-light">Cancelar</a>
                 <button type="submit" class="btn btn-primary">
                     <i class="fa-solid fa-floppy-disk me-1"></i>Guardar club
