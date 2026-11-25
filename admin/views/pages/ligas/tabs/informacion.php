@@ -149,7 +149,7 @@
                         <h6 class="fw-semibold mb-2">Solicitar vinculación a un organismo</h6>
                         <p class="text-muted mb-3">La solicitud será enviada al organismo seleccionado. La relación solo se activará si el organismo la aprueba.</p>
                         <?php $pendientesOrg = array_filter($solicitudesOrganismo ?? [], static fn($s) => ($s['estado'] ?? '') === 'pendiente'); ?>
-                        <?php if (!empty($organismosDisponibles) && count($pendientesOrg) < count($organismosDisponibles)): ?>
+                        <?php if (!empty($organismosDisponibles)): ?>
                             <form method="POST" action="index.php?page=ligas&action=solicitarVinculacionOrganismo" class="row g-2 align-items-end">
                                 <input type="hidden" name="liga_id" value="<?= (int) $liga['id'] ?>">
                                 <div class="col-md-5"><label class="form-label" for="organismo_solicitado">Organismo *</label><select class="form-select" id="organismo_solicitado" name="organismo_id" required><option value="">Selecciona un organismo</option><?php foreach ($organismosDisponibles as $orgDisponible): ?><option value="<?= (int) $orgDisponible['id'] ?>"><?= htmlspecialchars($orgDisponible['nombre'] . (!empty($orgDisponible['siglas']) ? ' (' . $orgDisponible['siglas'] . ')' : ''), ENT_QUOTES, 'UTF-8') ?></option><?php endforeach; ?></select></div>
