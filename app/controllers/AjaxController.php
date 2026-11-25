@@ -58,7 +58,7 @@ class AjaxController
             SELECT DISTINCT l.id, l.nombre, lo.organismo_id
             FROM tb_ligas l
             LEFT JOIN tb_liga_organismos lo
-                ON lo.liga_id = l.id AND lo.estado = 'activo'
+                ON lo.liga_id = l.id AND lo.estado = 'activo' AND lo.es_gestor = 1
             WHERE l.estado = 'activo'
         ";
         $params = [];
@@ -119,6 +119,7 @@ class AjaxController
                 WHERE lo.liga_id = l.id
                   AND lo.organismo_id = :organismo_id
                   AND lo.estado = 'activo'
+                  AND lo.es_gestor = 1
             )";
             $params[':organismo_id'] = $requestedOrganismoId;
         } elseif ($requestedOrganismoId === 0) {
