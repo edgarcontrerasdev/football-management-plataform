@@ -1,11 +1,10 @@
 <?php
 
-    require_once __DIR__.'../../core/Auth.php';
-
-    require_once __DIR__.'../../models/Torneo.php';
-    require_once __DIR__.'../../models/Liga.php';
-    require_once __DIR__.'../../models/Temporada.php';
-    require_once __DIR__.'../../models/Equipo.php';
+    require_once __DIR__ . '/../core/Auth.php';
+    require_once __DIR__ . '/../models/Torneo.php';
+    require_once __DIR__ . '/../models/Liga.php';
+    require_once __DIR__ . '/../models/Temporada.php';
+    require_once __DIR__ . '/../models/Equipo.php';
     require_once __DIR__ . '/../services/AuthorizationService.php';
 
 class TorneosController{
@@ -152,7 +151,7 @@ class TorneosController{
         $tor = $this->torneoModel->listar($filtros, $pagination['limit'], $pagination['offset']);
 
         $temporadaActiva    =   $this->temporadaModel->getActiva();
-        $torneos            =   $this->torneoModel->getAll();
+        $torneos            =   $this->torneoModel->getAll($this->idsLigasAutorizadas());
 
         //tabla final
         $tableData  =   TableService::make($tor,'torneos');
@@ -220,7 +219,7 @@ class TorneosController{
             $ligas = array_values(array_filter($ligas, fn($liga) => in_array((int) $liga['id'], $ligaIds, true)));
         }
         $temporadaActiva = $this->temporadaModel->getActiva();
-        $torneos = $this->torneoModel->getAll();
+        $torneos = $this->torneoModel->getAll($this->idsLigasAutorizadas());
 
        view('pages.torneos.create.php',[
             'ligas' => $ligas,
