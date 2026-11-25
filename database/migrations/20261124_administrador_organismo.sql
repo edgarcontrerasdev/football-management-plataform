@@ -37,6 +37,7 @@ INNER JOIN (
     SELECT liga_id, MIN(organismo_id) AS organismo_id
     FROM tb_liga_organismos
     WHERE estado = 'activo'
+      AND es_gestor = 1
     GROUP BY liga_id
     HAVING COUNT(DISTINCT organismo_id) = 1
 ) relacion ON relacion.liga_id = ua.entidad_id
@@ -60,6 +61,7 @@ INNER JOIN tb_usuario_alcances alcance_liga
 INNER JOIN tb_liga_organismos relacion
     ON relacion.liga_id = alcance_liga.entidad_id
    AND relacion.estado = 'activo'
+   AND relacion.es_gestor = 1
 WHERE alcance_equipo.tipo_entidad = 'equipo'
   AND alcance_equipo.estado = 'activo'
 GROUP BY alcance_equipo.id
