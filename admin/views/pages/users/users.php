@@ -71,7 +71,7 @@
                     <th>ACCIONES</th>
                 </tr>
             </thead>
-            <tbody id="tabla-body">
+            <tbody id="tabla-body" data-manager-role="<?= htmlspecialchars((string) Auth::role(), ENT_QUOTES, 'UTF-8') ?>">
                 <?php 
                 if (!empty($users)):         
                 foreach ($users as $user): 
@@ -107,25 +107,18 @@
                     </td>
 
                     <td class="text-center">
-                    <label class="switch">
-                        <input type="checkbox" class="toggle-user" data-id="<?= $user['id'] ?>"
-                        <?= $user['estado'] === 'activo' ? 'checked' : '' ?>>
-                        <span class="slider"></span>
-                    </label>
-
-                    <a href="index.php?page=users&action=edit&id=<?= $user['id'] ?>" class="btn-icon edit" title="Editar usuario">
-                        <svg xmlns="http://www.w3.org/2000/svg" 
-                            width="16" height="16" 
-                            viewBox="0 0 24 24" 
-                            fill="none" 
-                            stroke="currentColor" 
-                            stroke-width="2" 
-                            stroke-linecap="round" 
-                            stroke-linejoin="round">
-                            <path d="M12 20h9"/>
-                            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>
-                        </svg>
-                    </a>
+                    <?php $canManageUser = Auth::role() === 'ADMIN' || (Auth::role() === 'ORGANISMO' && in_array($user['rol_clave'] ?? '', ['LIGA', 'EQUIPO'], true)); ?>
+                    <?php if ($canManageUser): ?>
+                        <label class="switch">
+                            <input type="checkbox" class="toggle-user" data-id="<?= $user['id'] ?>" <?= $user['estado'] === 'activo' ? 'checked' : '' ?>>
+                            <span class="slider"></span>
+                        </label>
+                        <a href="index.php?page=users&action=edit&id=<?= $user['id'] ?>" class="btn-icon edit" title="Editar usuario">
+                            <i class="fa-solid fa-pen"></i>
+                        </a>
+                    <?php else: ?>
+                        <span class="text-muted small">Cuenta de administración</span>
+                    <?php endif; ?>
                     </td>
                 </tr>
                 <?php endforeach; ?>
