@@ -72,14 +72,18 @@ class UsersController
     {
         $organismoId = $this->currentOrganismoId();
         if ($this->isPlatformAdmin()) {
-            $roles = (new Role($this->db))->all();
+            $roles = array_values(array_filter(
+                (new Role($this->db))->all(),
+                static fn($role) => in_array(strtoupper((string) ($role['clave'] ?? '')), ['ADMIN', 'ORGANISMO', 'LIGA', 'EQUIPO'], true)
+                    && ($role['estado'] ?? 'activo') === 'activo'
+            ));
             $organismos = $this->db->query("
                 SELECT id, nombre
                 FROM tb_organismos
                 WHERE estado = 'activo'
                 ORDER BY nombre
             ")->fetchAll(PDO::FETCH_ASSOC);
-            $ligaWhere = "l.estado = 'activo'";
+            $ligaWhere = "l.estado = 'activo' AND lo.estado = 'activo'";
             $params = [];
         } else {
             $roles = array_values(array_filter(
@@ -149,8 +153,11 @@ class UsersController
             }
         }
 
-        if ($key === 'ADMIN' || $key === 'SUPERVISOR') {
+        if ($key === 'ADMIN') {
             return $this->isPlatformAdmin() ? [] : ['No tienes autorización para crear cuentas de administración global.'];
+        }
+        if ($key === 'SUPERVISOR') {
+            return ['El rol Supervisor aún no está habilitado para creación de cuentas; requiere asignación explícita de alcances.'];
         }
 
         if (!$organismoId) {
@@ -249,7 +256,22 @@ class UsersController
     {
         $this->requireManager();
         $roles = (new Role($this->db))->all();
-        $ligas = (new Liga($this->db))->all();
+        $organismoId = $this->currentOrganismoId();
+        if ($organismoId === null) {
+            $ligas = (new Liga($this->db))->all();
+        } else {
+            $stmt = $this->db->prepare("
+                SELECT DISTINCT l.id, l.nombre
+                FROM tb_ligas l
+                INNER JOIN tb_liga_organismos lo ON lo.liga_id = l.id
+                WHERE lo.organismo_id = :organismo_id
+                  AND lo.estado = 'activo'
+                  AND l.estado = 'activo'
+                ORDER BY l.nombre
+            ");
+            $stmt->execute([':organismo_id' => $organismoId]);
+            $ligas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
         $users = $this->userModel->filtrar([
             'estado' => $_GET['filtroEstado'] ?? 'all',
             'rol' => $_GET['filtroRol'] ?? null,
