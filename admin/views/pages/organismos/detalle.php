@@ -57,6 +57,7 @@ $e = static fn($v) => htmlspecialchars((string) ($v ?? ''), ENT_QUOTES, 'UTF-8')
                 <?php foreach ($solicitudesVinculacion as $solicitud): ?>
                     <div class="border rounded-3 p-3 mb-3">
                         <div class="d-flex flex-wrap justify-content-between gap-2 mb-2"><div><strong><?= $e($solicitud['liga_nombre']) ?></strong> <span class="text-muted"><?= $e($solicitud['siglas'] ?? '') ?></span><div class="small text-muted">Solicitó: <?= $e($solicitud['solicitante'] ?? 'Usuario') ?> (<?= $e($solicitud['solicitante_rol']) ?>) · <?= $e(date('d/m/Y H:i', strtotime($solicitud['fecha_solicitud']))) ?></div></div><span class="badge bg-warning text-dark">Pendiente</span></div>
+                        <?php if (Auth::role() === 'ORGANISMO'): ?>
                         <form method="POST" action="index.php?page=organismos&action=resolverSolicitudVinculacion&id=<?= (int) $organismo['id'] ?>">
                             <input type="hidden" name="solicitud_id" value="<?= (int) $solicitud['id'] ?>">
                             <div class="row g-2 align-items-end">
@@ -66,6 +67,7 @@ $e = static fn($v) => htmlspecialchars((string) ($v ?? ''), ENT_QUOTES, 'UTF-8')
                             </div>
                             <div class="d-flex justify-content-end gap-2 mt-3"><button class="btn btn-sm btn-outline-danger" name="decision" value="rechazar" type="submit">Rechazar</button><button class="btn btn-sm btn-primary" name="decision" value="aprobar" type="submit">Aprobar y vincular</button></div>
                         </form>
+                        <?php else: ?><p class="small text-muted mb-0">Solo el administrador autorizado del organismo puede resolver esta solicitud.</p><?php endif; ?>
                     </div>
                 <?php endforeach; ?>
             <?php else: ?><p class="text-muted mb-0">No hay solicitudes pendientes de revisión.</p><?php endif; ?>
