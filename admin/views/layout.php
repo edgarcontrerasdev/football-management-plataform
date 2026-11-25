@@ -3,7 +3,7 @@
         die('Vista no definida');
     }
     $page = $_GET['page'] ?? 'dashboard';
-    $isAdminManager = in_array(Auth::role(), ['ADMIN', 'SUPERVISOR'], true);
+    $isAdminManager = in_array(Auth::role(), ['ADMIN', 'ORGANISMO'], true);
     $isActivePage = static fn(string $key): string => $page === $key ? ' active' : '';
 ?>
 
