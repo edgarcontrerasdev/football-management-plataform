@@ -30,6 +30,20 @@ $escape = static fn($value) => htmlspecialchars((string) ($value ?? ''), ENT_QUO
                         <label class="form-label" for="password">Contraseña</label>
                         <input type="password" id="password" name="password" class="form-control" autocomplete="new-password" required>
                     </div>
+                    <?php if (Auth::role() === 'ADMIN'): ?>
+                        <div class="mb-3 d-none" id="boxOrganismo">
+                            <label class="form-label" for="organismo_id">Organismo responsable</label>
+                            <select name="organismo_id" id="organismo_id" class="form-select">
+                                <option value="">Selecciona un organismo</option>
+                                <?php foreach (($organismos ?? []) as $organismo): ?>
+                                    <option value="<?= (int) $organismo['id'] ?>"><?= $escape($organismo['nombre']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <small class="form-text">El administrador de organismo solo podrá gestionar este ámbito.</small>
+                        </div>
+                    <?php else: ?>
+                        <input type="hidden" name="organismo_id" id="organismo_id" value="<?= (int) ($organismoId ?? 0) ?>">
+                    <?php endif; ?>
                     <div class="mb-3">
                         <label class="form-label" for="rol_id">Rol de acceso</label>
                         <select name="rol_id" id="rol_id" class="form-select" required>
