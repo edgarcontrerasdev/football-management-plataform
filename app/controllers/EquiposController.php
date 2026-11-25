@@ -36,7 +36,34 @@
             }
 
             if (in_array($rol, ['ORGANISMO', 'LIGA'], true)) {
-                $ligaIds = $this->authorization->getScopedEntityIds('liga') ?? [];
+                if ($rol === 'ORGANISMO') {
+                    $organismoIds = $this->authorization->getScopedEntityIds('organismo') ?? [];
+                    if (!$organismoIds) {
+                        return [];
+                    }
+
+                    $placeholders = [];
+                    $params = [];
+                    foreach (array_values($organismoIds) as $i => $organismoId) {
+                        $key = ':organismo_' . $i;
+                        $placeholders[] = $key;
+                        $params[$key] = (int) $organismoId;
+                    }
+
+                    $sqlLigas = "
+                        SELECT DISTINCT liga_id
+                        FROM tb_liga_organismos
+                        WHERE organismo_id IN (" . implode(',', $placeholders) . ")
+                          AND estado = 'activo'
+                          AND es_gestor = 1
+                    ";
+                    $stmtLigas = $this->db->prepare($sqlLigas);
+                    $stmtLigas->execute($params);
+                    $ligaIds = array_map('intval', $stmtLigas->fetchAll(PDO::FETCH_COLUMN));
+                } else {
+                    $ligaIds = $this->authorization->getScopedEntityIds('liga') ?? [];
+                }
+
                 if (!$ligaIds) {
                     return [];
                 }
