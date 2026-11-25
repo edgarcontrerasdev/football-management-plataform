@@ -131,8 +131,8 @@ class UsersController
             SELECT DISTINCT l.id, l.nombre, lo.organismo_id
             FROM tb_ligas l
             " . ($this->isPlatformAdmin()
-                ? "LEFT JOIN tb_liga_organismos lo ON lo.liga_id = l.id AND lo.estado = 'activo'"
-                : "INNER JOIN tb_liga_organismos lo ON lo.liga_id = l.id AND lo.estado = 'activo'") . "
+                ? "LEFT JOIN tb_liga_organismos lo ON lo.liga_id = l.id AND lo.estado = 'activo' AND lo.es_gestor = 1 AND lo.es_gestor = 1"
+                : "INNER JOIN tb_liga_organismos lo ON lo.liga_id = l.id AND lo.estado = 'activo' AND lo.es_gestor = 1 AND lo.es_gestor = 1") . "
             WHERE {$ligaWhere}
             ORDER BY l.nombre
         ";
@@ -147,8 +147,8 @@ class UsersController
             INNER JOIN tb_liga_temporadas lt ON lt.id = le.liga_temporada_id
             INNER JOIN tb_ligas l ON l.id = lt.liga_id
             " . ($this->isPlatformAdmin()
-                ? "LEFT JOIN tb_liga_organismos lo ON lo.liga_id = l.id AND lo.estado = 'activo'"
-                : "INNER JOIN tb_liga_organismos lo ON lo.liga_id = l.id AND lo.estado = 'activo'") . "
+                ? "LEFT JOIN tb_liga_organismos lo ON lo.liga_id = l.id AND lo.estado = 'activo' AND lo.es_gestor = 1 AND lo.es_gestor = 1"
+                : "INNER JOIN tb_liga_organismos lo ON lo.liga_id = l.id AND lo.estado = 'activo' AND lo.es_gestor = 1 AND lo.es_gestor = 1") . "
             WHERE le.estado_participacion = 'activo'
               AND lt.estado = 'activo'
               AND l.estado = 'activo'
@@ -222,6 +222,7 @@ class UsersController
                   AND l.estado = 'activo'
                   AND lo.organismo_id = :organismo_id
                   AND lo.estado = 'activo'
+                  AND lo.es_gestor = 1
             ");
             $ligaCheck->execute([':liga_id' => $ligaId, ':organismo_id' => $organismoId]);
         } else {
@@ -235,7 +236,7 @@ class UsersController
                   AND l.estado = 'activo'
                   AND NOT EXISTS (
                       SELECT 1 FROM tb_liga_organismos lo
-                      WHERE lo.liga_id = l.id AND lo.estado = 'activo'
+                      WHERE lo.liga_id = l.id AND lo.estado = 'activo' AND lo.es_gestor = 1 AND lo.es_gestor = 1
                   )
             ");
             $ligaCheck->execute([':liga_id' => $ligaId]);
