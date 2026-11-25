@@ -76,7 +76,7 @@ class Liga
             LIMIT 1
         ");
 
-        return $stmt->execute([
+        $stmt->execute([
             ':nombre' => trim((string) $data['nombre']),
             ':siglas' => ($data['siglas'] ?? '') !== '' ? trim((string) $data['siglas']) : null,
             ':estado' => $data['estado'] ?? 'activo',
