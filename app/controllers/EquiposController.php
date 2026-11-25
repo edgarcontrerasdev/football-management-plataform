@@ -10,11 +10,90 @@
     {
         private PDO $db;
         private $equipoModel;
-        private $ligaModel;
+        private AuthorizationService $authorization;
 
         public function __construct(PDO $db){
             $this->db = $db;
             $this->equipoModel = new Equipo($db);
+            $this->authorization = new AuthorizationService($db);
+        }
+
+        /**
+         * IDs de equipos visibles según los alcances efectivos del usuario.
+         * ADMIN es global; ORGANISMO y LIGA heredan equipos de sus ligas;
+         * EQUIPO recibe únicamente el equipo asignado directamente.
+         */
+        private function equiposAutorizados(): ?array
+        {
+            $rol = Auth::role();
+
+            if ($rol === 'ADMIN') {
+                return null;
+            }
+
+            if ($rol === 'EQUIPO') {
+                return $this->authorization->getScopedEntityIds('equipo') ?? [];
+            }
+
+            if (in_array($rol, ['ORGANISMO', 'LIGA'], true)) {
+                $ligaIds = $this->authorization->getScopedEntityIds('liga') ?? [];
+                if (!$ligaIds) {
+                    return [];
+                }
+
+                $placeholders = [];
+                $params = [];
+                foreach (array_values($ligaIds) as $i => $ligaId) {
+                    $key = ':liga_' . $i;
+                    $placeholders[] = $key;
+                    $params[$key] = (int) $ligaId;
+                }
+
+                $sql = "
+                    SELECT DISTINCT le.equipo_id
+                    FROM tb_liga_equipos le
+                    INNER JOIN tb_liga_temporadas lt
+                        ON lt.id = le.liga_temporada_id
+                    WHERE lt.liga_id IN (" . implode(',', $placeholders) . ")
+                      AND lt.estado = 'activo'
+                      AND le.estado_participacion = 'activo'
+                ";
+                $stmt = $this->db->prepare($sql);
+                $stmt->execute($params);
+                return array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+            }
+
+            // SUPERVISOR también requiere un alcance explícito.
+            return $this->authorization->getScopedEntityIds('equipo') ?? [];
+        }
+
+        private function exigirAccesoEquipo(int $equipoId, bool $json = false): void
+        {
+            $ids = $this->equiposAutorizados();
+            if ($ids === null || in_array($equipoId, $ids, true)) {
+                return;
+            }
+
+            http_response_code(403);
+            if ($json) {
+                header('Content-Type: application/json; charset=utf-8');
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'No tienes autorización para administrar este equipo.'
+                ]);
+            } else {
+                view('403.php');
+            }
+            exit;
+        }
+
+        private function exigirCreacionEquipo(): void
+        {
+            if (Auth::role() !== 'ADMIN') {
+                http_response_code(403);
+                view('403.php');
+                exit;
+            }
         }
 
         //listar equipos
@@ -28,9 +107,13 @@
             // El listado general muestra entidades equipo.
             // Los filtros de liga y estado pertenecen a sus relaciones,
             // no a la tabla base tb_equipos.
+            $idsAutorizados = $this->equiposAutorizados();
             $filtros = [
                 'buscar' => $_GET['buscar'] ?? null
             ];
+            if ($idsAutorizados !== null) {
+                $filtros['ids'] = $idsAutorizados;
+            }
 
             // 🔹 Paginación
             $total = $this->equipoModel->contar($filtros);
@@ -45,7 +128,7 @@
 
             // 🔹Configuracion del Toolbox
             $toolbox = [
-                'create' => 'index.php?page=equipos&action=create',
+                'create' => Auth::role() === 'ADMIN' ? 'index.php?page=equipos&action=create' : null,
                 'filters' => [
                     [
                         'type' => 'search',
@@ -79,6 +162,8 @@
         // Ver detalle de equipo
         public function detalles($id) {
 
+            $id = (int) $id;
+            $this->exigirAccesoEquipo($id);
             $equipo = $this->equipoModel->getById($id);
 
             if (!$equipo) {
@@ -107,6 +192,7 @@
         public function editar($id)
         {
             $id = (int) $id;
+            $this->exigirAccesoEquipo($id);
             $equipo = $this->equipoModel->getById($id);
 
             if (!$equipo) {
@@ -132,6 +218,7 @@
         public function actualizar($id)
         {
             $id = (int) $id;
+            $this->exigirAccesoEquipo($id);
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 header('Location: index.php?page=equipos');
                 exit;
@@ -225,7 +312,15 @@
         }
 
         public function dashboard(){
-            $equipo = $this->equipoModel->getById(10);
+            $ids = $this->equiposAutorizados();
+            $equipoId = $ids === null ? 10 : (int) ($ids[0] ?? 0);
+            if ($equipoId <= 0) {
+                http_response_code(403);
+                view('403.php');
+                return;
+            }
+            $this->exigirAccesoEquipo($equipoId);
+            $equipo = $this->equipoModel->getById($equipoId);
             $viewPath = ROOT_PATH.'/admin/views/pages/equipos/dashboard.php';
             if(!file_exists($viewPath)){
                 $viewPath = ROOT_PATH.'/admin/views/404.php';
@@ -244,6 +339,7 @@
             }
 
             $equipoId = (int) $_POST['equipo_id'];
+            $this->exigirAccesoEquipo($equipoId, true);
             $archivo = $_FILES['escudo'];
 
             $equipo = $this->equipoModel->getById($equipoId);
@@ -403,7 +499,10 @@
         public function guardarContacto(){
             header('Content-Type: application/json');
             if($_SERVER['REQUEST_METHOD'] === 'POST'){
-                $equipoId = $_POST['equipo_id'] ?? null;
+                $equipoId = (int) ($_POST['equipo_id'] ?? 0);
+                if ($equipoId > 0) {
+                    $this->exigirAccesoEquipo($equipoId, true);
+                }
 
                 if (!$equipoId){
                     echo json_encode([
@@ -437,6 +536,7 @@
         // Vista para crear equipo como entidad independiente.
         public function create()
         {
+            $this->exigirCreacionEquipo();
             $error = $_SESSION['equipo_error'] ?? null;
             unset($_SESSION['equipo_error']);
 
@@ -451,6 +551,7 @@
         // Registrar la entidad base del equipo y su escudo opcional.
         public function store()
         {
+            $this->exigirCreacionEquipo();
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 header('Location: index.php?page=equipos&action=create');
                 exit;
