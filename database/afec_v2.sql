@@ -2753,10 +2753,11 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- Datos iniciales mínimos de sistema
 -- -------------------------------------------------------------
 INSERT INTO tb_roles (clave, nombre, descripcion) VALUES
-('ADMIN', 'Administrador', 'Acceso administrativo general.'),
-('SUPERVISOR', 'Supervisor', 'Supervisión operativa.'),
-('LIGA', 'Liga', 'Operación de una liga dentro de sus alcances.'),
-('EQUIPO', 'Equipo', 'Operación de un equipo dentro de sus alcances.');
+('ADMIN', 'Administrador de plataforma', 'Administración global y excepcional de la plataforma.'),
+('ORGANISMO', 'Administrador de organismo', 'Administración de usuarios y entidades dentro de un organismo autorizado.'),
+('SUPERVISOR', 'Supervisor', 'Supervisión operativa dentro de los alcances asignados.'),
+('LIGA', 'Administrador de liga', 'Operación de una liga dentro de sus alcances.'),
+('EQUIPO', 'Administrador de equipo', 'Operación de un equipo dentro de sus alcances.');
 
 -- Nota: permisos, catálogos de dominio y configuraciones específicas de AFEC
 -- se sembrarán en una etapa posterior, una vez aprobada la matriz de permisos
