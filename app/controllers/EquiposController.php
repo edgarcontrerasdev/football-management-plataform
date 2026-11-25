@@ -384,7 +384,10 @@
         public function guardarGenerales(){
             header('Content-Type: application/json');
             if($_SERVER['REQUEST_METHOD'] === 'POST'){
-                $equipoId = $_POST['equipo_id'] ?? null;
+                $equipoId = (int) ($_POST['equipo_id'] ?? 0);
+                if ($equipoId > 0) {
+                    $this->exigirAccesoEquipo($equipoId, true);
+                }
 
                 if(!$equipoId){
                     echo json_encode([
@@ -441,7 +444,10 @@
 
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-                $equipoId = $_POST['equipo_id'] ?? null;
+                $equipoId = (int) ($_POST['equipo_id'] ?? 0);
+                if ($equipoId > 0) {
+                    $this->exigirAccesoEquipo($equipoId, true);
+                }
 
                 if (!$equipoId) {
                     echo json_encode([
