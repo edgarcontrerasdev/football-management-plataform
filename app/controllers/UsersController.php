@@ -371,6 +371,7 @@ class UsersController
                 INNER JOIN tb_liga_organismos lo ON lo.liga_id = l.id
                 WHERE lo.organismo_id = :organismo_id
                   AND lo.estado = 'activo'
+                  AND lo.es_gestor = 1
                   AND l.estado = 'activo'
                 ORDER BY l.nombre
             ");
@@ -381,7 +382,8 @@ class UsersController
             'estado' => $_GET['filtroEstado'] ?? 'all',
             'rol' => $_GET['filtroRol'] ?? null,
             'filtro' => trim((string) ($_GET['filtro'] ?? '')),
-            'organismo' => $this->currentOrganismoId()
+            'organismo' => $this->currentOrganismoId(),
+            'roles_permitidos' => $this->isPlatformAdmin() ? null : ['LIGA', 'EQUIPO']
         ]);
         $viewPath = ROOT_PATH . '/admin/views/pages/users/users.php';
         include ROOT_PATH . '/admin/views/layout.php';
