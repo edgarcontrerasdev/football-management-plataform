@@ -74,6 +74,31 @@ class UsersController
         }
     }
 
+    private function protectLastPlatformAdmin(array $target, ?string $newRoleKey = null, bool $deactivating = false): void
+    {
+        if (strtoupper((string) ($target['rol_clave'] ?? '')) !== 'ADMIN') {
+            return;
+        }
+
+        $removingAdmin = $deactivating || ($newRoleKey !== null && $newRoleKey !== 'ADMIN');
+        if (!$removingAdmin) {
+            return;
+        }
+
+        $count = (int) $this->db->query("
+            SELECT COUNT(*)
+            FROM tb_usuarios u
+            INNER JOIN tb_roles r ON r.id = u.rol_id
+            WHERE r.clave = 'ADMIN'
+              AND r.estado = 'activo'
+              AND u.estado = 'activo'
+        ")->fetchColumn();
+
+        if ($count <= 1) {
+            throw new RuntimeException('No puedes desactivar o convertir al último administrador de plataforma. Crea primero otra cuenta ADMIN.');
+        }
+    }
+
     private function catalogos(): array
     {
         $organismoId = $this->currentOrganismoId();
@@ -443,6 +468,7 @@ class UsersController
             $errors[] = 'El nombre de usuario ya está registrado.';
         }
         $key = $this->roleKey($rolId);
+        $this->protectLastPlatformAdmin($user, $key);
         if (in_array($key, ['ADMIN', 'SUPERVISOR', 'ORGANISMO'], true)) {
             $ligaId = $equipoId = null;
         } elseif ($key === 'LIGA') {
@@ -522,6 +548,9 @@ class UsersController
                 throw new RuntimeException('Usuario no encontrado.');
             }
             $this->assertCanManageUser($target);
+            if (!$active) {
+                $this->protectLastPlatformAdmin($target, null, true);
+            }
             $this->userModel->update($id, ['estado' => $active ? 'activo' : 'inactivo']);
             echo json_encode(['success' => true]);
         } catch (Throwable $e) {
@@ -539,6 +568,7 @@ class UsersController
             exit;
         }
         $this->assertCanManageUser($target);
+        $this->protectLastPlatformAdmin($target, null, true);
         $this->userModel->disable((int) $id);
         header('Location: index.php?page=users');
         exit;
