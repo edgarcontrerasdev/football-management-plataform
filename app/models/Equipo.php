@@ -238,6 +238,21 @@ class Equipo{
             $params[':buscar'] = '%' . trim($filtros['buscar']) . '%';
         }
 
+        if (array_key_exists('ids', $filtros)) {
+            $ids = array_values(array_unique(array_filter(array_map('intval', (array) $filtros['ids']), fn($id) => $id > 0)));
+            if (!$ids) {
+                $sql .= " AND 1 = 0";
+            } else {
+                $placeholders = [];
+                foreach ($ids as $i => $id) {
+                    $key = ':equipo_scope_' . $i;
+                    $placeholders[] = $key;
+                    $params[$key] = $id;
+                }
+                $sql .= " AND e.id IN (" . implode(',', $placeholders) . ")";
+            }
+        }
+
         $sql .= " ORDER BY e.nombre ASC LIMIT :limit OFFSET :offset";
 
         $stmt = $this->pdo->prepare($sql);
@@ -261,6 +276,21 @@ class Equipo{
         if (!empty($filtros['buscar'])) {
             $sql .= " AND (e.nombre LIKE :buscar OR e.siglas LIKE :buscar)";
             $params[':buscar'] = '%' . trim($filtros['buscar']) . '%';
+        }
+
+        if (array_key_exists('ids', $filtros)) {
+            $ids = array_values(array_unique(array_filter(array_map('intval', (array) $filtros['ids']), fn($id) => $id > 0)));
+            if (!$ids) {
+                $sql .= " AND 1 = 0";
+            } else {
+                $placeholders = [];
+                foreach ($ids as $i => $id) {
+                    $key = ':equipo_scope_' . $i;
+                    $placeholders[] = $key;
+                    $params[$key] = $id;
+                }
+                $sql .= " AND e.id IN (" . implode(',', $placeholders) . ")";
+            }
         }
 
         $stmt = $this->pdo->prepare($sql);
