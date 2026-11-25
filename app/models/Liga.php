@@ -97,8 +97,14 @@ class Liga
     /**
      * Registra una liga independiente. Su organismo gestor podrá vincularse después.
      */
-    public function crear(array $data): bool
+    public function crear(array $data, ?int $organismoId = null): bool
     {
+        $inTransaction = $this->pdo->inTransaction();
+        if (!$inTransaction) {
+            $this->pdo->beginTransaction();
+        }
+
+        try {
         $stmt = $this->pdo->prepare("
             INSERT INTO tb_ligas (
                 nombre, siglas, estado, logo, correo, telefono, direccion, colonia,
@@ -124,6 +130,31 @@ class Liga
             ':redes_sociales' => ($data['redes_sociales'] ?? '') !== '' ? trim((string) $data['redes_sociales']) : null,
             ':notas' => ($data['notas'] ?? '') !== '' ? trim((string) $data['notas']) : null
         ]);
+
+        $ligaId = (int) $this->pdo->lastInsertId();
+        if ($organismoId !== null) {
+            $relacion = $this->pdo->prepare("
+                INSERT INTO tb_liga_organismos
+                    (liga_id, organismo_id, tipo_relacion, es_gestor, fecha_inicio, estado)
+                VALUES
+                    (:liga_id, :organismo_id, 'gestor', 1, CURDATE(), 'activo')
+            ");
+            $relacion->execute([
+                ':liga_id' => $ligaId,
+                ':organismo_id' => $organismoId
+            ]);
+        }
+
+        if (!$inTransaction) {
+            $this->pdo->commit();
+        }
+        return true;
+        } catch (Throwable $e) {
+            if (!$inTransaction && $this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $e;
+        }
     }
 
     public function listar(
