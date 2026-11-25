@@ -422,7 +422,7 @@ class TorneosController{
 
         $ligaId = (int) ($_POST['liga_id'] ?? 0);
         $temporadaId = (int) ($_POST['temporada_id'] ?? 0);
-        if (!$this->temporadaPerteneceALiga($temporadaId, $ligaId)) {
+        if ($temporadaId > 0 && !$this->temporadaPerteneceALiga($temporadaId, $ligaId)) {
             http_response_code(422);
             echo json_encode(['success' => false, 'message' => 'La temporada seleccionada no pertenece a la liga o no está vinculada activamente.']);
             return;
