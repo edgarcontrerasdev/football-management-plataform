@@ -1,8 +1,15 @@
 <?php
 
 return [
-    ['type' => 'text', 'field' => 'nombre', 'title' => 'ORGANISMO'],
-    ['type' => 'text', 'field' => 'siglas', 'title' => 'SIGLAS'],
+    [
+        'type' => 'image',
+        'folder' => 'organismos',
+        'imageField' => 'logo',
+        'textField' => 'nombre',
+        'subField' => 'siglas',
+        'defaultImage' => 'ligas/default.png',
+        'title' => 'ORGANISMO'
+    ],
     ['type' => 'text', 'field' => 'tipo', 'title' => 'TIPO'],
     ['type' => 'text', 'field' => 'alcance_territorial', 'title' => 'ALCANCE'],
     ['type' => 'status', 'field' => 'estado', 'title' => 'ESTADO', 'source' => 'general'],
