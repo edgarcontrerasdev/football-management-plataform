@@ -256,6 +256,110 @@ public function listar(array $filtros = [], int $limit = 10, int $offset = 0): a
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function listarSolicitudesVinculacion(int $organismoId): array
+    {
+        $stmt = $this->pdo->prepare("
+            SELECT s.id, s.liga_id, l.nombre AS liga_nombre, l.siglas,
+                   s.solicitante_rol, s.fecha_solicitud, s.observaciones,
+                   u.usuario AS solicitante
+            FROM tb_liga_organismo_solicitudes s
+            INNER JOIN tb_ligas l ON l.id = s.liga_id
+            LEFT JOIN tb_usuarios u ON u.id = s.solicitante_usuario_id
+            WHERE s.organismo_id = :organismo_id AND s.estado = 'pendiente'
+            ORDER BY s.fecha_solicitud ASC, s.id ASC
+        ");
+        $stmt->execute([':organismo_id' => $organismoId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function resolverSolicitudVinculacion(
+        int $organismoId,
+        int $solicitudId,
+        int $usuarioId,
+        string $decision,
+        array $data = []
+    ): void {
+        if (!in_array($decision, ['aprobar', 'rechazar'], true)) {
+            throw new InvalidArgumentException('La decisión no es válida.');
+        }
+        $this->pdo->beginTransaction();
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT * FROM tb_liga_organismo_solicitudes
+                WHERE id = :id AND organismo_id = :organismo_id AND estado = 'pendiente'
+                FOR UPDATE
+            ");
+            $stmt->execute([':id' => $solicitudId, ':organismo_id' => $organismoId]);
+            $solicitud = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$solicitud) {
+                throw new InvalidArgumentException('La solicitud ya fue atendida o no pertenece a este organismo.');
+            }
+
+            if ($decision === 'aprobar') {
+                $tipo = trim((string) ($data['tipo_relacion'] ?? 'afiliacion'));
+                if (!in_array($tipo, ['gestion', 'afiliacion', 'colaboracion', 'otro'], true)) {
+                    throw new InvalidArgumentException('El tipo de relación no es válido.');
+                }
+                $esGestor = !empty($data['es_gestor']) ? 1 : 0;
+                $ligaLock = $this->pdo->prepare("SELECT id FROM tb_ligas WHERE id = :id AND estado = 'activo' FOR UPDATE");
+                $ligaLock->execute([':id' => (int) $solicitud['liga_id']]);
+                if (!$ligaLock->fetchColumn()) {
+                    throw new InvalidArgumentException('La liga ya no está disponible.');
+                }
+                $relacion = $this->pdo->prepare("
+                    SELECT id FROM tb_liga_organismos
+                    WHERE liga_id = :liga_id AND organismo_id = :organismo_id AND estado = 'activo'
+                    LIMIT 1 FOR UPDATE
+                ");
+                $relacion->execute([':liga_id' => (int) $solicitud['liga_id'], ':organismo_id' => $organismoId]);
+                if ($relacion->fetchColumn()) {
+                    throw new InvalidArgumentException('La liga ya tiene una relación vigente con este organismo.');
+                }
+                if ($esGestor === 1) {
+                    $gestor = $this->pdo->prepare("
+                        SELECT organismo_id FROM tb_liga_organismos
+                        WHERE liga_id = :liga_id AND es_gestor = 1 AND estado = 'activo'
+                        LIMIT 1 FOR UPDATE
+                    ");
+                    $gestor->execute([':liga_id' => (int) $solicitud['liga_id']]);
+                    if ($gestor->fetchColumn()) {
+                        throw new InvalidArgumentException('La liga ya tiene un organismo gestor. Para cambiarlo se requiere un proceso de transferencia autorizado.');
+                    }
+                }
+                $insert = $this->pdo->prepare("
+                    INSERT INTO tb_liga_organismos
+                        (liga_id, organismo_id, tipo_relacion, es_gestor, fecha_inicio, estado, observaciones)
+                    VALUES (:liga_id, :organismo_id, :tipo_relacion, :es_gestor, CURDATE(), 'activo', :observaciones)
+                ");
+                $insert->execute([
+                    ':liga_id' => (int) $solicitud['liga_id'],
+                    ':organismo_id' => $organismoId,
+                    ':tipo_relacion' => $tipo,
+                    ':es_gestor' => $esGestor,
+                    ':observaciones' => $data['observaciones'] ?? null
+                ]);
+            }
+
+            $update = $this->pdo->prepare("
+                UPDATE tb_liga_organismo_solicitudes
+                SET estado = :estado, fecha_resolucion = NOW(),
+                    resuelto_por_usuario_id = :usuario_id,
+                    respuesta = :respuesta
+                WHERE id = :id AND estado = 'pendiente'
+            ");
+            $update->execute([
+                ':estado' => $decision === 'aprobar' ? 'aprobada' : 'rechazada',
+                ':usuario_id' => $usuarioId,
+                ':respuesta' => trim((string) ($data['respuesta'] ?? '')) ?: null,
+                ':id' => $solicitudId
+            ]);
+            $this->pdo->commit();
+        } catch (Throwable $e) {
+            if ($this->pdo->inTransaction()) $this->pdo->rollBack();
+            throw $e;
+        }
+    }
+
     public function listarLigasDisponibles(int $organismoId): array
     {
         $stmt = $this->pdo->prepare("
@@ -301,12 +405,15 @@ public function listar(array $filtros = [], int $limit = 10, int $offset = 0): a
 
             $esGestor = !empty($data['es_gestor']) ? 1 : 0;
             if ($esGestor === 1) {
-                $cerrar = $this->pdo->prepare("
-                    UPDATE tb_liga_organismos
-                    SET estado = 'inactivo', fecha_fin = :fecha_fin
+                $gestor = $this->pdo->prepare("
+                    SELECT organismo_id FROM tb_liga_organismos
                     WHERE liga_id = :liga_id AND es_gestor = 1 AND estado = 'activo'
+                    LIMIT 1 FOR UPDATE
                 ");
-                $cerrar->execute([':fecha_fin' => $data['fecha_inicio'], ':liga_id' => $ligaId]);
+                $gestor->execute([':liga_id' => $ligaId]);
+                if ($gestor->fetchColumn()) {
+                    throw new InvalidArgumentException('La liga ya tiene un organismo gestor. Para cambiarlo se requiere una transferencia autorizada.');
+                }
             }
 
             $insert = $this->pdo->prepare("
