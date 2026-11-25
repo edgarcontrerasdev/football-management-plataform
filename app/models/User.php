@@ -22,21 +22,22 @@ class User
                 r.clave AS rol_clave,
                 r.nombre AS rol_nombre,
                 (
-                    SELECT ua.entidad_id
+                    SELECT COALESCE(ua.organismo_id, CASE WHEN ua.tipo_entidad = 'organismo' THEN ua.entidad_id END)
                     FROM tb_usuario_alcances ua
                     WHERE ua.usuario_id = u.id
-                      AND ua.tipo_entidad = 'organismo'
                       AND ua.estado = 'activo'
-                    ORDER BY ua.id DESC LIMIT 1
+                    ORDER BY CASE ua.tipo_entidad WHEN 'organismo' THEN 0 WHEN 'liga' THEN 1 ELSE 2 END, ua.id DESC
+                    LIMIT 1
                 ) AS organismo_id,
                 (
                     SELECT o.nombre
                     FROM tb_usuario_alcances ua
-                    INNER JOIN tb_organismos o ON o.id = ua.entidad_id
+                    INNER JOIN tb_organismos o
+                        ON o.id = COALESCE(ua.organismo_id, CASE WHEN ua.tipo_entidad = 'organismo' THEN ua.entidad_id END)
                     WHERE ua.usuario_id = u.id
-                      AND ua.tipo_entidad = 'organismo'
                       AND ua.estado = 'activo'
-                    ORDER BY ua.id DESC LIMIT 1
+                    ORDER BY CASE ua.tipo_entidad WHEN 'organismo' THEN 0 WHEN 'liga' THEN 1 ELSE 2 END, ua.id DESC
+                    LIMIT 1
                 ) AS organismo,
                 (
                     SELECT ua.entidad_id
