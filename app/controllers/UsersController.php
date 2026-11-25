@@ -24,13 +24,21 @@ class UsersController
     private function catalogos(): array
     {
         $roles = (new Role($this->db))->all();
-        $ligas = $this->db->query("SELECT id, nombre FROM tb_ligas ORDER BY nombre")->fetchAll(PDO::FETCH_ASSOC);
+        $ligas = $this->db->query("
+            SELECT id, nombre
+            FROM tb_ligas
+            WHERE estado = 'activo'
+            ORDER BY nombre
+        ")->fetchAll(PDO::FETCH_ASSOC);
         $equipos = $this->db->query("
             SELECT DISTINCT e.id, e.nombre, lt.liga_id
             FROM tb_equipos e
             INNER JOIN tb_liga_equipos le ON le.equipo_id = e.id
             INNER JOIN tb_liga_temporadas lt ON lt.id = le.liga_temporada_id
+            INNER JOIN tb_ligas l ON l.id = lt.liga_id
             WHERE le.estado_participacion = 'activo'
+              AND lt.estado = 'activo'
+              AND l.estado = 'activo'
             ORDER BY e.nombre
         ")->fetchAll(PDO::FETCH_ASSOC);
         return compact('roles', 'ligas', 'equipos');
