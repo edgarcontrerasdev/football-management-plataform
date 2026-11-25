@@ -430,14 +430,27 @@ class Liga
         return $liga;
     }
 
-    public function listarOrganismosDisponibles(): array
+    public function listarOrganismosDisponibles(int $ligaId): array
     {
-        $stmt = $this->pdo->query("
-            SELECT id, nombre, siglas
-            FROM tb_organismos
-            WHERE estado = 'activo'
-            ORDER BY nombre ASC
+        $stmt = $this->pdo->prepare("
+            SELECT o.id, o.nombre, o.siglas
+            FROM tb_organismos o
+            WHERE o.estado = 'activo'
+              AND NOT EXISTS (
+                  SELECT 1 FROM tb_liga_organismos lo
+                  WHERE lo.liga_id = :liga_activa
+                    AND lo.organismo_id = o.id
+                    AND lo.estado = 'activo'
+              )
+              AND NOT EXISTS (
+                  SELECT 1 FROM tb_liga_organismo_solicitudes s
+                  WHERE s.liga_id = :liga_pendiente
+                    AND s.organismo_id = o.id
+                    AND s.estado = 'pendiente'
+              )
+            ORDER BY o.nombre ASC
         ");
+        $stmt->execute([':liga_activa' => $ligaId, ':liga_pendiente' => $ligaId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
