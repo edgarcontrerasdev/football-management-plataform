@@ -36,6 +36,19 @@ foreach (($roles ?? []) as $rol) {
                             <label class="form-label" for="usuario">Nombre de usuario</label>
                             <input type="text" id="usuario" name="usuario" class="form-control" maxlength="100" required value="<?= $escape($user['usuario']) ?>">
                         </div>
+                        <?php if (Auth::role() === 'ADMIN'): ?>
+                            <div class="mb-3 <?= in_array($rolActual, ['ORGANISMO','LIGA','EQUIPO'], true) ? '' : 'd-none' ?>" id="boxOrganismo">
+                                <label class="form-label" for="organismo_id">Organismo responsable</label>
+                                <select name="organismo_id" id="organismo_id" class="form-select">
+                                    <option value="">Selecciona un organismo</option>
+                                    <?php foreach (($organismos ?? []) as $organismo): ?>
+                                        <option value="<?= (int) $organismo['id'] ?>" <?= (int) ($user['organismo_id'] ?? 0) === (int) $organismo['id'] ? 'selected' : '' ?>><?= $escape($organismo['nombre']) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        <?php else: ?>
+                            <input type="hidden" name="organismo_id" id="organismo_id" value="<?= (int) ($organismoId ?? 0) ?>">
+                        <?php endif; ?>
                         <div class="mb-3">
                             <label class="form-label" for="rol_id">Rol de acceso</label>
                             <select name="rol_id" id="rol_id" class="form-select" required>
@@ -51,7 +64,7 @@ foreach (($roles ?? []) as $rol) {
                             <select name="liga_id" id="liga_id" class="form-select">
                                 <option value="">Selecciona una liga</option>
                                 <?php foreach (($ligas ?? []) as $liga): ?>
-                                    <option value="<?= (int) $liga['id'] ?>" <?= (int) ($user['liga_id'] ?? 0) === (int) $liga['id'] ? 'selected' : '' ?>><?= $escape($liga['nombre']) ?></option>
+                                    <option value="<?= (int) $liga['id'] ?>" data-organismo="<?= (int) ($liga['organismo_id'] ?? 0) ?>" <?= (int) ($user['liga_id'] ?? 0) === (int) $liga['id'] ? 'selected' : '' ?>><?= $escape($liga['nombre']) ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
