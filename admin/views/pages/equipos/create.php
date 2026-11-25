@@ -21,12 +21,12 @@
     </div>
 <?php endif; ?>
 
-<div class="card shadow-sm border-0 equipo-create-card">
+<div class="card shadow-sm border-0 equipo-create-card entity-form-card">
     <div class="card-body p-0">
         <form id="formCreateEquipo" action="index.php?page=equipos&action=store" method="POST" enctype="multipart/form-data">
-            <div class="row g-0">
-                <div class="col-lg-8 p-4">
-                    <section class="equipo-form-section">
+            <div class="row g-0 entity-form-grid">
+                <div class="col-lg-8 p-4 entity-form-main">
+                    <section class="equipo-form-section entity-form-section">
                         <h6 class="text-uppercase fw-bold mb-3">
                             <i class="fa-solid fa-circle-info me-2"></i>Identidad del equipo
                         </h6>
@@ -61,7 +61,7 @@
                         </div>
                     </section>
 
-                    <section class="equipo-form-section mt-4">
+                    <section class="equipo-form-section entity-form-section mt-4">
                         <h6 class="text-uppercase fw-bold mb-3">
                             <i class="fa-solid fa-file-lines me-2"></i>Información adicional
                         </h6>
@@ -78,7 +78,7 @@
                     </section>
                 </div>
 
-                <aside class="col-lg-4 p-4 equipo-create-aside">
+                <aside class="col-lg-4 p-4 equipo-create-aside entity-form-aside">
                     <section class="equipo-form-section">
                         <h6 class="text-uppercase fw-bold mb-3">
                             <i class="fa-solid fa-image me-2"></i>Escudo del equipo
@@ -100,7 +100,7 @@
                 </aside>
             </div>
 
-            <div class="equipo-form-actions d-flex justify-content-end gap-2 p-3">
+            <div class="equipo-form-actions entity-form-actions d-flex justify-content-end gap-2 p-3">
                 <a href="index.php?page=equipos" class="btn btn-light">Cancelar</a>
                 <button type="submit" class="btn btn-primary">
                     <i class="fa-solid fa-floppy-disk me-1"></i>Guardar equipo
