@@ -83,7 +83,7 @@
                         ON lt.id = le.liga_temporada_id
                     WHERE lt.liga_id IN (" . implode(',', $placeholders) . ")
                       AND lt.estado = 'activo'
-                      AND le.estado_participacion = 'activo'
+                      AND le.estado_participacion IN ('activo', 'pendiente')
                 ";
                 $stmt = $this->db->prepare($sql);
                 $stmt->execute($params);
@@ -114,13 +114,39 @@
             exit;
         }
 
-        private function exigirCreacionEquipo(): void
+        private function exigirCreacionEquipo(): ?int
         {
-            if (Auth::role() !== 'ADMIN') {
-                http_response_code(403);
-                view('403.php');
-                exit;
+            $rol = Auth::role();
+            if ($rol === 'ADMIN') {
+                return null;
             }
+            if ($rol === 'LIGA') {
+                $ligas = $this->authorization->getScopedEntityIds('liga') ?? [];
+                if (count($ligas) === 1) {
+                    return (int) $ligas[0];
+                }
+            }
+
+            http_response_code(403);
+            view('403.php');
+            exit;
+        }
+
+        private function temporadaActivaParaLiga(int $ligaId): ?int
+        {
+            $stmt = $this->db->prepare("
+                SELECT t.id
+                FROM tb_liga_temporadas lt
+                INNER JOIN tb_temporadas t ON t.id = lt.temporada_id
+                WHERE lt.liga_id = :liga_id
+                  AND lt.estado = 'activo'
+                  AND t.es_actual = 1
+                ORDER BY t.id DESC
+                LIMIT 1
+            ");
+            $stmt->execute([':liga_id' => $ligaId]);
+            $id = $stmt->fetchColumn();
+            return $id ? (int) $id : null;
         }
 
         //listar equipos
@@ -155,7 +181,7 @@
 
             // 🔹Configuracion del Toolbox
             $toolbox = [
-                'create' => Auth::role() === 'ADMIN' ? 'index.php?page=equipos&action=create' : null,
+                'create' => in_array(Auth::role(), ['ADMIN', 'LIGA'], true) ? 'index.php?page=equipos&action=create' : null,
                 'filters' => [
                     [
                         'type' => 'search',
@@ -569,7 +595,15 @@
         // Vista para crear equipo como entidad independiente.
         public function create()
         {
-            $this->exigirCreacionEquipo();
+            $ligaId = $this->exigirCreacionEquipo();
+            if ($ligaId !== null && $this->temporadaActivaParaLiga($ligaId) === null) {
+                http_response_code(409);
+                view('pages.equipos.create.php', [
+                    'error' => 'Tu liga todavía no tiene una temporada actual vinculada y activa. Solicita al organismo que la habilite antes de registrar equipos.',
+                    'success' => false
+                ]);
+                return;
+            }
             $error = $_SESSION['equipo_error'] ?? null;
             unset($_SESSION['equipo_error']);
 
@@ -584,7 +618,13 @@
         // Registrar la entidad base del equipo y su escudo opcional.
         public function store()
         {
-            $this->exigirCreacionEquipo();
+            $ligaId = $this->exigirCreacionEquipo();
+            $temporadaId = $ligaId !== null ? $this->temporadaActivaParaLiga($ligaId) : null;
+            if ($ligaId !== null && $temporadaId === null) {
+                $_SESSION['equipo_error'] = 'Tu liga todavía no tiene una temporada actual vinculada y activa. Solicita al organismo que la habilite antes de registrar equipos.';
+                header('Location: index.php?page=equipos&action=create');
+                exit;
+            }
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 header('Location: index.php?page=equipos&action=create');
                 exit;
@@ -655,6 +695,7 @@
             }
 
             try {
+                $this->db->beginTransaction();
                 $equipoId = $this->equipoModel->crearEntidad([
                     'nombre' => $nombre,
                     'siglas' => $siglas,
@@ -662,11 +703,36 @@
                     'escudo' => $nombreEscudo
                 ]);
 
+                if ($ligaId !== null) {
+                    $stmtInscripcion = $this->db->prepare("
+                        INSERT INTO tb_liga_equipos
+                            (liga_temporada_id, equipo_id, estado_participacion, fecha_solicitud)
+                        SELECT lt.id, :equipo_id, 'pendiente', NOW()
+                        FROM tb_liga_temporadas lt
+                        WHERE lt.liga_id = :liga_id
+                          AND lt.temporada_id = :temporada_id
+                          AND lt.estado = 'activo'
+                        LIMIT 1
+                    ");
+                    $stmtInscripcion->execute([
+                        ':equipo_id' => $equipoId,
+                        ':liga_id' => $ligaId,
+                        ':temporada_id' => $temporadaId
+                    ]);
+                    if ($stmtInscripcion->rowCount() !== 1) {
+                        throw new RuntimeException('No fue posible registrar la solicitud de inscripción del equipo.');
+                    }
+                }
+                $this->db->commit();
+
                 unset($_SESSION['equipo_old']);
                 $_SESSION['success'] = 'El equipo se registró correctamente.';
                 header('Location: index.php?page=equipos');
                 exit;
             } catch (Throwable $e) {
+                if ($this->db->inTransaction()) {
+                    $this->db->rollBack();
+                }
                 if ($rutaEscudo && is_file($rutaEscudo)) {
                     @unlink($rutaEscudo);
                 }
