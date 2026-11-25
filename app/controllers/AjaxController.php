@@ -160,6 +160,7 @@ class AjaxController
                 'pagina' => max(1, (int) ($_GET['pagina'] ?? 1)),
                 'limite' => min(100, max(1, (int) ($_GET['limite'] ?? 10))),
                 'organismo' => $this->currentOrganismoId(),
+                'roles_permitidos' => Auth::role() === 'ADMIN' ? null : ['LIGA', 'EQUIPO'],
             ];
 
             $resultado = (new User($this->pdo))->filterUsers($filtros);
