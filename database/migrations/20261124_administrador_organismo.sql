@@ -5,13 +5,16 @@
 USE afec_v2;
 
 INSERT INTO tb_roles (clave, nombre, descripcion, estado)
-SELECT 'ORGANISMO',
-       'Administrador de organismo',
-       'Administración de usuarios y entidades dentro de un organismo autorizado.',
-       'activo'
-WHERE NOT EXISTS (
-    SELECT 1 FROM tb_roles WHERE clave = 'ORGANISMO'
-);
+VALUES (
+    'ORGANISMO',
+    'Administrador de organismo',
+    'Administración de usuarios y entidades dentro de un organismo autorizado.',
+    'activo'
+)
+ON DUPLICATE KEY UPDATE
+    nombre = VALUES(nombre),
+    descripcion = VALUES(descripcion),
+    estado = 'activo';
 
 UPDATE tb_roles
 SET nombre = 'Administrador de plataforma',
