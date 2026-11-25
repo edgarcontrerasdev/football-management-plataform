@@ -1,17 +1,4 @@
-<?php
-
-declare(strict_types=1);
-
-class Organismo
-{
-    private PDO $pdo;
-
-    public function __construct(PDO $pdo)
-    {
-        $this->pdo = $pdo;
-    }
-
-    public function listar(array $filtros = [], int $limit = 10, int $offset = 0): array
+public function listar(array $filtros = [], int $limit = 10, int $offset = 0): array
     {
         $where = ['1 = 1'];
         $params = [];
@@ -19,6 +6,21 @@ class Organismo
         $estado = trim((string) ($filtros['estado'] ?? ''));
         $tipo = trim((string) ($filtros['tipo'] ?? ''));
         $buscar = trim((string) ($filtros['buscar'] ?? ''));
+
+        if (isset($filtros['ids'])) {
+            $ids = array_values(array_unique(array_filter(array_map('intval', (array) $filtros['ids']), fn($id) => $id > 0)));
+            if (!$ids) {
+                $where[] = '1 = 0';
+            } else {
+                $holders = [];
+                foreach ($ids as $i => $id) {
+                    $key = ':scope_organismo_' . $i;
+                    $holders[] = $key;
+                    $params[$key] = $id;
+                }
+                $where[] = 'id IN (' . implode(',', $holders) . ')';
+            }
+        }
 
         if ($estado !== '') {
             $where[] = 'estado = :estado';
@@ -68,6 +70,21 @@ class Organismo
         $tipo = trim((string) ($filtros['tipo'] ?? ''));
         $buscar = trim((string) ($filtros['buscar'] ?? ''));
 
+        if (isset($filtros['ids'])) {
+            $ids = array_values(array_unique(array_filter(array_map('intval', (array) $filtros['ids']), fn($id) => $id > 0)));
+            if (!$ids) {
+                $where[] = '1 = 0';
+            } else {
+                $holders = [];
+                foreach ($ids as $i => $id) {
+                    $key = ':scope_organismo_' . $i;
+                    $holders[] = $key;
+                    $params[$key] = $id;
+                }
+                $where[] = 'id IN (' . implode(',', $holders) . ')';
+            }
+        }
+
         if ($estado !== '') {
             $where[] = 'estado = :estado';
             $params[':estado'] = $estado;
@@ -96,15 +113,31 @@ class Organismo
         return (int) $stmt->fetchColumn();
     }
 
-    public function metricas(): array
+    public function metricas(?array $ids = null): array
     {
-        $stmt = $this->pdo->query("
-            SELECT
-                COUNT(*) AS total,
-                SUM(estado = 'activo') AS activos,
-                SUM(estado <> 'activo') AS inactivos
+        $sql = "
+            SELECT COUNT(*) AS total,
+                   SUM(estado = 'activo') AS activos,
+                   SUM(estado <> 'activo') AS inactivos
             FROM tb_organismos
-        ");
+        ";
+        $params = [];
+        if ($ids !== null) {
+            $scopeIds = array_values(array_unique(array_filter(array_map('intval', $ids), fn($id) => $id > 0)));
+            if (!$scopeIds) {
+                $sql .= " WHERE 1 = 0";
+            } else {
+                $holders = [];
+                foreach ($scopeIds as $i => $id) {
+                    $key = ':metric_org_' . $i;
+                    $holders[] = $key;
+                    $params[$key] = $id;
+                }
+                $sql .= " WHERE id IN (" . implode(',', $holders) . ")";
+            }
+        }
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
 
         $row = $stmt->fetch(PDO::FETCH_ASSOC) ?: [];
 
