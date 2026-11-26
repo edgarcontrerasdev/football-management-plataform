@@ -63,6 +63,16 @@ class OrganismosController
 
     public function index(): void
     {
+        if (Auth::role() === 'ORGANISMO') {
+            $ids = $this->organismosAutorizados() ?? [];
+            if (count($ids) !== 1) {
+                http_response_code(403);
+                view('403.php');
+                exit;
+            }
+            header('Location: index.php?page=organismos&action=detalles&id=' . (int) $ids[0]);
+            exit;
+        }
 
         $filtros = [
             'estado' => trim((string) ($_GET['estado'] ?? '')),
