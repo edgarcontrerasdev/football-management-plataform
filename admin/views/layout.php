@@ -104,7 +104,7 @@
             <?php if (in_array(Auth::role(), ['ADMIN', 'SUPERVISOR'], true)): ?>
             <a href="index.php?page=clubes" class="nav-item<?= $isActivePage('clubes') ?>" data-key="clubes"><i class="bi bi-shield"></i><span class="label">Clubes</span></a>
             <?php endif; ?>
-            <?php if (in_array(Auth::role(), ['ADMIN', 'SUPERVISOR'], true)): ?>
+            <?php if (in_array(Auth::role(), ['ADMIN', 'ORGANISMO', 'SUPERVISOR'], true)): ?>
             <a href="index.php?page=organismos" class="nav-item<?= $isActivePage('organismos') ?>" data-key="organismos"><i class="bi bi-diagram-3"></i><span class="label">Organismos</span></a>
             <?php endif; ?>
             <a href="index.php?page=torneos" class="nav-item<?= $isActivePage('torneos') ?>" data-key="torneos"><i class="bi bi-flag"></i><span class="label">Torneos</span></a>
