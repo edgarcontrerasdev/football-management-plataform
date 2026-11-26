@@ -77,20 +77,21 @@
 
                 AND (
                     ua.fecha_inicio IS NULL
-                    OR ua.fecha_inicio <= :fecha_actual
+                    OR ua.fecha_inicio <= :fecha_inicio_actual
                 )
 
                 AND (
                     ua.fecha_fin IS NULL
-                    OR ua.fecha_fin >= :fecha_actual
+                    OR ua.fecha_fin >= :fecha_fin_actual
                 )
             ";
 
             $params = [
                 ':usuario_id'  => (int) $user['id'],
                 ':tipo_entidad' => $tipoEntidad,
-                ':entidad_id'  => $entidadId,
-                ':fecha_actual' => date('Y-m-d')
+                ':entidad_id'          => $entidadId,
+                ':fecha_inicio_actual' => date('Y-m-d'),
+                ':fecha_fin_actual'    => date('Y-m-d')
             ];
 
             /*
