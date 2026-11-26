@@ -212,6 +212,18 @@
             ]);
         }
 
+        /** Panel inicial del administrador de equipo. */
+        public function miEquipo(): void
+        {
+            $ids = $this->equiposAutorizados();
+            if (empty($ids) || count($ids) !== 1) {
+                http_response_code(403);
+                view('403.php');
+                exit;
+            }
+            $this->detalles((int) $ids[0]);
+        }
+
         // Ver detalle de equipo
         public function detalles($id) {
 
