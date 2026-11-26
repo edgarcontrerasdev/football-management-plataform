@@ -4,9 +4,9 @@
 
     <div class="admin-page-header mb-4">
         <div>
-            <h3 class="admin-page-title mb-1">Ligas</h3>
+            <h3 class="admin-page-title mb-1"><?= Auth::role() === 'ORGANISMO' ? 'Ligas que administra' : 'Ligas' ?></h3>
             <p class="admin-page-description mb-0">
-                Catálogo y administración de ligas
+                <?= Auth::role() === 'ORGANISMO' ? 'Gestión de las ligas bajo la administración de su organismo' : 'Catálogo y administración de ligas' ?>
             </p>
         </div>
     </div>
