@@ -91,6 +91,8 @@ class Router
             $this->action = $_GET['action'];
         } elseif ($this->page === 'liga') {
             $this->action = 'miLiga';
+        } elseif ($this->page === 'equipo') {
+            $this->action = 'miEquipo';
         } else {
             $this->action = 'index';
         }
@@ -382,7 +384,7 @@ class Router
 
             'LIGA' => 'liga',
 
-            'EQUIPO' => 'equipos',
+            'EQUIPO' => 'equipo',
 
             'ADMIN',
             'ORGANISMO' => 'organismos',
