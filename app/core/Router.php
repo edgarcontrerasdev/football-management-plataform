@@ -241,7 +241,11 @@ class Router
          * ---------------------------------------------------------
          */
 
-       if ($route['permission'] !== null && !$this->authorization->hasPermission($route['permission'])) 
+       if (
+            $route['permission'] !== null
+            && !($this->rol === 'ORGANISMO' && in_array($this->page, ['ligas', 'equipos', 'torneos', 'temporadas'], true))
+            && !$this->authorization->hasPermission($route['permission'])
+        ) 
         {
             $this->forbiddenPage();
             return;
@@ -381,6 +385,8 @@ class Router
             'EQUIPO' => 'equipos',
 
             'ADMIN',
+            'ORGANISMO' => 'organismos',
+
             'SUPERVISOR' => 'dashboard',
 
             default => 'dashboard'
