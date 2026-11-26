@@ -17,7 +17,7 @@
                 <p><strong>Nombre:</strong> <?= $liga['nombre'] ?></p>
 
                 <p><strong>Siglas:</strong> 
-                    <?= $equipo['siglas'] ?? 'No definido' ?>
+                    <?= htmlspecialchars((string) ($liga['siglas'] ?? 'No definido'), ENT_QUOTES, 'UTF-8') ?>
                 </p>
 
                 <p><strong>Registro:</strong> 
