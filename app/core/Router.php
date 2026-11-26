@@ -386,7 +386,8 @@ class Router
 
             'EQUIPO' => 'equipo',
 
-            'ADMIN',
+            'ADMIN' => 'dashboard',
+
             'ORGANISMO' => 'organismos',
 
             'SUPERVISOR' => 'dashboard',
