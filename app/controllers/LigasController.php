@@ -786,7 +786,7 @@ class LigasController
         }
 
         try {
-            $this->ligaModel->vincularTemporada($ligaId, $temporadaId);
+            $this->ligaModel->vincularTemporada($ligaId, $temporadaId, (int) Auth::id());
             flashSuccess('La temporada quedó vinculada como solicitud pendiente.');
         } catch (PDOException $e) {
             flashError('La temporada ya está vinculada o no fue posible registrar la solicitud.');
@@ -836,7 +836,8 @@ class LigasController
             $resuelto = $this->ligaModel->resolverVinculacionTemporada(
                 $ligaId,
                 $ligaTemporadaId,
-                $estado
+                $estado,
+                (int) Auth::id()
             );
 
             if ($resuelto) {
@@ -905,7 +906,8 @@ class LigasController
                 $ligaId,
                 $temporadaId,
                 $equipoId,
-                $numeroRegistro !== '' ? $numeroRegistro : null
+                $numeroRegistro !== '' ? $numeroRegistro : null,
+                (int) Auth::id()
             );
             if (!$registrado) {
                 flashError('No se pudo registrar la solicitud de inscripción.');
@@ -941,7 +943,7 @@ class LigasController
 
         try {
             $estado = $decision === 'aprobar' ? 'activo' : 'rechazado';
-            $resuelto = $this->ligaModel->resolverInscripcionEquipo($ligaId, $ligaEquipoId, $estado);
+            $resuelto = $this->ligaModel->resolverInscripcionEquipo($ligaId, $ligaEquipoId, $estado, (int) Auth::id());
 
             if ($resuelto) {
                 flashSuccess($decision === 'aprobar'
