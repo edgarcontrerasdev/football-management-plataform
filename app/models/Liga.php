@@ -963,6 +963,105 @@ class Liga
 
 
     /**
+     * Cambia la participación de un equipo o registra su baja de una temporada.
+     * Cada transición queda auditada en el historial de la liga.
+     */
+    public function cambiarParticipacionEquipo(
+        int $ligaId,
+        int $ligaEquipoId,
+        string $estadoNuevo,
+        string $motivo,
+        int $usuarioId
+    ): bool {
+        if (!in_array($estadoNuevo, ['activo', 'suspendido', 'baja'], true)) {
+            throw new InvalidArgumentException('Estado de participación no válido.');
+        }
+        if ($usuarioId <= 0) {
+            throw new InvalidArgumentException('No se identificó al usuario responsable.');
+        }
+        $motivo = trim($motivo);
+        if ($estadoNuevo === 'baja' && $motivo === '') {
+            throw new InvalidArgumentException('El motivo de baja es obligatorio.');
+        }
+
+        $this->pdo->beginTransaction();
+        try {
+            $consulta = $this->pdo->prepare("
+                SELECT le.estado_participacion, e.nombre AS equipo, t.temporada
+                FROM tb_liga_equipos le
+                INNER JOIN tb_liga_temporadas lt ON lt.id = le.liga_temporada_id
+                INNER JOIN tb_equipos e ON e.id = le.equipo_id
+                INNER JOIN tb_temporadas t ON t.id = lt.temporada_id
+                WHERE le.id = :liga_equipo_id AND lt.liga_id = :liga_id
+                FOR UPDATE
+            ");
+            $consulta->execute([
+                ':liga_equipo_id' => $ligaEquipoId,
+                ':liga_id' => $ligaId
+            ]);
+            $registro = $consulta->fetch(PDO::FETCH_ASSOC);
+            if (!$registro) {
+                $this->pdo->rollBack();
+                return false;
+            }
+
+            $estadoAnterior = (string) $registro['estado_participacion'];
+            $transiciones = [
+                'activo' => ['suspendido', 'baja'],
+                'suspendido' => ['activo', 'baja'],
+                'baja' => [],
+                'pendiente' => [],
+                'rechazado' => []
+            ];
+            if (!in_array($estadoNuevo, $transiciones[$estadoAnterior] ?? [], true)) {
+                $this->pdo->rollBack();
+                return false;
+            }
+
+            $stmt = $this->pdo->prepare("
+                UPDATE tb_liga_equipos
+                SET estado_participacion = :estado,
+                    fecha_baja = CASE WHEN :estado_fecha = 'baja' THEN NOW() ELSE NULL END,
+                    motivo_baja = CASE WHEN :motivo_estado = 'baja' THEN :motivo ELSE NULL END
+                WHERE id = :id
+            ");
+            $stmt->execute([
+                ':estado' => $estadoNuevo,
+                ':estado_fecha' => $estadoNuevo,
+                ':motivo_estado' => $estadoNuevo,
+                ':motivo' => $motivo !== '' ? $motivo : null,
+                ':id' => $ligaEquipoId
+            ]);
+
+            $esBaja = $estadoNuevo === 'baja';
+            $accion = $esBaja ? 'baja_equipo_temporada' : 'cambio_participacion_equipo';
+            $descripcion = $esBaja
+                ? 'Baja de participación. Motivo: ' . $motivo
+                : 'Se actualizó el estado de participación del equipo.';
+            $historial = $this->pdo->prepare("
+                INSERT INTO tb_liga_historial
+                    (liga_id, usuario_id, accion, campo, valor_anterior, valor_nuevo, descripcion)
+                VALUES (:liga_id, :usuario_id, :accion, 'estado_participacion', :anterior, :nuevo, :descripcion)
+            ");
+            $historial->execute([
+                ':liga_id' => $ligaId,
+                ':usuario_id' => $usuarioId,
+                ':accion' => $accion,
+                ':anterior' => $estadoAnterior,
+                ':nuevo' => $estadoNuevo,
+                ':descripcion' => mb_substr($descripcion, 0, 255)
+            ]);
+
+            $this->pdo->commit();
+            return true;
+        } catch (Throwable $e) {
+            if ($this->pdo->inTransaction()) $this->pdo->rollBack();
+            throw $e;
+        }
+    }
+
+
+    /**
      * Temporadas ya vinculadas a una liga.
      */
     public function listarTemporadasVinculadas(int $ligaId): array
