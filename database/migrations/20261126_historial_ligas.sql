@@ -12,7 +12,6 @@ CREATE TABLE IF NOT EXISTS tb_liga_historial (
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_liga_historial_liga
         FOREIGN KEY (liga_id) REFERENCES tb_ligas(id)
-        ON DELETE CASCADE,
     CONSTRAINT fk_liga_historial_usuario
         FOREIGN KEY (usuario_id) REFERENCES tb_usuarios(id),
     INDEX idx_liga_historial_liga_fecha (liga_id, created_at, id),
