@@ -64,7 +64,9 @@
                                             'rechazo_temporada' => ['Temporada rechazada', 'danger'],
                                             'solicitud_inscripcion_equipo' => ['Inscripción solicitada', 'info text-dark'],
                                             'aprobacion_inscripcion_equipo' => ['Inscripción aprobada', 'success'],
-                                            'rechazo_inscripcion_equipo' => ['Inscripción rechazada', 'danger']
+                                            'rechazo_inscripcion_equipo' => ['Inscripción rechazada', 'danger'],
+                                            'cambio_participacion_equipo' => ['Cambio de participación', 'warning text-dark'],
+                                            'baja_equipo_temporada' => ['Baja de equipo', 'secondary']
                                         ];
                                         [$accionTexto, $accionClase] = $acciones[$movimiento['accion']] ?? ['Movimiento institucional', 'secondary'];
                                     ?>
