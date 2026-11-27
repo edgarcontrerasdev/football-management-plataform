@@ -833,55 +833,132 @@ class Liga
         int $ligaId,
         int $temporadaId,
         int $equipoId,
-        ?string $numeroRegistro = null
+        ?string $numeroRegistro = null,
+        int $usuarioId = 0
     ): bool {
-        $stmt = $this->pdo->prepare("
-            INSERT INTO tb_liga_equipos (
-                liga_temporada_id, equipo_id, numero_registro, fecha_solicitud
-            )
-            SELECT lt.id, :equipo_id, :numero_registro, NOW()
-            FROM tb_liga_temporadas lt
-            WHERE lt.liga_id = :liga_id
-              AND lt.temporada_id = :temporada_id
-            LIMIT 1
-        ");
-        $stmt->execute([
-            ':equipo_id' => $equipoId,
-            ':numero_registro' => $numeroRegistro,
-            ':liga_id' => $ligaId,
-            ':temporada_id' => $temporadaId
-        ]);
-        return $stmt->rowCount() === 1;
+        $this->pdo->beginTransaction();
+        try {
+            $equipo = $this->pdo->prepare("SELECT nombre FROM tb_equipos WHERE id = :id");
+            $equipo->execute([':id' => $equipoId]);
+            $equipoNombre = $equipo->fetchColumn();
+            $temporada = $this->pdo->prepare("SELECT temporada FROM tb_temporadas WHERE id = :id");
+            $temporada->execute([':id' => $temporadaId]);
+            $temporadaNombre = $temporada->fetchColumn();
+            if (!$equipoNombre || !$temporadaNombre) {
+                throw new InvalidArgumentException('El equipo o la temporada no existe.');
+            }
+
+            $stmt = $this->pdo->prepare("
+                INSERT INTO tb_liga_equipos (
+                    liga_temporada_id, equipo_id, numero_registro, fecha_solicitud
+                )
+                SELECT lt.id, :equipo_id, :numero_registro, NOW()
+                FROM tb_liga_temporadas lt
+                WHERE lt.liga_id = :liga_id
+                  AND lt.temporada_id = :temporada_id
+                LIMIT 1
+            ");
+            $stmt->execute([
+                ':equipo_id' => $equipoId,
+                ':numero_registro' => $numeroRegistro,
+                ':liga_id' => $ligaId,
+                ':temporada_id' => $temporadaId
+            ]);
+            if ($stmt->rowCount() !== 1) {
+                $this->pdo->rollBack();
+                return false;
+            }
+
+            $historial = $this->pdo->prepare("
+                INSERT INTO tb_liga_historial
+                    (liga_id, usuario_id, accion, campo, valor_anterior, valor_nuevo, descripcion)
+                VALUES (:liga_id, :usuario_id, 'solicitud_inscripcion_equipo', 'equipo_temporada', NULL, :nuevo, :descripcion)
+            ");
+            $historial->execute([
+                ':liga_id' => $ligaId,
+                ':usuario_id' => $usuarioId,
+                ':nuevo' => $equipoNombre . ' / ' . $temporadaNombre,
+                ':descripcion' => 'Se solicitó inscribir un equipo en una temporada de la liga.'
+            ]);
+            $this->pdo->commit();
+            return true;
+        } catch (Throwable $e) {
+            if ($this->pdo->inTransaction()) $this->pdo->rollBack();
+            throw $e;
+        }
     }
 
 
     /**
      * Resuelve una solicitud pendiente de inscripción, limitada a la liga indicada.
      */
-    public function resolverInscripcionEquipo(int $ligaId, int $ligaEquipoId, string $estado): bool
+    public function resolverInscripcionEquipo(int $ligaId, int $ligaEquipoId, string $estado, int $usuarioId): bool
     {
         if (!in_array($estado, ['activo', 'rechazado'], true)) {
             throw new InvalidArgumentException('Estado de resolución no válido.');
         }
 
-        $stmt = $this->pdo->prepare("
-            UPDATE tb_liga_equipos le
-            INNER JOIN tb_liga_temporadas lt ON lt.id = le.liga_temporada_id
-            SET le.estado_participacion = :estado,
-                le.fecha_alta = CASE WHEN :estado_fecha = 'activo' THEN NOW() ELSE le.fecha_alta END
-            WHERE le.id = :liga_equipo_id
-              AND lt.liga_id = :liga_id
-              AND le.estado_participacion = 'pendiente'
-              AND lt.estado = 'activo'
-        ");
-        $stmt->execute([
-            ':estado' => $estado,
-            ':estado_fecha' => $estado,
-            ':liga_equipo_id' => $ligaEquipoId,
-            ':liga_id' => $ligaId
-        ]);
+        $this->pdo->beginTransaction();
+        try {
+            $consulta = $this->pdo->prepare("
+                SELECT e.nombre AS equipo, t.temporada
+                FROM tb_liga_equipos le
+                INNER JOIN tb_liga_temporadas lt ON lt.id = le.liga_temporada_id
+                INNER JOIN tb_equipos e ON e.id = le.equipo_id
+                INNER JOIN tb_temporadas t ON t.id = lt.temporada_id
+                WHERE le.id = :id AND lt.liga_id = :liga_id
+                  AND le.estado_participacion = 'pendiente' AND lt.estado = 'activo'
+                FOR UPDATE
+            ");
+            $consulta->execute([':id' => $ligaEquipoId, ':liga_id' => $ligaId]);
+            $registro = $consulta->fetch(PDO::FETCH_ASSOC);
+            if (!$registro) {
+                $this->pdo->rollBack();
+                return false;
+            }
 
-        return $stmt->rowCount() === 1;
+            $stmt = $this->pdo->prepare("
+                UPDATE tb_liga_equipos le
+                INNER JOIN tb_liga_temporadas lt ON lt.id = le.liga_temporada_id
+                SET le.estado_participacion = :estado,
+                    le.fecha_alta = CASE WHEN :estado_fecha = 'activo' THEN NOW() ELSE le.fecha_alta END
+                WHERE le.id = :liga_equipo_id
+                  AND lt.liga_id = :liga_id
+                  AND le.estado_participacion = 'pendiente'
+                  AND lt.estado = 'activo'
+            ");
+            $stmt->execute([
+                ':estado' => $estado,
+                ':estado_fecha' => $estado,
+                ':liga_equipo_id' => $ligaEquipoId,
+                ':liga_id' => $ligaId
+            ]);
+            if ($stmt->rowCount() !== 1) {
+                $this->pdo->rollBack();
+                return false;
+            }
+
+            $accion = $estado === 'activo' ? 'aprobacion_inscripcion_equipo' : 'rechazo_inscripcion_equipo';
+            $historial = $this->pdo->prepare("
+                INSERT INTO tb_liga_historial
+                    (liga_id, usuario_id, accion, campo, valor_anterior, valor_nuevo, descripcion)
+                VALUES (:liga_id, :usuario_id, :accion, 'equipo_temporada', 'Solicitud pendiente', :nuevo, :descripcion)
+            ");
+            $historial->execute([
+                ':liga_id' => $ligaId,
+                ':usuario_id' => $usuarioId,
+                ':accion' => $accion,
+                ':nuevo' => $registro['equipo'] . ' / ' . $registro['temporada'],
+                ':descripcion' => $estado === 'activo'
+                    ? 'Se aprobó la inscripción del equipo en la temporada.'
+                    : 'Se rechazó la solicitud de inscripción del equipo.'
+            ]);
+            $this->pdo->commit();
+            return true;
+        } catch (Throwable $e) {
+            if ($this->pdo->inTransaction()) $this->pdo->rollBack();
+            throw $e;
+        }
     }
 
 
@@ -908,40 +985,107 @@ class Liga
     /**
      * Aprueba o rechaza una solicitud pendiente de vinculación de temporada.
      */
-    public function resolverVinculacionTemporada(int $ligaId, int $ligaTemporadaId, string $estado): bool
+    public function resolverVinculacionTemporada(int $ligaId, int $ligaTemporadaId, string $estado, int $usuarioId): bool
     {
         if (!in_array($estado, ['activo', 'rechazado'], true)) {
             throw new InvalidArgumentException('Estado de vinculación no válido.');
         }
 
-        $stmt = $this->pdo->prepare("
-            UPDATE tb_liga_temporadas
-            SET estado = :estado,
-                fecha_alta = CASE WHEN :estado_fecha = 'activo' THEN NOW() ELSE fecha_alta END
-            WHERE id = :liga_temporada_id
-              AND liga_id = :liga_id
-              AND estado = 'pendiente'
-        ");
-        $stmt->execute([
-            ':estado' => $estado,
-            ':estado_fecha' => $estado,
-            ':liga_temporada_id' => $ligaTemporadaId,
-            ':liga_id' => $ligaId
-        ]);
+        $this->pdo->beginTransaction();
+        try {
+            $consulta = $this->pdo->prepare("
+                SELECT lt.temporada_id, t.temporada
+                FROM tb_liga_temporadas lt
+                INNER JOIN tb_temporadas t ON t.id = lt.temporada_id
+                WHERE lt.id = :id AND lt.liga_id = :liga_id AND lt.estado = 'pendiente'
+                FOR UPDATE
+            ");
+            $consulta->execute([':id' => $ligaTemporadaId, ':liga_id' => $ligaId]);
+            $registro = $consulta->fetch(PDO::FETCH_ASSOC);
+            if (!$registro) {
+                $this->pdo->rollBack();
+                return false;
+            }
 
-        return $stmt->rowCount() === 1;
+            $stmt = $this->pdo->prepare("
+                UPDATE tb_liga_temporadas
+                SET estado = :estado,
+                    fecha_alta = CASE WHEN :estado_fecha = 'activo' THEN NOW() ELSE fecha_alta END
+                WHERE id = :liga_temporada_id AND liga_id = :liga_id AND estado = 'pendiente'
+            ");
+            $stmt->execute([
+                ':estado' => $estado,
+                ':estado_fecha' => $estado,
+                ':liga_temporada_id' => $ligaTemporadaId,
+                ':liga_id' => $ligaId
+            ]);
+            if ($stmt->rowCount() !== 1) {
+                $this->pdo->rollBack();
+                return false;
+            }
+
+            $accion = $estado === 'activo' ? 'aprobacion_temporada' : 'rechazo_temporada';
+            $historial = $this->pdo->prepare("
+                INSERT INTO tb_liga_historial
+                    (liga_id, usuario_id, accion, campo, valor_anterior, valor_nuevo, descripcion)
+                VALUES (:liga_id, :usuario_id, :accion, 'temporada', 'Solicitud pendiente', :nuevo, :descripcion)
+            ");
+            $historial->execute([
+                ':liga_id' => $ligaId,
+                ':usuario_id' => $usuarioId,
+                ':accion' => $accion,
+                ':nuevo' => $registro['temporada'],
+                ':descripcion' => $estado === 'activo'
+                    ? 'Se aprobó la vinculación de la temporada.'
+                    : 'Se rechazó la solicitud de vinculación de la temporada.'
+            ]);
+            $this->pdo->commit();
+            return true;
+        } catch (Throwable $e) {
+            if ($this->pdo->inTransaction()) $this->pdo->rollBack();
+            throw $e;
+        }
     }
 
 
     /**
      * Registra la solicitud de vinculación usando el estado predeterminado pendiente.
      */
-    public function vincularTemporada(int $ligaId, int $temporadaId): bool
+    public function vincularTemporada(int $ligaId, int $temporadaId, int $usuarioId): bool
     {
-        $stmt = $this->pdo->prepare("
-            INSERT INTO tb_liga_temporadas (liga_id, temporada_id, fecha_solicitud)
-            VALUES (:liga_id, :temporada_id, NOW())
-        ");
-        return $stmt->execute([':liga_id' => $ligaId, ':temporada_id' => $temporadaId]);
+        $this->pdo->beginTransaction();
+        try {
+            $liga = $this->pdo->prepare("SELECT nombre FROM tb_ligas WHERE id = :id FOR UPDATE");
+            $liga->execute([':id' => $ligaId]);
+            $ligaNombre = $liga->fetchColumn();
+            $temporada = $this->pdo->prepare("SELECT temporada FROM tb_temporadas WHERE id = :id");
+            $temporada->execute([':id' => $temporadaId]);
+            $temporadaNombre = $temporada->fetchColumn();
+            if (!$ligaNombre || !$temporadaNombre) {
+                throw new InvalidArgumentException('La liga o temporada no existe.');
+            }
+
+            $stmt = $this->pdo->prepare("
+                INSERT INTO tb_liga_temporadas (liga_id, temporada_id, fecha_solicitud)
+                VALUES (:liga_id, :temporada_id, NOW())
+            ");
+            $stmt->execute([':liga_id' => $ligaId, ':temporada_id' => $temporadaId]);
+
+            $historial = $this->pdo->prepare("
+                INSERT INTO tb_liga_historial
+                    (liga_id, usuario_id, accion, campo, valor_anterior, valor_nuevo, descripcion)
+                VALUES (:liga_id, :usuario_id, 'solicitud_temporada', 'temporada', NULL, :nuevo, 'Se solicitó vincular una temporada a la liga.')
+            ");
+            $historial->execute([
+                ':liga_id' => $ligaId,
+                ':usuario_id' => $usuarioId,
+                ':nuevo' => $temporadaNombre
+            ]);
+            $this->pdo->commit();
+            return true;
+        } catch (Throwable $e) {
+            if ($this->pdo->inTransaction()) $this->pdo->rollBack();
+            throw $e;
+        }
     }
 }
