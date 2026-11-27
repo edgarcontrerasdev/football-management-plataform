@@ -294,6 +294,12 @@ public function listar(array $filtros = [], int $limit = 10, int $offset = 0): a
             if (!$solicitud) {
                 throw new InvalidArgumentException('La solicitud ya fue atendida o no pertenece a este organismo.');
             }
+            $nombreLigaStmt = $this->pdo->prepare("SELECT nombre FROM tb_ligas WHERE id = :id");
+            $nombreLigaStmt->execute([':id' => (int) $solicitud['liga_id']]);
+            $ligaNombre = (string) $nombreLigaStmt->fetchColumn();
+            $nombreOrganismoStmt = $this->pdo->prepare("SELECT nombre FROM tb_organismos WHERE id = :id");
+            $nombreOrganismoStmt->execute([':id' => $organismoId]);
+            $organismoNombre = (string) $nombreOrganismoStmt->fetchColumn();
 
             if ($decision === 'aprobar') {
                 $tipo = trim((string) ($data['tipo_relacion'] ?? 'afiliacion'));
@@ -353,6 +359,25 @@ public function listar(array $filtros = [], int $limit = 10, int $offset = 0): a
                 ':respuesta' => trim((string) ($data['respuesta'] ?? '')) ?: null,
                 ':id' => $solicitudId
             ]);
+
+            $accion = $decision === 'aprobar' ? 'aprobacion_vinculacion' : 'rechazo_vinculacion';
+            $valorNuevo = $decision === 'aprobar'
+                ? $organismoNombre . ' (' . ($data['tipo_relacion'] ?? 'afiliacion') . (!empty($data['es_gestor']) ? ', gestor' : '') . ')'
+                : 'Solicitud rechazada por ' . $organismoNombre;
+            $historial = $this->pdo->prepare("
+                INSERT INTO tb_liga_historial
+                    (liga_id, usuario_id, accion, campo, valor_anterior, valor_nuevo, descripcion)
+                VALUES (:liga_id, :usuario_id, :accion, 'relacion_institucional', 'Solicitud pendiente', :nuevo, :descripcion)
+            ");
+            $historial->execute([
+                ':liga_id' => (int) $solicitud['liga_id'],
+                ':usuario_id' => $usuarioId,
+                ':accion' => $accion,
+                ':nuevo' => $valorNuevo,
+                ':descripcion' => ($decision === 'aprobar' ? 'Se aprobó' : 'Se rechazó')
+                    . ' la solicitud de vinculación de la liga "' . $ligaNombre
+                    . '" con el organismo "' . $organismoNombre . '".'
+            ]);
             $this->pdo->commit();
         } catch (Throwable $e) {
             if ($this->pdo->inTransaction()) $this->pdo->rollBack();
@@ -378,18 +403,20 @@ public function listar(array $filtros = [], int $limit = 10, int $offset = 0): a
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function vincularLiga(int $organismoId, int $ligaId, array $data): void
+    public function vincularLiga(int $organismoId, int $ligaId, array $data, int $usuarioId): void
     {
         $this->pdo->beginTransaction();
         try {
-            $orgCheck = $this->pdo->prepare("SELECT id FROM tb_organismos WHERE id = :id AND estado = 'activo'");
+            $orgCheck = $this->pdo->prepare("SELECT nombre FROM tb_organismos WHERE id = :id AND estado = 'activo'");
             $orgCheck->execute([':id' => $organismoId]);
-            if (!$orgCheck->fetchColumn()) {
+            $organismoNombre = $orgCheck->fetchColumn();
+            if (!$organismoNombre) {
                 throw new InvalidArgumentException('El organismo no existe o está inactivo.');
             }
-            $lock = $this->pdo->prepare("SELECT id FROM tb_ligas WHERE id = :id AND estado = 'activo' FOR UPDATE");
+            $lock = $this->pdo->prepare("SELECT nombre FROM tb_ligas WHERE id = :id AND estado = 'activo' FOR UPDATE");
             $lock->execute([':id' => $ligaId]);
-            if (!$lock->fetchColumn()) {
+            $ligaNombre = $lock->fetchColumn();
+            if (!$ligaNombre) {
                 throw new InvalidArgumentException('La liga seleccionada no existe o está inactiva.');
             }
 
@@ -431,30 +458,84 @@ public function listar(array $filtros = [], int $limit = 10, int $offset = 0): a
                 ':referencia' => $data['referencia'] ?: null,
                 ':observaciones' => $data['observaciones'] ?: null
             ]);
+
+            $historial = $this->pdo->prepare("
+                INSERT INTO tb_liga_historial
+                    (liga_id, usuario_id, accion, campo, valor_anterior, valor_nuevo, descripcion)
+                VALUES (:liga_id, :usuario_id, 'vinculacion_organismo', 'relacion_institucional', NULL, :nuevo, :descripcion)
+            ");
+            $detalle = $organismoNombre . ' (' . $data['tipo_relacion'] . ($esGestor ? ', gestor' : '') . ')';
+            $historial->execute([
+                ':liga_id' => $ligaId,
+                ':usuario_id' => $usuarioId,
+                ':nuevo' => $detalle,
+                ':descripcion' => 'El organismo "' . $organismoNombre . '" vinculó directamente la liga "' . $ligaNombre . '".'
+            ]);
+
             $this->pdo->commit();
         } catch (Throwable $e) {
-            if ($this->pdo->inTransaction()) {
-                $this->pdo->rollBack();
-            }
+            if ($this->pdo->inTransaction()) $this->pdo->rollBack();
             throw $e;
         }
     }
 
-    public function finalizarRelacion(int $organismoId, int $relacionId, string $fechaFin): void
+    public function finalizarRelacion(int $organismoId, int $relacionId, string $fechaFin, int $usuarioId): void
     {
-        $stmt = $this->pdo->prepare("
-            UPDATE tb_liga_organismos
-            SET estado = 'inactivo', fecha_fin = :fecha_fin
-            WHERE id = :id AND organismo_id = :organismo_id AND estado = 'activo'
-              AND (fecha_inicio IS NULL OR fecha_inicio <= :fecha_fin)
-        ");
-        $stmt->execute([
-            ':fecha_fin' => $fechaFin,
-            ':id' => $relacionId,
-            ':organismo_id' => $organismoId
-        ]);
-        if ($stmt->rowCount() === 0) {
-            throw new InvalidArgumentException('La relación no existe o ya fue finalizada.');
+        $this->pdo->beginTransaction();
+        try {
+            $stmt = $this->pdo->prepare("
+                SELECT liga_id FROM tb_liga_organismos
+                WHERE id = :id AND organismo_id = :organismo_id AND estado = 'activo'
+                  AND (fecha_inicio IS NULL OR fecha_inicio <= :fecha_fin)
+                FOR UPDATE
+            ");
+            $stmt->execute([
+                ':id' => $relacionId,
+                ':organismo_id' => $organismoId,
+                ':fecha_fin' => $fechaFin
+            ]);
+            $ligaId = $stmt->fetchColumn();
+            if (!$ligaId) {
+                throw new InvalidArgumentException('La relación no existe o ya fue finalizada.');
+            }
+
+            $nombreLigaStmt = $this->pdo->prepare("SELECT nombre FROM tb_ligas WHERE id = :id");
+            $nombreLigaStmt->execute([':id' => (int) $ligaId]);
+            $ligaNombre = (string) $nombreLigaStmt->fetchColumn();
+            $nombreOrganismoStmt = $this->pdo->prepare("SELECT nombre FROM tb_organismos WHERE id = :id");
+            $nombreOrganismoStmt->execute([':id' => $organismoId]);
+            $organismoNombre = (string) $nombreOrganismoStmt->fetchColumn();
+
+            $update = $this->pdo->prepare("
+                UPDATE tb_liga_organismos
+                SET estado = 'inactivo', fecha_fin = :fecha_fin
+                WHERE id = :id AND organismo_id = :organismo_id AND estado = 'activo'
+            ");
+            $update->execute([
+                ':fecha_fin' => $fechaFin,
+                ':id' => $relacionId,
+                ':organismo_id' => $organismoId
+            ]);
+            if ($update->rowCount() === 0) {
+                throw new InvalidArgumentException('La relación no existe o ya fue finalizada.');
+            }
+
+            $historial = $this->pdo->prepare("
+                INSERT INTO tb_liga_historial
+                    (liga_id, usuario_id, accion, campo, valor_anterior, valor_nuevo, descripcion)
+                VALUES (:liga_id, :usuario_id, 'fin_vinculacion', 'relacion_institucional', :anterior, :nuevo, :descripcion)
+            ");
+            $historial->execute([
+                ':liga_id' => (int) $ligaId,
+                ':usuario_id' => $usuarioId,
+                ':anterior' => $organismoNombre . ' (relación activa)',
+                ':nuevo' => $organismoNombre . ' (relación finalizada el ' . $fechaFin . ')',
+                ':descripcion' => 'El organismo "' . $organismoNombre . '" finalizó su relación con la liga "' . $ligaNombre . '".'
+            ]);
+            $this->pdo->commit();
+        } catch (Throwable $e) {
+            if ($this->pdo->inTransaction()) $this->pdo->rollBack();
+            throw $e;
         }
     }
 }
