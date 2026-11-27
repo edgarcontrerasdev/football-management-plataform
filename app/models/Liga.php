@@ -212,7 +212,7 @@ class Liga
     /**
      * Registra una liga independiente. Su organismo gestor podrá vincularse después.
      */
-    public function crear(array $data, ?int $organismoId = null): bool
+    public function crear(array $data, ?int $organismoId = null, ?int $usuarioId = null): bool
     {
         $inTransaction = $this->pdo->inTransaction();
         if (!$inTransaction) {
@@ -248,6 +248,9 @@ class Liga
 
         $ligaId = (int) $this->pdo->lastInsertId();
         if ($organismoId !== null) {
+            if ($usuarioId === null || $usuarioId <= 0) {
+                throw new RuntimeException('No se identificó al usuario que crea la liga.');
+            }
             $relacion = $this->pdo->prepare("
                 INSERT INTO tb_liga_organismos
                     (liga_id, organismo_id, tipo_relacion, es_gestor, fecha_inicio, estado)
@@ -257,6 +260,20 @@ class Liga
             $relacion->execute([
                 ':liga_id' => $ligaId,
                 ':organismo_id' => $organismoId
+            ]);
+
+            $organismoStmt = $this->pdo->prepare("SELECT nombre FROM tb_organismos WHERE id = :id");
+            $organismoStmt->execute([':id' => $organismoId]);
+            $organismoNombre = (string) $organismoStmt->fetchColumn();
+            $historial = $this->pdo->prepare("
+                INSERT INTO tb_liga_historial
+                    (liga_id, usuario_id, accion, campo, valor_anterior, valor_nuevo, descripcion)
+                VALUES (:liga_id, :usuario_id, 'vinculacion_organismo', 'relacion_institucional', NULL, :nuevo, 'Liga creada y vinculada automáticamente a su organismo gestor.')
+            ");
+            $historial->execute([
+                ':liga_id' => $ligaId,
+                ':usuario_id' => $usuarioId,
+                ':nuevo' => $organismoNombre . ' (gestor)'
             ]);
         }
 
@@ -650,7 +667,7 @@ class Liga
                 ':liga_id' => $ligaId,
                 ':usuario_id' => $usuarioId,
                 ':nuevo' => 'Solicitud enviada a: ' . $organismoNombre,
-                ':descripcion' => 'Se solicitó vincular la liga "' . $ligaNombre . '" con el organismo "' . $organismoNombre . '".'
+                ':descripcion' => 'Se envió una solicitud de vinculación institucional.'
             ]);
 
             $this->pdo->commit();
