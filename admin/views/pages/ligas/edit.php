@@ -36,6 +36,7 @@ $valor = static fn(string $campo, $default = ''): string =>
                         <label class="form-label" for="siglas">Siglas</label>
                         <input class="form-control" id="siglas" name="siglas" maxlength="30" value="<?= $valor('siglas') ?>">
                     </div>
+                    <?php if (Auth::role() !== 'LIGA'): ?>
                     <div class="col-md-4">
                         <label class="form-label" for="estado">Estado</label>
                         <select class="form-select" id="estado" name="estado">
@@ -44,6 +45,12 @@ $valor = static fn(string $campo, $default = ''): string =>
                             <option value="suspendido" <?= $valor('estado') === 'suspendido' ? 'selected' : '' ?>>Suspendida</option>
                         </select>
                     </div>
+                    <?php else: ?>
+                    <div class="col-md-4">
+                        <label class="form-label">Estado</label>
+                        <input class="form-control" value="<?= htmlspecialchars(ucfirst((string) ($liga['estado'] ?? 'activo')), ENT_QUOTES, 'UTF-8') ?>" disabled>
+                    </div>
+                    <?php endif; ?>
                 </div>
 
                 <hr class="my-4">
