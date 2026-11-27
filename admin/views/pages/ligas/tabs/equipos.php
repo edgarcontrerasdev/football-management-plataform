@@ -130,6 +130,33 @@ $estadosDocumentacion = [
                                 </div>
                             <?php elseif ($estadoParticipacion === 'pendiente'): ?>
                                 <span class="text-muted small">Pendiente de autorización de temporada</span>
+                            <?php elseif (in_array($estadoParticipacion, ['activo', 'suspendido'], true) && ($ligaTemporada['estado'] ?? '') === 'activo'): ?>
+                                <div class="d-flex flex-wrap gap-1">
+                                    <?php if ($estadoParticipacion === 'activo'): ?>
+                                        <form method="POST" action="index.php?page=ligas&action=cambiarParticipacionEquipo">
+                                            <input type="hidden" name="liga_id" value="<?= (int) $liga['id'] ?>">
+                                            <input type="hidden" name="liga_equipo_id" value="<?= (int) $equipo['liga_equipo_id'] ?>">
+                                            <input type="hidden" name="estado" value="suspendido">
+                                            <button type="submit" class="btn btn-sm btn-outline-warning" data-confirm="¿Suspender la participación de este equipo?">Suspender</button>
+                                        </form>
+                                    <?php else: ?>
+                                        <form method="POST" action="index.php?page=ligas&action=cambiarParticipacionEquipo">
+                                            <input type="hidden" name="liga_id" value="<?= (int) $liga['id'] ?>">
+                                            <input type="hidden" name="liga_equipo_id" value="<?= (int) $equipo['liga_equipo_id'] ?>">
+                                            <input type="hidden" name="estado" value="activo">
+                                            <button type="submit" class="btn btn-sm btn-outline-success" data-confirm="¿Reactivar la participación de este equipo?">Reactivar</button>
+                                        </form>
+                                    <?php endif; ?>
+                                    <form method="POST" action="index.php?page=ligas&action=cambiarParticipacionEquipo" class="d-flex flex-wrap gap-1">
+                                        <input type="hidden" name="liga_id" value="<?= (int) $liga['id'] ?>">
+                                        <input type="hidden" name="liga_equipo_id" value="<?= (int) $equipo['liga_equipo_id'] ?>">
+                                        <input type="hidden" name="estado" value="baja">
+                                        <input type="text" name="motivo_baja" class="form-control form-control-sm" maxlength="255" placeholder="Motivo de baja" required>
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" data-confirm="¿Registrar la baja definitiva de este equipo en la temporada?">Dar de baja</button>
+                                    </form>
+                                </div>
+                            <?php elseif ($estadoParticipacion === 'baja'): ?>
+                                <span class="text-muted small">Baja registrada<?= !empty($equipo['motivo_baja']) ? ': ' . htmlspecialchars($equipo['motivo_baja'], ENT_QUOTES, 'UTF-8') : '' ?></span>
                             <?php else: ?>
                                 <span class="text-muted small">Sin acciones</span>
                             <?php endif; ?>
