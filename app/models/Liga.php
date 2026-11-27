@@ -95,6 +95,28 @@ class Liga
     }
 
     /**
+     * Actualiza únicamente el estado operativo de una liga.
+     */
+    public function cambiarEstado(int $id, string $estado): bool
+    {
+        if (!in_array($estado, ['activo', 'inactivo', 'suspendido'], true)) {
+            throw new InvalidArgumentException('Estado de liga no válido.');
+        }
+
+        $stmt = $this->pdo->prepare("
+            UPDATE tb_ligas
+            SET estado = :estado
+            WHERE id = :id
+            LIMIT 1
+        ");
+
+        return $stmt->execute([
+            ':estado' => $estado,
+            ':id' => $id
+        ]);
+    }
+
+    /**
      * Registra una liga independiente. Su organismo gestor podrá vincularse después.
      */
     public function crear(array $data, ?int $organismoId = null): bool
