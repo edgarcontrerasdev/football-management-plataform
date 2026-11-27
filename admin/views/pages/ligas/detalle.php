@@ -89,6 +89,10 @@
                 <div class="tab-pane fade" id="deportivo">
                     <?php require ROOT_PATH . '/admin/views/pages/ligas/tabs/deportivo.php'; ?>
                 </div>
+
+                <div class="tab-pane fade" id="historial">
+                    <?php require ROOT_PATH . '/admin/views/pages/ligas/tabs/historial.php'; ?>
+                </div>
             </div>
         </div>
         
