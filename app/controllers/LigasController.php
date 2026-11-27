@@ -339,7 +339,7 @@ class LigasController
         }
 
         try {
-            if (!$this->ligaModel->crear($data, $organismoId)) {
+            if (!$this->ligaModel->crear($data, $organismoId, (int) Auth::id())) {
                 throw new RuntimeException('La creación de la liga no se completó.');
             }
             flashSuccess('La liga se creó correctamente.');
