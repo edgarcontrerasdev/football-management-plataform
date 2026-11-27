@@ -432,7 +432,7 @@ class TemporadasController{
         $id = $_POST['id'];
 
         $temporadaActual = $this->temporadaModel->getById($id);
-        $this->exigirAccesoTemporada($temporadaActual);
+        $this->exigirGestionTemporada($temporadaActual);
 
         if (!$temporadaActual) {
             flashError('No existe la temporada solicitada.');
