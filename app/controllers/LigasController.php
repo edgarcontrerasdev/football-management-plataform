@@ -265,7 +265,9 @@ class LigasController
             $errors[] = 'Las siglas no pueden superar los 30 caracteres.';
         }
 
-        if (!in_array($data['estado'], ['activo', 'inactivo', 'suspendido'], true)) {
+        if (Auth::role() === 'LIGA') {
+            $data['estado'] = (string) ($liga['estado'] ?? 'activo');
+        } elseif (!in_array($data['estado'], ['activo', 'inactivo', 'suspendido'], true)) {
             $errors[] = 'El estado seleccionado no es válido.';
         }
 
@@ -515,6 +517,53 @@ class LigasController
             header('Location: index.php?page=ligas&action=editar&id=' . $id);
             exit;
         }
+    }
+
+    /**
+     * Cambia el estado operativo de una liga. Solo ADMIN global u ORGANISMO gestor.
+     */
+    public function cambiarEstado($id): void
+    {
+        $rol = Auth::role();
+        if (!in_array($rol, ['ADMIN', 'ORGANISMO'], true)) {
+            http_response_code(403);
+            view('403.php');
+            return;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: index.php?page=ligas');
+            exit;
+        }
+
+        $id = (int) $id;
+        $scopeIds = $this->ligasAutorizadas();
+        $liga = $this->ligaModel->getById($id, $scopeIds);
+        if (!$liga) {
+            http_response_code(403);
+            view('403.php');
+            exit;
+        }
+
+        $estado = trim((string) ($_POST['estado'] ?? ''));
+        if (!in_array($estado, ['activo', 'inactivo', 'suspendido'], true)) {
+            $_SESSION['errors'] = ['El estado solicitado no es válido.'];
+            header('Location: index.php?page=ligas&action=detalle&id=' . $id);
+            exit;
+        }
+
+        try {
+            if (!$this->ligaModel->cambiarEstado($id, $estado)) {
+                throw new RuntimeException('No fue posible actualizar el estado de la liga.');
+            }
+            flashSuccess('El estado de la liga se actualizó correctamente.');
+        } catch (Throwable $e) {
+            error_log('Error al cambiar estado de liga ' . $id . ': ' . $e->getMessage());
+            $_SESSION['errors'] = ['No fue posible cambiar el estado de la liga.'];
+        }
+
+        header('Location: index.php?page=ligas&action=detalle&id=' . $id);
+        exit;
     }
 
     public function miLiga(): void
