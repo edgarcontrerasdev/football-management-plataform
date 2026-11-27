@@ -374,9 +374,9 @@ public function listar(array $filtros = [], int $limit = 10, int $offset = 0): a
                 ':usuario_id' => $usuarioId,
                 ':accion' => $accion,
                 ':nuevo' => $valorNuevo,
-                ':descripcion' => ($decision === 'aprobar' ? 'Se aprobó' : 'Se rechazó')
-                    . ' la solicitud de vinculación de la liga "' . $ligaNombre
-                    . '" con el organismo "' . $organismoNombre . '".'
+                ':descripcion' => $decision === 'aprobar'
+                    ? 'El organismo aprobó la solicitud de vinculación institucional.'
+                    : 'El organismo rechazó la solicitud de vinculación institucional.'
             ]);
             $this->pdo->commit();
         } catch (Throwable $e) {
@@ -469,7 +469,7 @@ public function listar(array $filtros = [], int $limit = 10, int $offset = 0): a
                 ':liga_id' => $ligaId,
                 ':usuario_id' => $usuarioId,
                 ':nuevo' => $detalle,
-                ':descripcion' => 'El organismo "' . $organismoNombre . '" vinculó directamente la liga "' . $ligaNombre . '".'
+                ':descripcion' => 'El organismo registró una vinculación directa con la liga.'
             ]);
 
             $this->pdo->commit();
@@ -530,7 +530,7 @@ public function listar(array $filtros = [], int $limit = 10, int $offset = 0): a
                 ':usuario_id' => $usuarioId,
                 ':anterior' => $organismoNombre . ' (relación activa)',
                 ':nuevo' => $organismoNombre . ' (relación finalizada el ' . $fechaFin . ')',
-                ':descripcion' => 'El organismo "' . $organismoNombre . '" finalizó su relación con la liga "' . $ligaNombre . '".'
+                ':descripcion' => 'El organismo finalizó una relación institucional con la liga.'
             ]);
             $this->pdo->commit();
         } catch (Throwable $e) {
