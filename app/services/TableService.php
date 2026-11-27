@@ -3,7 +3,7 @@
 class TableService {
 
     
-    public static function make($data, $module){
+    public static function make($data, $module, array $options = []){
 
         $configPath = ROOT_PATH."/app/tables/{$module}.php";
 
@@ -16,6 +16,13 @@ class TableService {
         $table = new TableBuilder($data);
 
         foreach($config as $col){
+
+            if (($options['read_only'] ?? false) && ($col['type'] ?? '') === 'actions') {
+                $col['actions'] = array_values(array_filter(
+                    $col['actions'] ?? [],
+                    fn($action) => ($action['title'] ?? '') === 'Ver'
+                ));
+            }
 
             switch($col['type']){
 
