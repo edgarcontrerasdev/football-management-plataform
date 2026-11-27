@@ -6,6 +6,7 @@ $tabsLiga = [
     ['id' => 'documentos', 'icon' => 'bi-folder', 'label' => 'Documentos'],
     ['id' => 'pagos', 'icon' => 'bi-cash-coin', 'label' => 'Pagos'],
     ['id' => 'deportivo', 'icon' => 'bi-trophy', 'label' => 'Deportivo'],
+    ['id' => 'historial', 'icon' => 'bi-clock-history', 'label' => 'Historial'],
 ];
 ?>
 <ul class="nav nav-tabs card-header-tabs flex-wrap">
