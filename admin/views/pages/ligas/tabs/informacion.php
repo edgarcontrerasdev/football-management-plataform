@@ -125,9 +125,22 @@
                     Aquí podrás activar, suspender o desactivar la liga.
                 </p>
 
-                <button class="btn btn-sm btn-outline-secondary">
-                    Cambiar estado
-                </button>
+                <?php if (in_array(Auth::role(), ['ADMIN', 'ORGANISMO'], true)): ?>
+                    <form method="POST"
+                          action="index.php?page=ligas&amp;action=cambiarEstado&amp;id=<?= (int) $liga['id'] ?>"
+                          class="d-flex flex-wrap align-items-center gap-2"
+                          onsubmit="return window.Swal ? (event.preventDefault(), Swal.fire({title: '¿Confirmar cambio de estado?', text: 'El estado de la liga cambiará y esto puede afectar su operación.', icon: 'warning', showCancelButton: true, confirmButtonText: 'Sí, cambiar estado', cancelButtonText: 'Cancelar', reverseButtons: true, focusCancel: true}).then(result => { if (result.isConfirmed) event.target.submit(); }), false) : confirm('¿Confirmas cambiar el estado de esta liga?')">
+                        <label class="visually-hidden" for="estadoLiga">Nuevo estado</label>
+                        <select class="form-select form-select-sm" id="estadoLiga" name="estado" required style="max-width: 190px;">
+                            <option value="activo" <?= ($liga['estado'] ?? '') === 'activo' ? 'selected' : '' ?>>Activa</option>
+                            <option value="inactivo" <?= ($liga['estado'] ?? '') === 'inactivo' ? 'selected' : '' ?>>Inactiva</option>
+                            <option value="suspendido" <?= ($liga['estado'] ?? '') === 'suspendido' ? 'selected' : '' ?>>Suspendida</option>
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Actualizar estado</button>
+                    </form>
+                <?php else: ?>
+                    <p class="text-muted mb-0">Solo el administrador global o el organismo gestor pueden cambiar el estado.</p>
+                <?php endif; ?>
 
             </div>
 
