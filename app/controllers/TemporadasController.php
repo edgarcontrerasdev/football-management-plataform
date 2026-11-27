@@ -107,7 +107,7 @@ class TemporadasController{
 
          //configuracion de toolbox
         $toolbox = [
-            'create'    =>  'index.php?page=temporadas&action=create',
+            'create'    =>  (Auth::user()['rol_clave'] ?? '') === 'ADMIN' ? null : 'index.php?page=temporadas&action=create',
             'filters'   =>  [
                 [
                     'type'      =>  'select',
@@ -157,6 +157,15 @@ class TemporadasController{
             redirectRoute('temporadas');
        }
 
+        // Las temporadas pertenecen a un organismo o a una liga independiente.
+        // El ADMIN global no puede crear ni asignar temporadas a otros ámbitos.
+        if ((Auth::user()['rol_clave'] ?? '') === 'ADMIN') {
+            http_response_code(403);
+            flashError('Las temporadas deben ser creadas por el organismo o la liga independiente que las administra.');
+            redirectRoute('temporadas');
+            exit;
+        }
+
         $errors = $_SESSION['errors'] ?? [];
         $old    = $_SESSION['old'] ?? [];
         $propietarios = $this->temporadaModel->listarPropietarios();
@@ -183,6 +192,14 @@ class TemporadasController{
        if(!Auth::check()){
             redirectRoute('temporadas');
        }
+
+        // Bloqueo servidor-side: ADMIN global no puede asignar temporadas a organismos o ligas.
+        if ((Auth::user()['rol_clave'] ?? '') === 'ADMIN') {
+            http_response_code(403);
+            flashError('No tienes permisos para crear temporadas. Cada organismo o liga independiente administra las propias.');
+            redirectRoute('temporadas');
+            exit;
+        }
 
         $errors = [];
 
