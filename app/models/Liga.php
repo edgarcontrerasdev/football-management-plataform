@@ -757,7 +757,9 @@ class Liga
                 COALESCE(NULLIF(et.siglas, ''), e.siglas) AS siglas,
                 le.numero_registro,
                 le.estado_participacion,
-                le.estado_documentacion
+                le.estado_documentacion,
+                le.fecha_baja,
+                le.motivo_baja
             FROM tb_liga_temporadas lt
             INNER JOIN tb_liga_equipos le
                 ON le.liga_temporada_id = lt.id
