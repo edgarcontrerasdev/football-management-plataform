@@ -31,6 +31,26 @@ class TemporadasController{
             $conditions[] = "(ambito_tipo = 'liga' AND liga_propietaria_id = :liga{$i})";
             $params[":liga{$i}"] = (int) $id;
         }
+
+        // También son visibles las temporadas inscritas/vinculadas a las ligas
+        // que administra el organismo o a las que el usuario tiene acceso.
+        $ligaRelacionadaIds = array_values(array_unique(array_merge(
+            array_map('intval', $ligaIds),
+            array_map('intval', $this->obtenerLigasGestorasDeOrganismos($organismoIds))
+        )));
+        if ($ligaRelacionadaIds) {
+            $holders = [];
+            foreach ($ligaRelacionadaIds as $i => $id) {
+                $holders[] = ":liga_relacionada{$i}";
+                $params[":liga_relacionada{$i}"] = $id;
+            }
+            $conditions[] = "id IN (
+                SELECT lt.temporada_id
+                FROM tb_liga_temporadas lt
+                WHERE lt.liga_id IN (" . implode(',', $holders) . ")
+            )";
+        }
+
         if ($temporadaIds) {
             $holders = [];
             foreach ($temporadaIds as $i => $id) {
@@ -41,7 +61,27 @@ class TemporadasController{
         }
         if (!$conditions) return [];
 
-        $stmt = $this->db->prepare("SELECT id FROM tb_temporadas WHERE " . implode(' OR ', $conditions));
+        $stmt = $this->db->prepare("SELECT DISTINCT id FROM tb_temporadas WHERE " . implode(' OR ', $conditions));
+        $stmt->execute($params);
+        return array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+    }
+
+    private function obtenerLigasGestorasDeOrganismos(array $organismoIds): array
+    {
+        if (!$organismoIds) return [];
+        $holders = [];
+        $params = [];
+        foreach (array_values($organismoIds) as $i => $id) {
+            $holders[] = ":organismo{$i}";
+            $params[":organismo{$i}"] = (int) $id;
+        }
+        $stmt = $this->db->prepare("
+            SELECT DISTINCT liga_id
+            FROM tb_liga_organismos
+            WHERE organismo_id IN (" . implode(',', $holders) . ")
+              AND es_gestor = 1
+              AND estado = 'activa'
+        ");
         $stmt->execute($params);
         return array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
     }
