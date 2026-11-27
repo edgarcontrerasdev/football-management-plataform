@@ -125,7 +125,9 @@
                     Aquí podrás activar, suspender o desactivar la liga.
                 </p>
 
-                <?php if (in_array(Auth::role(), ['ADMIN', 'ORGANISMO'], true)): ?>
+                <?php $rolActual = Auth::role(); ?>
+                <?php $ligaIndependiente = empty($liga['organismos']); ?>
+                <?php if ($rolActual === 'ORGANISMO' || ($rolActual === 'LIGA' && $ligaIndependiente)): ?>
                     <form method="POST"
                           action="index.php?page=ligas&amp;action=cambiarEstado&amp;id=<?= (int) $liga['id'] ?>"
                           class="d-flex flex-wrap align-items-center gap-2"
@@ -139,7 +141,7 @@
                         <button type="submit" class="btn btn-sm btn-outline-danger">Actualizar estado</button>
                     </form>
                 <?php else: ?>
-                    <p class="text-muted mb-0">Solo el administrador global o el organismo gestor pueden cambiar el estado.</p>
+                    <p class="text-muted mb-0"><?= $rolActual === 'ADMIN' ? 'El administrador global puede consultar el estado, pero no modificarlo.' : ($rolActual === 'LIGA' ? 'El estado de esta liga corresponde al organismo al que está vinculada.' : 'Solo el organismo gestor puede cambiar el estado de esta liga.') ?></p>
                 <?php endif; ?>
 
             </div>
