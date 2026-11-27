@@ -46,23 +46,67 @@ class TemporadasController{
         return array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
     }
 
-    private function puedeGestionarTemporada(array $temporada): bool
+    private function puedeVerTemporada(array $temporada): bool
     {
         $user = Auth::user();
         if (!$user) return false;
         if (($user['rol_clave'] ?? '') === 'ADMIN') return true;
-        if ($this->authorization->hasScope('temporada', (int) $temporada['id'])) return true;
 
+        if ($this->authorization->hasScope('temporada', (int) $temporada['id'])) {
+            return true;
+        }
+
+        $rol = $user['rol_clave'] ?? '';
         if (($temporada['ambito_tipo'] ?? '') === 'organismo' && !empty($temporada['organismo_id'])) {
-            return $this->authorization->hasScope('organismo', (int) $temporada['organismo_id']);
+            return in_array($rol, ['ORGANISMO', 'SUPERVISOR'], true)
+                && $this->authorization->hasScope('organismo', (int) $temporada['organismo_id']);
         }
         if (($temporada['ambito_tipo'] ?? '') === 'liga' && !empty($temporada['liga_propietaria_id'])) {
-            return $this->authorization->hasScope('liga', (int) $temporada['liga_propietaria_id']);
+            return in_array($rol, ['LIGA', 'SUPERVISOR'], true)
+                && $this->authorization->hasScope('liga', (int) $temporada['liga_propietaria_id']);
         }
         return false;
     }
 
-    private function exigirAccesoTemporada(?array $temporada): void
+    private function puedeGestionarTemporada(array $temporada): bool
+    {
+        $user = Auth::user();
+        if (!$user) return false;
+
+        $rol = $user['rol_clave'] ?? '';
+        // ADMIN global es de consulta: nunca administra el ciclo de vida.
+        if ($rol === 'ADMIN') return false;
+
+        // Las temporadas institucionales solo las administra el organismo propietario.
+        // Una liga vinculada no adquiere control sobre temporadas del organismo.
+        if (($temporada['ambito_tipo'] ?? '') === 'organismo' && !empty($temporada['organismo_id'])) {
+            if ($rol === 'ORGANISMO' || $rol === 'SUPERVISOR') {
+                return $this->authorization->hasScope('organismo', (int) $temporada['organismo_id'])
+                    || ($rol === 'SUPERVISOR' && $this->authorization->hasScope('temporada', (int) $temporada['id']));
+            }
+            return false;
+        }
+
+        if (($temporada['ambito_tipo'] ?? '') === 'liga' && !empty($temporada['liga_propietaria_id'])) {
+            if ($rol === 'LIGA' || $rol === 'SUPERVISOR') {
+                return $this->authorization->hasScope('liga', (int) $temporada['liga_propietaria_id'])
+                    || ($rol === 'SUPERVISOR' && $this->authorization->hasScope('temporada', (int) $temporada['id']));
+            }
+        }
+        return false;
+    }
+
+    private function exigirLecturaTemporada(?array $temporada): void
+    {
+        if (!$temporada || !$this->puedeVerTemporada($temporada)) {
+            http_response_code(403);
+            flashError('No tienes permisos para consultar esta temporada.');
+            redirectRoute('temporadas');
+            exit;
+        }
+    }
+
+    private function exigirGestionTemporada(?array $temporada): void
     {
         if (!$temporada || !$this->puedeGestionarTemporada($temporada)) {
             http_response_code(403);
@@ -129,7 +173,9 @@ class TemporadasController{
         $temporadas = $this->temporadaModel->listar($filtros, $pagination['limit'], $pagination['offset']);
        
         //tabla final
-        $tableData = TableService::make($temporadas, 'temporadas');
+        $tableData = TableService::make($temporadas, 'temporadas', [
+            'read_only' => (Auth::user()['rol_clave'] ?? '') === 'ADMIN'
+        ]);
         $columns = $tableData['columns'];
         $rows = $tableData['rows'];
 
@@ -301,7 +347,7 @@ class TemporadasController{
 
         // si el ID no viene vacio 
         $temporada = $this->temporadaModel->getById($_GET['id']);
-        $this->exigirAccesoTemporada($temporada);   // llamamos al modelo para obtener la temporada con el ID enviado
+        $this->exigirGestionTemporada($temporada);   // llamamos al modelo para obtener la temporada con el ID enviado
 
         // si no existe la temporada
         if (!$temporada) {
@@ -415,7 +461,7 @@ class TemporadasController{
 
     public function activar($id){
         $temporada = $this->temporadaModel->getById($id);
-        $this->exigirAccesoTemporada($temporada);
+        $this->exigirGestionTemporada($temporada);
         if(!$temporada){
             flashError('No existe una temporada con el ID solicitado');
             redirectRoute('temporadas');
@@ -447,13 +493,15 @@ class TemporadasController{
         }
 
         $temporada = $this->temporadaModel->getById($id);
-        $this->exigirAccesoTemporada($temporada);
+        $this->exigirLecturaTemporada($temporada);
 
         if (!$temporada) {
             header('Location: index.php?page=temporadas');
             exit;
         }
     
+        $esAdminGlobal = (Auth::user()['rol_clave'] ?? '') === 'ADMIN';
+
         //ruta de la vista show.php
         $viewPath = ROOT_PATH."/admin/views/pages/temporadas/show.php";
 
@@ -485,7 +533,7 @@ class TemporadasController{
         //obtenemos el id de la temporada y la buscamos en la base de datos
         $id = $_GET['id'];
         $temporada = $this->temporadaModel->getById($id);
-        $this->exigirAccesoTemporada($temporada);
+        $this->exigirGestionTemporada($temporada);
 
         //si no se obtuvo resultado en la consulta
         if(!$temporada){
@@ -532,7 +580,7 @@ class TemporadasController{
         }
 
         $temporada = $this->temporadaModel->getById($id);
-        $this->exigirAccesoTemporada($temporada);
+        $this->exigirGestionTemporada($temporada);
 
         if (!$temporada) {
             flashError('ERROR. El ID recibido no es válido o no existe.');
@@ -569,7 +617,7 @@ class TemporadasController{
 
         $id = $_GET['id'];
         $temporada = $this->temporadaModel->getById($id);
-        $this->exigirAccesoTemporada($temporada);
+        $this->exigirGestionTemporada($temporada);
 
         if(!$temporada){
             flashError('ERROR. El ID recibido no es valido o no existe');
