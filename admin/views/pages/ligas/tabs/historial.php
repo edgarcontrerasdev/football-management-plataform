@@ -36,7 +36,8 @@
                                     'codigo_postal' => 'Código postal',
                                     'redes_sociales' => 'Redes sociales',
                                     'notas' => 'Notas',
-                                    'estado' => 'Estado institucional'
+                                    'estado' => 'Estado institucional',
+                                    'relacion_institucional' => 'Relación institucional'
                                 ];
                                 $campo = $etiquetas[$movimiento['campo']] ?? ucfirst((string) $movimiento['campo']);
                                 $anterior = trim((string) ($movimiento['valor_anterior'] ?? ''));
@@ -49,11 +50,26 @@
                                     <?= htmlspecialchars(date('d/m/Y H:i', strtotime($movimiento['created_at'])), ENT_QUOTES, 'UTF-8') ?>
                                 </td>
                                 <td>
-                                    <span class="badge bg-<?= $movimiento['accion'] === 'cambio_estado' ? 'warning text-dark' : 'primary' ?>">
-                                        <?= $movimiento['accion'] === 'cambio_estado' ? 'Cambio de estado' : 'Actualización' ?>
+                                    <?php
+                                        $acciones = [
+                                            'cambio_estado' => ['Cambio de estado', 'warning text-dark'],
+                                            'actualizacion' => ['Actualización', 'primary'],
+                                            'solicitud_vinculacion' => ['Solicitud enviada', 'info text-dark'],
+                                            'vinculacion_organismo' => ['Vinculación directa', 'success'],
+                                            'aprobacion_vinculacion' => ['Solicitud aprobada', 'success'],
+                                            'rechazo_vinculacion' => ['Solicitud rechazada', 'danger'],
+                                            'fin_vinculacion' => ['Relación finalizada', 'secondary']
+                                        ];
+                                        [$accionTexto, $accionClase] = $acciones[$movimiento['accion']] ?? ['Movimiento institucional', 'secondary'];
+                                    ?>
+                                    <span class="badge bg-<?= $accionClase ?>">
+                                        <?= htmlspecialchars($accionTexto, ENT_QUOTES, 'UTF-8') ?>
                                     </span>
                                 </td>
                                 <td class="small">
+                                    <?php if (!empty($movimiento['descripcion'])): ?>
+                                        <div class="mb-1"><?= htmlspecialchars($movimiento['descripcion'], ENT_QUOTES, 'UTF-8') ?></div>
+                                    <?php endif; ?>
                                     <strong><?= htmlspecialchars($campo, ENT_QUOTES, 'UTF-8') ?>:</strong>
                                     <span class="text-muted"><?= htmlspecialchars($anterior, ENT_QUOTES, 'UTF-8') ?></span>
                                     <i class="fas fa-arrow-right mx-1 text-muted"></i>
