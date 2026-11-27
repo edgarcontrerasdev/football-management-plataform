@@ -541,6 +541,7 @@ class TemporadasController{
         }
     
         $esAdminGlobal = (Auth::user()['rol_clave'] ?? '') === 'ADMIN';
+        $puedeGestionarTemporada = $this->puedeGestionarTemporada($temporada);
 
         //ruta de la vista show.php
         $viewPath = ROOT_PATH."/admin/views/pages/temporadas/show.php";
