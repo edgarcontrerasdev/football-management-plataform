@@ -304,7 +304,7 @@ class OrganismosController
             exit;
         }
         try {
-            $this->organismoModel->vincularLiga($organismoId, $ligaId, $data);
+            $this->organismoModel->vincularLiga($organismoId, $ligaId, $data, (int) Auth::id());
             $_SESSION['success'] = 'La liga se vinculó correctamente al organismo.';
         } catch (Throwable $e) {
             error_log('Error al vincular liga con organismo: ' . $e->getMessage());
@@ -377,7 +377,7 @@ class OrganismosController
             exit;
         }
         try {
-            $this->organismoModel->finalizarRelacion($organismoId, $relacionId, $fechaFin);
+            $this->organismoModel->finalizarRelacion($organismoId, $relacionId, $fechaFin, (int) Auth::id());
             $_SESSION['success'] = 'La relación con la liga se finalizó. El historial se conservó.';
         } catch (Throwable $e) {
             error_log('Error al finalizar relación de organismo: ' . $e->getMessage());
