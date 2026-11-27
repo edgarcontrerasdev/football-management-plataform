@@ -116,13 +116,13 @@
 
                 <p>
                     <strong>Estatus actual:</strong>
-                    <span class="badge bg-success">
-                        <?= $liga['estado'] ?? 'Activo' ?>
+                    <span class="badge bg-<?= ($liga['estado'] ?? '') === 'activo' ? 'success' : (($liga['estado'] ?? '') === 'suspendido' ? 'danger' : 'secondary') ?>">
+                        <?= htmlspecialchars(ucfirst((string) ($liga['estado'] ?? 'activo')), ENT_QUOTES, 'UTF-8') ?>
                     </span>
                 </p>
 
                 <p class="text-muted">
-                    Aquí podrás activar, suspender o desactivar la liga.
+                    El estado se administra según la autoridad responsable de la liga.
                 </p>
 
                 <?php $rolActual = Auth::role(); ?>
