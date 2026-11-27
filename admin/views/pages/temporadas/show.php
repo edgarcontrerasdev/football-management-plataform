@@ -34,7 +34,7 @@
 
     <div class="d-flex gap-2">
 
-        <?php if ($temporada['estado'] === 'borrador'): ?>
+        <?php if (!$esAdminGlobal && $temporada['estado'] === 'borrador'): ?>
 
             <a href="index.php?page=temporadas&action=edit&id=<?= $temporada['id'] ?>"
                class="btn btn-warning">
@@ -53,7 +53,7 @@
                 Eliminar
             </a>
 
-        <?php elseif ($temporada['estado'] === 'activa'): ?>
+        <?php elseif (!$esAdminGlobal && $temporada['estado'] === 'activa'): ?>
             <a  href="index.php?page=temporadas&action=cerrar&id=<?= $temporada['id']; ?>"
                 class="btn btn-sm btn-outline-danger"
                 data-confirm="¿Cerrar esta temporada?. Una vez cerrada no se podran asociar mas registros a este temporada">
