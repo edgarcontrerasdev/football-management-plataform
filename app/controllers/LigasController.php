@@ -360,6 +360,12 @@ class LigasController
      */
     public function editar($id): void
     {
+        if (!in_array(Auth::role(), ['ADMIN', 'ORGANISMO', 'LIGA'], true)) {
+            http_response_code(403);
+            view('403.php');
+            return;
+        }
+
         $id = (int) $id;
         $scopeIds = $this->ligasAutorizadas();
         $liga = $this->ligaModel->getById($id, $scopeIds);
@@ -386,6 +392,12 @@ class LigasController
      */
     public function actualizar($id): void
     {
+        if (!in_array(Auth::role(), ['ADMIN', 'ORGANISMO', 'LIGA'], true)) {
+            http_response_code(403);
+            view('403.php');
+            return;
+        }
+
         $id = (int) $id;
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: index.php?page=ligas');
