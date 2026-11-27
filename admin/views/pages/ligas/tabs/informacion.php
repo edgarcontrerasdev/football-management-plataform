@@ -7,9 +7,9 @@
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
                 <strong><i class="fas fa-info-circle"></i> Datos Generales</strong>
 
-                <button class="btn btn-sm btn-outline-primary" id="btnGenerales"> 
-                    Editar
-                </button>
+                <?php if (in_array(Auth::role(), ['ADMIN', 'ORGANISMO', 'LIGA'], true)): ?>
+                    <a class="btn btn-sm btn-outline-primary" href="index.php?page=ligas&amp;action=editar&amp;id=<?= (int) $liga['id'] ?>">Editar</a>
+                <?php endif; ?>
             </div>
 
             <div class="card-body small">
@@ -40,9 +40,9 @@
             <div class="card-header bg-white d-flex justify-content-between align-items-center">
                 <strong><i class="fas fa-envelope"></i> Contacto</strong>
 
-                <button class="btn btn-sm btn-outline-primary" id="btnContacto">
-                    Editar
-                </button>
+                <?php if (in_array(Auth::role(), ['ADMIN', 'ORGANISMO', 'LIGA'], true)): ?>
+                    <a class="btn btn-sm btn-outline-primary" href="index.php?page=ligas&amp;action=editar&amp;id=<?= (int) $liga['id'] ?>">Editar</a>
+                <?php endif; ?>
             </div>
 
             <div class="card-body small">
@@ -95,9 +95,9 @@
                     </p>
                 <?php endif; ?>
 
-                <button id="btnDireccion" class="btn btn-sm btn-outline-primary">
-                    <?= !empty($direccionTexto) ? 'Editar' : 'Agregar' ?>
-                </button>
+                <?php if (in_array(Auth::role(), ['ADMIN', 'ORGANISMO', 'LIGA'], true)): ?>
+                    <a class="btn btn-sm btn-outline-primary" href="index.php?page=ligas&amp;action=editar&amp;id=<?= (int) $liga['id'] ?>"><?= !empty($direccionTexto) ? 'Editar' : 'Agregar' ?></a>
+                <?php endif; ?>
 
             </div>
 
