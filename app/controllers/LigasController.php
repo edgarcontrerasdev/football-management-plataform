@@ -924,6 +924,48 @@ class LigasController
 
 
     /**
+     * Actualiza la participación de un equipo inscrito en la liga.
+     */
+    public function cambiarParticipacionEquipo(): void
+    {
+        $ligaId = (int) ($_POST['liga_id'] ?? 0);
+        $ligaEquipoId = (int) ($_POST['liga_equipo_id'] ?? 0);
+        $estado = trim((string) ($_POST['estado'] ?? ''));
+        $motivo = trim((string) ($_POST['motivo_baja'] ?? ''));
+
+        $liga = $this->ligaModel->getById($ligaId, $this->ligasAutorizadas());
+        if (!$liga || $ligaEquipoId <= 0 || !in_array($estado, ['activo', 'suspendido', 'baja'], true)) {
+            http_response_code(403);
+            view('403.php');
+            return;
+        }
+
+        try {
+            $actualizado = $this->ligaModel->cambiarParticipacionEquipo(
+                $ligaId,
+                $ligaEquipoId,
+                $estado,
+                $motivo,
+                (int) Auth::id()
+            );
+            if ($actualizado) {
+                flashSuccess($estado === 'baja'
+                    ? 'La baja del equipo quedó registrada.'
+                    : 'El estado de participación del equipo se actualizó.');
+            } else {
+                flashError('No se pudo aplicar el cambio. Verifica el estado actual de la participación.');
+            }
+        } catch (Throwable $e) {
+            error_log('Error al cambiar participación de equipo: ' . $e->getMessage());
+            flashError($e->getMessage());
+        }
+
+        header('Location: index.php?page=ligas&action=detalle&id=' . $ligaId . '#equipos');
+        exit;
+    }
+
+
+    /**
      * Aprueba o rechaza una solicitud pendiente de inscripción de equipo.
      */
     public function resolverInscripcionEquipo(): void
