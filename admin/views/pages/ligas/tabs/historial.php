@@ -58,7 +58,13 @@
                                             'vinculacion_organismo' => ['Vinculación directa', 'success'],
                                             'aprobacion_vinculacion' => ['Solicitud aprobada', 'success'],
                                             'rechazo_vinculacion' => ['Solicitud rechazada', 'danger'],
-                                            'fin_vinculacion' => ['Relación finalizada', 'secondary']
+                                            'fin_vinculacion' => ['Relación finalizada', 'secondary'],
+                                            'solicitud_temporada' => ['Solicitud de temporada', 'info text-dark'],
+                                            'aprobacion_temporada' => ['Temporada aprobada', 'success'],
+                                            'rechazo_temporada' => ['Temporada rechazada', 'danger'],
+                                            'solicitud_inscripcion_equipo' => ['Inscripción solicitada', 'info text-dark'],
+                                            'aprobacion_inscripcion_equipo' => ['Inscripción aprobada', 'success'],
+                                            'rechazo_inscripcion_equipo' => ['Inscripción rechazada', 'danger']
                                         ];
                                         [$accionTexto, $accionClase] = $acciones[$movimiento['accion']] ?? ['Movimiento institucional', 'secondary'];
                                     ?>
