@@ -499,7 +499,7 @@ class LigasController
         }
 
         try {
-            if (!$this->ligaModel->actualizar($id, $data)) {
+            if (!$this->ligaModel->actualizar($id, $data, (int) Auth::id())) {
                 throw new RuntimeException('La actualización de la liga no se completó.');
             }
             if ($rutaNuevoLogo && $logoAnterior && $logoAnterior !== 'default.png') {
@@ -561,7 +561,7 @@ class LigasController
         }
 
         try {
-            if (!$this->ligaModel->cambiarEstado($id, $estado)) {
+            if (!$this->ligaModel->cambiarEstado($id, $estado, (int) Auth::id())) {
                 throw new RuntimeException('No fue posible actualizar el estado de la liga.');
             }
             flashSuccess('El estado de la liga se actualizó correctamente.');
@@ -705,7 +705,8 @@ class LigasController
                 'puedeResolverTemporadas' => $puedeResolverTemporadas,
                 'equiposLiga' => $equiposLiga,
                 'ligaTemporada' => $ligaTemporada,
-                'equiposDisponibles' => $equiposDisponibles
+                'equiposDisponibles' => $equiposDisponibles,
+                'historialLiga' => $this->ligaModel->listarHistorial($id)
             ]
         );
     }
