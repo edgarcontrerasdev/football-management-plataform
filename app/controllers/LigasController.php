@@ -417,12 +417,15 @@ class LigasController
 
         $data = [];
         foreach ([
-            'nombre', 'siglas', 'estado', 'correo', 'telefono', 'direccion',
+            'nombre', 'siglas', 'correo', 'telefono', 'direccion',
             'colonia', 'municipio', 'estado_republica', 'codigo_postal',
             'redes_sociales', 'notas'
         ] as $campo) {
             $data[$campo] = trim((string) ($_POST[$campo] ?? ''));
         }
+
+        // El estado es institucional: nunca se modifica desde el formulario general.
+        $data['estado'] = (string) ($liga['estado'] ?? 'activo');
 
         $errors = [];
         if ($data['nombre'] === '') {
@@ -433,9 +436,6 @@ class LigasController
 
         if ($data['siglas'] !== '' && mb_strlen($data['siglas']) > 30) {
             $errors[] = 'Las siglas no pueden superar los 30 caracteres.';
-        }
-        if (!in_array($data['estado'], ['activo', 'inactivo', 'suspendido'], true)) {
-            $errors[] = 'El estado seleccionado no es válido.';
         }
         if ($data['correo'] !== '' && !filter_var($data['correo'], FILTER_VALIDATE_EMAIL)) {
             $errors[] = 'El correo no tiene un formato válido.';
@@ -520,12 +520,12 @@ class LigasController
     }
 
     /**
-     * Cambia el estado operativo de una liga. Solo ADMIN global u ORGANISMO gestor.
+     * Cambia el estado institucional: ORGANISMO gestor o administrador de una liga independiente.
      */
     public function cambiarEstado($id): void
     {
         $rol = Auth::role();
-        if (!in_array($rol, ['ADMIN', 'ORGANISMO'], true)) {
+        if (!in_array($rol, ['ORGANISMO', 'LIGA'], true)) {
             http_response_code(403);
             view('403.php');
             return;
@@ -540,6 +540,14 @@ class LigasController
         $scopeIds = $this->ligasAutorizadas();
         $liga = $this->ligaModel->getById($id, $scopeIds);
         if (!$liga) {
+            http_response_code(403);
+            view('403.php');
+            exit;
+        }
+
+        // Una liga vinculada queda bajo autoridad institucional de su organismo gestor.
+        // El rol LIGA solo puede cambiar el estado si la liga sigue siendo independiente.
+        if ($rol === 'LIGA' && !empty($liga['organismos'])) {
             http_response_code(403);
             view('403.php');
             exit;
