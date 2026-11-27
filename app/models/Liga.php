@@ -53,67 +53,160 @@ class Liga
     }
 
     /**
-     * Actualiza los datos generales de una liga sin alterar sus relaciones.
+     * Actualiza datos generales y registra cada campo modificado en una transacción.
      */
-    public function actualizar(int $id, array $data): bool
+    public function actualizar(int $id, array $data, int $usuarioId): bool
     {
-        $stmt = $this->pdo->prepare("
-            UPDATE tb_ligas
-            SET nombre = :nombre,
-                siglas = :siglas,
-                estado = :estado,
-                logo = :logo,
-                correo = :correo,
-                telefono = :telefono,
-                direccion = :direccion,
-                colonia = :colonia,
-                municipio = :municipio,
-                estado_republica = :estado_republica,
-                codigo_postal = :codigo_postal,
-                redes_sociales = :redes_sociales,
-                notas = :notas
-            WHERE id = :id
-            LIMIT 1
-        ");
+        $campos = [
+            'nombre' => 'Nombre',
+            'siglas' => 'Siglas',
+            'logo' => 'Logotipo',
+            'correo' => 'Correo',
+            'telefono' => 'Teléfono',
+            'direccion' => 'Dirección',
+            'colonia' => 'Colonia',
+            'municipio' => 'Municipio',
+            'estado_republica' => 'Estado',
+            'codigo_postal' => 'Código postal',
+            'redes_sociales' => 'Redes sociales',
+            'notas' => 'Notas'
+        ];
 
-        return $stmt->execute([
-            ':nombre' => trim((string) $data['nombre']),
-            ':siglas' => ($data['siglas'] ?? '') !== '' ? trim((string) $data['siglas']) : null,
-            ':estado' => $data['estado'] ?? 'activo',
-            ':logo' => ($data['logo'] ?? '') !== '' ? trim((string) $data['logo']) : null,
-            ':correo' => ($data['correo'] ?? '') !== '' ? trim((string) $data['correo']) : null,
-            ':telefono' => ($data['telefono'] ?? '') !== '' ? trim((string) $data['telefono']) : null,
-            ':direccion' => ($data['direccion'] ?? '') !== '' ? trim((string) $data['direccion']) : null,
-            ':colonia' => ($data['colonia'] ?? '') !== '' ? trim((string) $data['colonia']) : null,
-            ':municipio' => ($data['municipio'] ?? '') !== '' ? trim((string) $data['municipio']) : null,
-            ':estado_republica' => ($data['estado_republica'] ?? '') !== '' ? trim((string) $data['estado_republica']) : null,
-            ':codigo_postal' => ($data['codigo_postal'] ?? '') !== '' ? trim((string) $data['codigo_postal']) : null,
-            ':redes_sociales' => ($data['redes_sociales'] ?? '') !== '' ? trim((string) $data['redes_sociales']) : null,
-            ':notas' => ($data['notas'] ?? '') !== '' ? trim((string) $data['notas']) : null,
-            ':id' => $id
-        ]);
+        $propia = !$this->pdo->inTransaction();
+        if ($propia) $this->pdo->beginTransaction();
+
+        try {
+            $lock = $this->pdo->prepare("SELECT * FROM tb_ligas WHERE id = :id FOR UPDATE");
+            $lock->execute([':id' => $id]);
+            $anterior = $lock->fetch(PDO::FETCH_ASSOC);
+            if (!$anterior) throw new RuntimeException('La liga no existe.');
+
+            $stmt = $this->pdo->prepare("
+                UPDATE tb_ligas
+                SET nombre = :nombre,
+                    siglas = :siglas,
+                    estado = :estado,
+                    logo = :logo,
+                    correo = :correo,
+                    telefono = :telefono,
+                    direccion = :direccion,
+                    colonia = :colonia,
+                    municipio = :municipio,
+                    estado_republica = :estado_republica,
+                    codigo_postal = :codigo_postal,
+                    redes_sociales = :redes_sociales,
+                    notas = :notas
+                WHERE id = :id
+                LIMIT 1
+            ");
+            $stmt->execute([
+                ':nombre' => trim((string) $data['nombre']),
+                ':siglas' => ($data['siglas'] ?? '') !== '' ? trim((string) $data['siglas']) : null,
+                ':estado' => $anterior['estado'],
+                ':logo' => ($data['logo'] ?? '') !== '' ? trim((string) $data['logo']) : null,
+                ':correo' => ($data['correo'] ?? '') !== '' ? trim((string) $data['correo']) : null,
+                ':telefono' => ($data['telefono'] ?? '') !== '' ? trim((string) $data['telefono']) : null,
+                ':direccion' => ($data['direccion'] ?? '') !== '' ? trim((string) $data['direccion']) : null,
+                ':colonia' => ($data['colonia'] ?? '') !== '' ? trim((string) $data['colonia']) : null,
+                ':municipio' => ($data['municipio'] ?? '') !== '' ? trim((string) $data['municipio']) : null,
+                ':estado_republica' => ($data['estado_republica'] ?? '') !== '' ? trim((string) $data['estado_republica']) : null,
+                ':codigo_postal' => ($data['codigo_postal'] ?? '') !== '' ? trim((string) $data['codigo_postal']) : null,
+                ':redes_sociales' => ($data['redes_sociales'] ?? '') !== '' ? trim((string) $data['redes_sociales']) : null,
+                ':notas' => ($data['notas'] ?? '') !== '' ? trim((string) $data['notas']) : null,
+                ':id' => $id
+            ]);
+
+            $historial = $this->pdo->prepare("
+                INSERT INTO tb_liga_historial
+                    (liga_id, usuario_id, accion, campo, valor_anterior, valor_nuevo, descripcion)
+                VALUES (:liga_id, :usuario_id, 'actualizacion', :campo, :anterior, :nuevo, :descripcion)
+            ");
+            foreach ($campos as $campo => $etiqueta) {
+                $valorNuevo = $data[$campo] ?? null;
+                $valorAnterior = $anterior[$campo] ?? null;
+                $valorNuevo = ($valorNuevo === '') ? null : $valorNuevo;
+                if ((string) ($valorAnterior ?? '') === (string) ($valorNuevo ?? '')) continue;
+                $historial->execute([
+                    ':liga_id' => $id,
+                    ':usuario_id' => $usuarioId,
+                    ':campo' => $campo,
+                    ':anterior' => $valorAnterior,
+                    ':nuevo' => $valorNuevo,
+                    ':descripcion' => 'Se modificó ' . $etiqueta . ' de la liga.'
+                ]);
+            }
+
+            if ($propia) $this->pdo->commit();
+            return true;
+        } catch (Throwable $e) {
+            if ($propia && $this->pdo->inTransaction()) $this->pdo->rollBack();
+            throw $e;
+        }
     }
 
     /**
-     * Actualiza únicamente el estado operativo de una liga.
+     * Actualiza el estado y registra el cambio en el historial de forma atómica.
      */
-    public function cambiarEstado(int $id, string $estado): bool
+    public function cambiarEstado(int $id, string $estado, int $usuarioId): bool
     {
         if (!in_array($estado, ['activo', 'inactivo', 'suspendido'], true)) {
             throw new InvalidArgumentException('Estado de liga no válido.');
         }
 
-        $stmt = $this->pdo->prepare("
-            UPDATE tb_ligas
-            SET estado = :estado
-            WHERE id = :id
-            LIMIT 1
-        ");
+        $propia = !$this->pdo->inTransaction();
+        if ($propia) $this->pdo->beginTransaction();
+        try {
+            $lock = $this->pdo->prepare("SELECT estado FROM tb_ligas WHERE id = :id FOR UPDATE");
+            $lock->execute([':id' => $id]);
+            $anterior = $lock->fetchColumn();
+            if ($anterior === false) throw new RuntimeException('La liga no existe.');
 
-        return $stmt->execute([
-            ':estado' => $estado,
-            ':id' => $id
-        ]);
+            if ($anterior !== $estado) {
+                $stmt = $this->pdo->prepare("UPDATE tb_ligas SET estado = :estado WHERE id = :id LIMIT 1");
+                $stmt->execute([':estado' => $estado, ':id' => $id]);
+                $historial = $this->pdo->prepare("
+                    INSERT INTO tb_liga_historial
+                        (liga_id, usuario_id, accion, campo, valor_anterior, valor_nuevo, descripcion)
+                    VALUES (:liga_id, :usuario_id, 'cambio_estado', 'estado', :anterior, :nuevo, 'Se modificó el estado institucional de la liga.')
+                ");
+                $historial->execute([
+                    ':liga_id' => $id,
+                    ':usuario_id' => $usuarioId,
+                    ':anterior' => $anterior,
+                    ':nuevo' => $estado
+                ]);
+            }
+
+            if ($propia) $this->pdo->commit();
+            return true;
+        } catch (Throwable $e) {
+            if ($propia && $this->pdo->inTransaction()) $this->pdo->rollBack();
+            throw $e;
+        }
+    }
+
+    /**
+     * Devuelve los movimientos recientes de una liga y el usuario responsable.
+     */
+    public function listarHistorial(int $ligaId, int $limite = 100): array
+    {
+        $stmt = $this->pdo->prepare("
+            SELECT h.id, h.accion, h.campo, h.valor_anterior, h.valor_nuevo,
+                   h.descripcion, h.created_at,
+                   COALESCE(NULLIF(TRIM(CONCAT_WS(' ', a.nombres, a.apellido_paterno, a.apellido_materno)), ''), u.usuario) AS usuario_nombre,
+                   r.nombre AS rol_nombre
+            FROM tb_liga_historial h
+            INNER JOIN tb_usuarios u ON u.id = h.usuario_id
+            LEFT JOIN tb_afiliados a ON a.id = u.afiliado_id
+            LEFT JOIN tb_roles r ON r.id = u.rol_id
+            WHERE h.liga_id = :liga_id
+            ORDER BY h.created_at DESC, h.id DESC
+            LIMIT :limite
+        ");
+        $stmt->bindValue(':liga_id', $ligaId, PDO::PARAM_INT);
+        $stmt->bindValue(':limite', max(1, min(200, $limite)), PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
