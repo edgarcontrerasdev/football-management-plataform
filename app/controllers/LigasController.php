@@ -638,7 +638,7 @@ class LigasController
         $ligaTemporada = $temporadaActual
             ? $this->ligaModel->obtenerVinculacionTemporada($id, (int) $temporadaActual['id'])
             : null;
-        $equiposDisponibles = ($ligaTemporada && $temporadaActual)
+        $equiposDisponibles = ($ligaTemporada && ($ligaTemporada['estado'] ?? '') === 'activo' && $temporadaActual)
             ? $this->ligaModel->listarEquiposDisponibles($id, (int) $temporadaActual['id'])
             : [];
         $temporadasVinculadasIds = array_map(
@@ -890,13 +890,16 @@ class LigasController
             ? (int) ($temporada['organismo_id'] ?: $temporada['liga_propietaria_id'])
             : 0;
 
+        $vinculacion = $this->ligaModel->obtenerVinculacionTemporada($ligaId, $temporadaId);
+
         if (
             !$temporada
             || $temporada['ambito_tipo'] !== $tipoEsperado
             || $propietarioReal !== $propietarioEsperado
-            || !$this->ligaModel->obtenerVinculacionTemporada($ligaId, $temporadaId)
+            || !$vinculacion
+            || ($vinculacion['estado'] ?? '') !== 'activo'
         ) {
-            flashError('La temporada no está vinculada correctamente con esta liga.');
+            flashError('La temporada debe estar autorizada por su organismo antes de inscribir equipos.');
             header('Location: index.php?page=ligas&action=detalle&id=' . $ligaId . '#equipos');
             exit;
         }
