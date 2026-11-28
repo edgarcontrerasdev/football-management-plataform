@@ -55,6 +55,7 @@
                                 <td>
                                     <?php
                                         $acciones = [
+                                            'creacion' => ['Liga creada', 'success'],
                                             'cambio_estado' => ['Cambio de estado', 'warning text-dark'],
                                             'actualizacion' => ['Actualización', 'primary'],
                                             'solicitud_vinculacion' => ['Solicitud enviada', 'info text-dark'],
