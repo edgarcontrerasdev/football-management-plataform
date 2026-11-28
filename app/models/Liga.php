@@ -1115,12 +1115,14 @@ class Liga
             $stmt = $this->pdo->prepare("
                 UPDATE tb_liga_temporadas
                 SET estado = :estado,
-                    fecha_alta = CASE WHEN :estado_fecha = 'activo' THEN NOW() ELSE fecha_alta END
+                    fecha_alta = CASE WHEN :estado_fecha = 'activo' THEN NOW() ELSE fecha_alta END,
+                    fecha_baja = CASE WHEN :estado_baja = 'activo' THEN NULL ELSE fecha_baja END
                 WHERE id = :liga_temporada_id AND liga_id = :liga_id AND estado = 'pendiente'
             ");
             $stmt->execute([
                 ':estado' => $estado,
                 ':estado_fecha' => $estado,
+                ':estado_baja' => $estado,
                 ':liga_temporada_id' => $ligaTemporadaId,
                 ':liga_id' => $ligaId
             ]);
@@ -1170,21 +1172,53 @@ class Liga
                 throw new InvalidArgumentException('La liga o temporada no existe.');
             }
 
-            $stmt = $this->pdo->prepare("
-                INSERT INTO tb_liga_temporadas (liga_id, temporada_id, fecha_solicitud)
-                VALUES (:liga_id, :temporada_id, NOW())
+            $existente = $this->pdo->prepare("
+                SELECT id, estado FROM tb_liga_temporadas
+                WHERE liga_id = :liga_id AND temporada_id = :temporada_id
+                FOR UPDATE
             ");
-            $stmt->execute([':liga_id' => $ligaId, ':temporada_id' => $temporadaId]);
+            $existente->execute([':liga_id' => $ligaId, ':temporada_id' => $temporadaId]);
+            $vinculo = $existente->fetch(PDO::FETCH_ASSOC);
+
+            if ($vinculo) {
+                if (!in_array($vinculo['estado'], ['revocado', 'rechazado'], true)) {
+                    throw new InvalidArgumentException('La temporada ya tiene una solicitud o autorización vigente.');
+                }
+                $actualizar = $this->pdo->prepare("
+                    UPDATE tb_liga_temporadas
+                    SET estado = 'pendiente', fecha_solicitud = NOW()
+                    WHERE id = :id AND estado IN ('revocado', 'rechazado')
+                ");
+                $actualizar->execute([':id' => (int) $vinculo['id']]);
+                if ($actualizar->rowCount() !== 1) {
+                    throw new RuntimeException('No fue posible reabrir la solicitud de temporada.');
+                }
+                $accion = 'solicitud_reingreso_temporada';
+                $anterior = (string) $vinculo['estado'];
+                $descripcion = 'Se solicitó nuevamente la participación en la temporada.';
+            } else {
+                $insertar = $this->pdo->prepare("
+                    INSERT INTO tb_liga_temporadas (liga_id, temporada_id, estado, fecha_solicitud)
+                    VALUES (:liga_id, :temporada_id, 'pendiente', NOW())
+                ");
+                $insertar->execute([':liga_id' => $ligaId, ':temporada_id' => $temporadaId]);
+                $accion = 'solicitud_temporada';
+                $anterior = null;
+                $descripcion = 'Se solicitó vincular una temporada a la liga.';
+            }
 
             $historial = $this->pdo->prepare("
                 INSERT INTO tb_liga_historial
                     (liga_id, usuario_id, accion, campo, valor_anterior, valor_nuevo, descripcion)
-                VALUES (:liga_id, :usuario_id, 'solicitud_temporada', 'temporada', NULL, :nuevo, 'Se solicitó vincular una temporada a la liga.')
+                VALUES (:liga_id, :usuario_id, :accion, 'temporada', :anterior, :nuevo, :descripcion)
             ");
             $historial->execute([
                 ':liga_id' => $ligaId,
                 ':usuario_id' => $usuarioId,
-                ':nuevo' => $temporadaNombre
+                ':accion' => $accion,
+                ':anterior' => $anterior,
+                ':nuevo' => $temporadaNombre,
+                ':descripcion' => $descripcion
             ]);
             $this->pdo->commit();
             return true;
