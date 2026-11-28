@@ -823,7 +823,8 @@ class Liga
             FROM tb_equipos e
             LEFT JOIN tb_equipo_temporadas et
                 ON et.equipo_id = e.id AND et.temporada_id = :temporada_join
-            WHERE NOT EXISTS (
+            WHERE e.liga_id = :liga_propietaria
+              AND NOT EXISTS (
                 SELECT 1
                 FROM tb_liga_temporadas lt
                 INNER JOIN tb_liga_equipos le ON le.liga_temporada_id = lt.id
@@ -836,6 +837,7 @@ class Liga
         ");
         $stmt->execute([
             ':temporada_join' => $temporadaId,
+            ':liga_propietaria' => $ligaId,
             ':liga_id' => $ligaId,
             ':temporada_filter' => $temporadaId
         ]);
@@ -854,8 +856,13 @@ class Liga
     ): bool {
         $this->pdo->beginTransaction();
         try {
-            $equipo = $this->pdo->prepare("SELECT nombre FROM tb_equipos WHERE id = :id");
-            $equipo->execute([':id' => $equipoId]);
+            $equipo = $this->pdo->prepare("
+                SELECT nombre
+                FROM tb_equipos
+                WHERE id = :id AND liga_id = :liga_id
+                LIMIT 1
+            ");
+            $equipo->execute([':id' => $equipoId, ':liga_id' => $ligaId]);
             $equipoNombre = $equipo->fetchColumn();
             $temporada = $this->pdo->prepare("SELECT temporada FROM tb_temporadas WHERE id = :id");
             $temporada->execute([':id' => $temporadaId]);
