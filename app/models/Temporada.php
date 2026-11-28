@@ -72,12 +72,22 @@ class Temporada
             : "SELECT t.id, t.temporada, t.fecha_inicio, t.fecha_fin, t.estado, t.es_actual
                FROM tb_temporadas t
                WHERE t.ambito_tipo = 'liga' AND t.liga_propietaria_id = :propietario";
-        $sql .= " AND NOT EXISTS (SELECT 1 FROM tb_liga_temporadas lt
-                   WHERE lt.liga_id = :liga_id AND lt.temporada_id = t.id)
+        $sql = str_replace(
+            "SELECT t.id, t.temporada, t.fecha_inicio, t.fecha_fin, t.estado, t.es_actual",
+            "SELECT t.id, t.temporada, t.fecha_inicio, t.fecha_fin, t.estado, t.es_actual,
+                    (SELECT lt.estado FROM tb_liga_temporadas lt
+                     WHERE lt.liga_id = :liga_id_estado AND lt.temporada_id = t.id LIMIT 1) AS estado_vinculacion_anterior",
+            $sql
+        );
+        $sql .= " AND NOT EXISTS (
+                    SELECT 1 FROM tb_liga_temporadas lt
+                    WHERE lt.liga_id = :liga_id AND lt.temporada_id = t.id
+                      AND lt.estado NOT IN ('revocado', 'rechazado')
+                 )
                  ORDER BY t.fecha_inicio DESC, t.id DESC";
 
         $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([':propietario' => $organismoGestorId ?? $ligaId, ':liga_id' => $ligaId]);
+        $stmt->execute([':propietario' => $organismoGestorId ?? $ligaId, ':liga_id_estado' => $ligaId, ':liga_id' => $ligaId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
