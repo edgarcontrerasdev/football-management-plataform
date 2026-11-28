@@ -37,7 +37,10 @@
                                     'redes_sociales' => 'Redes sociales',
                                     'notas' => 'Notas',
                                     'estado' => 'Estado institucional',
-                                    'relacion_institucional' => 'Relación institucional'
+                                    'relacion_institucional' => 'Relación institucional',
+                                    'temporada' => 'Participación en temporada',
+                                    'equipo_temporada' => 'Equipo y temporada',
+                                    'estado_participacion' => 'Estado de participación'
                                 ];
                                 $campo = $etiquetas[$movimiento['campo']] ?? ucfirst((string) $movimiento['campo']);
                                 $anterior = trim((string) ($movimiento['valor_anterior'] ?? ''));
@@ -62,6 +65,10 @@
                                             'solicitud_temporada' => ['Solicitud de temporada', 'info text-dark'],
                                             'aprobacion_temporada' => ['Temporada aprobada', 'success'],
                                             'rechazo_temporada' => ['Temporada rechazada', 'danger'],
+                                            'retiro_autorizacion_temporada' => ['Autorización retirada', 'secondary'],
+                                            'rechazo_temporada_organismo' => ['Participación rechazada por organismo', 'danger'],
+                                            'solicitud_reingreso_temporada' => ['Nueva solicitud de temporada', 'info text-dark'],
+                                            'autorizacion_temporada_organismo' => ['Autorización de temporada', 'success'],
                                             'solicitud_inscripcion_equipo' => ['Inscripción solicitada', 'info text-dark'],
                                             'aprobacion_inscripcion_equipo' => ['Inscripción aprobada', 'success'],
                                             'rechazo_inscripcion_equipo' => ['Inscripción rechazada', 'danger'],
