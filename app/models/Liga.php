@@ -996,7 +996,9 @@ class Liga
                 INNER JOIN tb_liga_temporadas lt ON lt.id = le.liga_temporada_id
                 INNER JOIN tb_equipos e ON e.id = le.equipo_id
                 INNER JOIN tb_temporadas t ON t.id = lt.temporada_id
-                WHERE le.id = :liga_equipo_id AND lt.liga_id = :liga_id
+                WHERE le.id = :liga_equipo_id
+                  AND lt.liga_id = :liga_id
+                  AND lt.estado = 'activo'
                 FOR UPDATE
             ");
             $consulta->execute([
