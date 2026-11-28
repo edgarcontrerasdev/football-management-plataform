@@ -524,6 +524,62 @@ class TemporadasController{
         }
     }
 
+    /**
+     * El organismo propietario resuelve la participación de una liga en su temporada.
+     */
+    public function resolverParticipacionLiga()
+    {
+        if (!Auth::check() || $_SERVER['REQUEST_METHOD'] !== 'POST') {
+            flashError('Solicitud inválida.');
+            redirectRoute('temporadas');
+        }
+
+        $temporadaId = (int) ($_POST['temporada_id'] ?? 0);
+        $ligaId = (int) ($_POST['liga_id'] ?? 0);
+        $decision = (string) ($_POST['decision'] ?? '');
+        $estado = $decision === 'aprobar' ? 'activo' : ($decision === 'rechazar' ? 'rechazado' : '');
+
+        $temporada = $this->temporadaModel->getById($temporadaId);
+        $user = Auth::user();
+
+        // Esta decisión corresponde exclusivamente al administrador del organismo propietario.
+        if (
+            !$temporada
+            || ($temporada['ambito_tipo'] ?? '') !== 'organismo'
+            || ($user['rol_clave'] ?? '') !== 'ORGANISMO'
+            || !$this->authorization->hasScope('organismo', (int) $temporada['organismo_id'])
+        ) {
+            http_response_code(403);
+            flashError('Solo el organismo propietario puede autorizar ligas en esta temporada.');
+            redirectRoute('temporadas');
+        }
+
+        if ($ligaId <= 0 || $estado === '') {
+            flashError('La liga o decisión seleccionada no es válida.');
+            redirectRoute('temporadas', ['action' => 'show', 'id' => $temporadaId]);
+        }
+
+        try {
+            $resultado = $this->temporadaModel->actualizarParticipacionLiga(
+                $temporadaId,
+                $ligaId,
+                $estado,
+                (int) Auth::id()
+            );
+            if (!$resultado) {
+                flashError('La liga no pertenece a este organismo o ya no está disponible.');
+            } else {
+                flashSuccess($estado === 'activo'
+                    ? 'La liga quedó autorizada para participar en esta temporada.'
+                    : 'La participación de la liga fue rechazada.');
+            }
+        } catch (Throwable $e) {
+            flashError('No fue posible actualizar la participación de la liga.');
+        }
+
+        redirectRoute('temporadas', ['action' => 'show', 'id' => $temporadaId]);
+    }
+
     public function show() {
         $id = $_GET['id'] ?? null;
 
@@ -542,6 +598,12 @@ class TemporadasController{
     
         $esAdminGlobal = (Auth::user()['rol_clave'] ?? '') === 'ADMIN';
         $puedeGestionarTemporada = $this->puedeGestionarTemporada($temporada);
+        $puedeGestionarParticipantes = ($temporada['ambito_tipo'] ?? '') === 'organismo'
+            && (Auth::user()['rol_clave'] ?? '') === 'ORGANISMO'
+            && $this->authorization->hasScope('organismo', (int) $temporada['organismo_id']);
+        $ligasParticipantes = ($temporada['ambito_tipo'] ?? '') === 'organismo'
+            ? $this->temporadaModel->listarLigasParticipantes((int) $temporada['id'])
+            : [];
 
         //ruta de la vista show.php
         $viewPath = ROOT_PATH."/admin/views/pages/temporadas/show.php";
