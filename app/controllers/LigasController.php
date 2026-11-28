@@ -626,9 +626,12 @@ class LigasController
             ? $this->temporadaModel->getActiva('organismo', (int) $organismoGestor['id'])
             : $this->temporadaModel->getActiva('liga', $id);
 
+        $rolActual = Auth::role();
         $puedeResolverTemporadas = $organismoGestor
-            ? $this->authorization->hasScope('organismo', (int) $organismoGestor['id'])
-            : $this->authorization->hasScope('liga', $id);
+            ? ($rolActual === 'ORGANISMO'
+                && $this->authorization->hasScope('organismo', (int) $organismoGestor['id']))
+            : ($rolActual === 'LIGA'
+                && $this->authorization->hasScope('liga', $id));
 
         $temporadasVinculadas = $this->ligaModel->listarTemporadasVinculadas($id);
         $temporadasDisponibles = $this->temporadaModel->listarDisponiblesParaLiga(
