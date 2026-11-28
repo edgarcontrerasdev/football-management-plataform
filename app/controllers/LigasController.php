@@ -779,8 +779,11 @@ class LigasController
         try {
             $this->ligaModel->vincularTemporada($ligaId, $temporadaId, (int) Auth::id());
             flashSuccess('La temporada quedó vinculada como solicitud pendiente.');
-        } catch (PDOException $e) {
-            flashError('La temporada ya está vinculada o no fue posible registrar la solicitud.');
+        } catch (InvalidArgumentException $e) {
+            flashError($e->getMessage());
+        } catch (Throwable $e) {
+            error_log('Error al solicitar vinculación de temporada: ' . $e->getMessage());
+            flashError('No fue posible registrar la solicitud de temporada.');
         }
 
         header('Location: index.php?page=ligas&action=detalle&id=' . $ligaId . '#temporada');
