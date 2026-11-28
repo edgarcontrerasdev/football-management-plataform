@@ -816,6 +816,7 @@ class Liga
                 INNER JOIN tb_liga_equipos le ON le.liga_temporada_id = lt.id
                 WHERE lt.liga_id = :liga_id
                   AND lt.temporada_id = :temporada_filter
+                  AND lt.estado = 'activo'
                   AND le.equipo_id = e.id
             )
             ORDER BY nombre_temporada ASC
@@ -858,6 +859,7 @@ class Liga
                 FROM tb_liga_temporadas lt
                 WHERE lt.liga_id = :liga_id
                   AND lt.temporada_id = :temporada_id
+                  AND lt.estado = 'activo'
                 LIMIT 1
             ");
             $stmt->execute([
