@@ -641,15 +641,6 @@ class LigasController
         $equiposDisponibles = ($ligaTemporada && ($ligaTemporada['estado'] ?? '') === 'activo' && $temporadaActual)
             ? $this->ligaModel->listarEquiposDisponibles($id, (int) $temporadaActual['id'])
             : [];
-        $temporadasVinculadasIds = array_map(
-            static fn(array $item): int => (int) $item['temporada_id'],
-            $temporadasVinculadas
-        );
-        $temporadasDisponibles = array_values(array_filter(
-            $temporadasDisponibles,
-            static fn(array $item): bool => !in_array((int) $item['id'], $temporadasVinculadasIds, true)
-        ));
-
         $totalEquipos = 0;
         $equiposLiga = [];
 
