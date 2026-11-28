@@ -108,12 +108,12 @@ class Temporada
     }
 
     /**
-     * El organismo propietario autoriza o rechaza la participación de una liga.
+     * El organismo propietario autoriza, rechaza o retira la participación de una liga.
      * También permite autorizar una liga aunque todavía no haya enviado solicitud.
      */
     public function actualizarParticipacionLiga(int $temporadaId, int $ligaId, string $estado, int $usuarioId): bool
     {
-        if (!in_array($estado, ['activo', 'rechazado'], true)) {
+        if (!in_array($estado, ['activo', 'rechazado', 'revocado'], true)) {
             throw new InvalidArgumentException('Estado de participación no válido.');
         }
 
@@ -170,12 +170,22 @@ class Temporada
                     UPDATE tb_liga_temporadas
                     SET estado = :estado,
                         fecha_solicitud = COALESCE(fecha_solicitud, NOW()),
-                        fecha_alta = CASE WHEN :estado_fecha = 'activo' THEN NOW() ELSE NULL END
+                        fecha_alta = CASE
+                            WHEN :estado_alta = 'activo' THEN COALESCE(fecha_alta, NOW())
+                            ELSE fecha_alta
+                        END,
+                        fecha_baja = CASE
+                            WHEN :estado_baja = 'revocado' THEN NOW()
+                            WHEN :estado_reactivar = 'activo' THEN NULL
+                            ELSE fecha_baja
+                        END
                     WHERE id = :id
                 ");
                 $actualizar->execute([
                     ':estado' => $estado,
-                    ':estado_fecha' => $estado,
+                    ':estado_alta' => $estado,
+                    ':estado_baja' => $estado,
+                    ':estado_reactivar' => $estado,
                     ':id' => (int) $vinculo['id']
                 ]);
                 $anterior = $anterior === 'pendiente' ? 'pendiente' : $anterior;
@@ -205,10 +215,14 @@ class Temporada
             $historial->execute([
                 ':liga_id' => $ligaId,
                 ':usuario_id' => $usuarioId,
-                ':accion' => $estado === 'activo' ? 'autorizacion_temporada_organismo' : 'rechazo_temporada_organismo',
+                ':accion' => $estado === 'activo'
+                    ? 'autorizacion_temporada_organismo'
+                    : ($estado === 'revocado' ? 'retiro_autorizacion_temporada' : 'rechazo_temporada_organismo'),
                 ':anterior' => $anterior,
                 ':nuevo' => $estado,
-                ':descripcion' => 'El organismo ' . $estado . ' la participación de la liga en la temporada ' . $datosTemporada['temporada'] . '.'
+                ':descripcion' => $estado === 'revocado'
+                    ? 'El organismo retiró la autorización de la liga para la temporada ' . $datosTemporada['temporada'] . '.'
+                    : 'El organismo ' . $estado . ' la participación de la liga en la temporada ' . $datosTemporada['temporada'] . '.'
             ]);
 
             $this->pdo->commit();
