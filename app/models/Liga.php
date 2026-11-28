@@ -214,6 +214,10 @@ class Liga
      */
     public function crear(array $data, ?int $organismoId = null, ?int $usuarioId = null): bool
     {
+        if ($usuarioId === null || $usuarioId <= 0) {
+            throw new RuntimeException('No se identificó al usuario que crea la liga.');
+        }
+
         $inTransaction = $this->pdo->inTransaction();
         if (!$inTransaction) {
             $this->pdo->beginTransaction();
@@ -247,10 +251,19 @@ class Liga
         ]);
 
         $ligaId = (int) $this->pdo->lastInsertId();
+
+        $historialCreacion = $this->pdo->prepare("
+            INSERT INTO tb_liga_historial
+                (liga_id, usuario_id, accion, campo, valor_anterior, valor_nuevo, descripcion)
+            VALUES (:liga_id, :usuario_id, 'creacion', 'liga', NULL, :nombre, 'Se creó el registro institucional de la liga.')
+        ");
+        $historialCreacion->execute([
+            ':liga_id' => $ligaId,
+            ':usuario_id' => $usuarioId,
+            ':nombre' => trim((string) $data['nombre'])
+        ]);
+
         if ($organismoId !== null) {
-            if ($usuarioId === null || $usuarioId <= 0) {
-                throw new RuntimeException('No se identificó al usuario que crea la liga.');
-            }
             $relacion = $this->pdo->prepare("
                 INSERT INTO tb_liga_organismos
                     (liga_id, organismo_id, tipo_relacion, es_gestor, fecha_inicio, estado)
