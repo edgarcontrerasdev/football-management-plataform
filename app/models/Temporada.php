@@ -225,11 +225,13 @@ class Temporada
             $historial->execute([
                 ':liga_id' => $ligaId,
                 ':usuario_id' => $usuarioId,
+                // La columna accion admite 30 caracteres; usamos el mismo
+                // identificador de aprobación que el flujo de la propia liga.
                 ':accion' => $estado === 'activo'
-                    ? 'autorizacion_temporada_organismo'
+                    ? 'aprobacion_temporada'
                     : ($estado === 'revocado' ? 'retiro_autorizacion_temporada' : 'rechazo_temporada_organismo'),
-                ':anterior' => $anterior,
-                ':nuevo' => $estado,
+                ':anterior' => $anterior . ' · ' . $datosTemporada['temporada'],
+                ':nuevo' => $estado . ' · ' . $datosTemporada['temporada'],
                 ':descripcion' => $estado === 'revocado'
                     ? 'El organismo retiró la autorización de la liga para la temporada ' . $datosTemporada['temporada'] . '.'
                     : 'El organismo ' . $estado . ' la participación de la liga en la temporada ' . $datosTemporada['temporada'] . '.'
