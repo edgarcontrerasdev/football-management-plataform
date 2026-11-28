@@ -815,9 +815,17 @@ class LigasController
             }
         }
 
-        $autorizado = $organismoGestor
-            ? $this->authorization->hasScope('organismo', (int) $organismoGestor['id'])
-            : $this->authorization->hasScope('liga', $ligaId);
+        $rol = Auth::role();
+
+        // hasScope() considera ADMIN como alcance global; por eso aquí
+        // validamos primero el rol responsable de cada tipo de liga.
+        if ($organismoGestor) {
+            $autorizado = $rol === 'ORGANISMO'
+                && $this->authorization->hasScope('organismo', (int) $organismoGestor['id']);
+        } else {
+            $autorizado = $rol === 'LIGA'
+                && $this->authorization->hasScope('liga', $ligaId);
+        }
 
         if (!$autorizado) {
             http_response_code(403);
