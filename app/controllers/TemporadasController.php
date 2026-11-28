@@ -537,7 +537,9 @@ class TemporadasController{
         $temporadaId = (int) ($_POST['temporada_id'] ?? 0);
         $ligaId = (int) ($_POST['liga_id'] ?? 0);
         $decision = (string) ($_POST['decision'] ?? '');
-        $estado = $decision === 'aprobar' ? 'activo' : ($decision === 'rechazar' ? 'rechazado' : '');
+        $estado = $decision === 'aprobar'
+            ? 'activo'
+            : ($decision === 'rechazar' ? 'rechazado' : ($decision === 'retirar' ? 'revocado' : ''));
 
         $temporada = $this->temporadaModel->getById($temporadaId);
         $user = Auth::user();
@@ -571,7 +573,9 @@ class TemporadasController{
             } else {
                 flashSuccess($estado === 'activo'
                     ? 'La liga quedó autorizada para participar en esta temporada.'
-                    : 'La participación de la liga fue rechazada.');
+                    : ($estado === 'revocado'
+                        ? 'La autorización fue retirada. El historial de equipos y participaciones se conservó.'
+                        : 'La participación de la liga fue rechazada.'));
             }
         } catch (Throwable $e) {
             flashError('No fue posible actualizar la participación de la liga.');
