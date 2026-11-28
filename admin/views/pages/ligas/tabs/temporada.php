@@ -22,6 +22,7 @@ $temporadasVinculadas = $temporadasVinculadas ?? [];
                     <option value="<?= (int) $temporada['id'] ?>">
                         <?= htmlspecialchars($temporada['temporada'], ENT_QUOTES, 'UTF-8') ?>
                         <?= !empty($temporada['es_actual']) ? ' · Actual' : '' ?>
+                        <?= in_array($temporada['estado_vinculacion_anterior'] ?? '', ['revocado', 'rechazado'], true) ? ' · Solicitar nuevamente' : '' ?>
                     </option>
                 <?php endforeach; ?>
             </select>
@@ -55,9 +56,14 @@ $temporadasVinculadas = $temporadasVinculadas ?? [];
                         <td>
                             <?php
                             $estadoVinculacion = (string) $item['estado_vinculacion'];
-                            $claseVinculacion = $estadoVinculacion === 'activo' ? 'success' : ($estadoVinculacion === 'pendiente' ? 'warning' : 'danger');
+                            $claseVinculacion = $estadoVinculacion === 'activo'
+                                ? 'success'
+                                : ($estadoVinculacion === 'pendiente' ? 'warning' : 'danger');
+                            $etiquetaVinculacion = $estadoVinculacion === 'revocado'
+                                ? 'Autorización retirada'
+                                : ucfirst($estadoVinculacion);
                             ?>
-                            <span class="badge bg-<?= $claseVinculacion ?>"><?= htmlspecialchars(ucfirst($estadoVinculacion), ENT_QUOTES, 'UTF-8') ?></span>
+                            <span class="badge bg-<?= $claseVinculacion ?>"><?= htmlspecialchars($etiquetaVinculacion, ENT_QUOTES, 'UTF-8') ?></span>
                         </td>
                         <?php if ($puedeResolverTemporadas): ?>
                             <td>
