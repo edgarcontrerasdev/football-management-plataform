@@ -30,7 +30,7 @@ $estadosDocumentacion = [
     </span>
 </div>
 
-<?php if (!empty($temporadaActual) && $ligaTemporada): ?>
+<?php if (!empty($temporadaActual) && ($ligaTemporada['estado'] ?? '') === 'activo'): ?>
     <form method="POST" action="index.php?page=ligas&action=inscribirEquipo" class="card card-body border mb-4">
         <input type="hidden" name="liga_id" value="<?= (int) $liga['id'] ?>">
         <input type="hidden" name="temporada_id" value="<?= (int) $temporadaActual['id'] ?>">
@@ -64,7 +64,13 @@ $estadosDocumentacion = [
     </form>
 <?php elseif (!empty($temporadaActual)): ?>
     <div class="alert alert-warning">
-        La temporada actual todavía no está vinculada a esta liga. Primero registra la solicitud en la pestaña Temporada.
+        <?php if (($ligaTemporada['estado'] ?? '') === 'pendiente'): ?>
+            La solicitud de participación de esta liga está pendiente de autorización del organismo. Podrás inscribir equipos cuando sea aprobada.
+        <?php elseif (($ligaTemporada['estado'] ?? '') === 'rechazado'): ?>
+            La participación de esta liga en la temporada fue rechazada por el organismo. No es posible inscribir equipos.
+        <?php else: ?>
+            La temporada actual todavía no está vinculada a esta liga. Primero registra la solicitud en la pestaña Temporada.
+        <?php endif; ?>
     </div>
 <?php endif; ?>
 
