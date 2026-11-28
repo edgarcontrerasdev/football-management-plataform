@@ -1053,8 +1053,8 @@ class Liga
                 ':liga_id' => $ligaId,
                 ':usuario_id' => $usuarioId,
                 ':accion' => $accion,
-                ':anterior' => $estadoAnterior,
-                ':nuevo' => $estadoNuevo,
+                ':anterior' => $estadoAnterior . ' · ' . $registro['equipo'] . ' / ' . $registro['temporada'],
+                ':nuevo' => $estadoNuevo . ' · ' . $registro['equipo'] . ' / ' . $registro['temporada'],
                 ':descripcion' => mb_substr($descripcion, 0, 255)
             ]);
 
