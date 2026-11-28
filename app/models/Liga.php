@@ -931,10 +931,15 @@ class Liga
                 INNER JOIN tb_equipos e ON e.id = le.equipo_id
                 INNER JOIN tb_temporadas t ON t.id = lt.temporada_id
                 WHERE le.id = :id AND lt.liga_id = :liga_id
+                  AND e.liga_id = :liga_propietaria
                   AND le.estado_participacion = 'pendiente' AND lt.estado = 'activo'
                 FOR UPDATE
             ");
-            $consulta->execute([':id' => $ligaEquipoId, ':liga_id' => $ligaId]);
+            $consulta->execute([
+                ':id' => $ligaEquipoId,
+                ':liga_id' => $ligaId,
+                ':liga_propietaria' => $ligaId
+            ]);
             $registro = $consulta->fetch(PDO::FETCH_ASSOC);
             if (!$registro) {
                 $this->pdo->rollBack();
@@ -1018,12 +1023,14 @@ class Liga
                 INNER JOIN tb_temporadas t ON t.id = lt.temporada_id
                 WHERE le.id = :liga_equipo_id
                   AND lt.liga_id = :liga_id
+                  AND e.liga_id = :liga_propietaria
                   AND lt.estado = 'activo'
                 FOR UPDATE
             ");
             $consulta->execute([
                 ':liga_equipo_id' => $ligaEquipoId,
-                ':liga_id' => $ligaId
+                ':liga_id' => $ligaId,
+                ':liga_propietaria' => $ligaId
             ]);
             $registro = $consulta->fetch(PDO::FETCH_ASSOC);
             if (!$registro) {
