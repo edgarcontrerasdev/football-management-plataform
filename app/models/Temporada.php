@@ -81,6 +81,144 @@ class Temporada
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Ligas gestionadas por el organismo y su estado de participación en la temporada.
+     */
+    public function listarLigasParticipantes(int $temporadaId): array
+    {
+        $stmt = $this->pdo->prepare("
+            SELECT l.id AS liga_id, l.nombre AS liga_nombre, l.siglas,
+                   lt.id AS liga_temporada_id,
+                   COALESCE(lt.estado, 'no_vinculada') AS estado_participacion,
+                   lt.fecha_solicitud, lt.fecha_alta
+            FROM tb_temporadas t
+            INNER JOIN tb_liga_organismos lo
+                ON lo.organismo_id = t.organismo_id
+               AND lo.es_gestor = 1
+               AND lo.estado = 'activa'
+            INNER JOIN tb_ligas l ON l.id = lo.liga_id
+            LEFT JOIN tb_liga_temporadas lt
+                ON lt.liga_id = l.id AND lt.temporada_id = t.id
+            WHERE t.id = :temporada_id
+              AND t.ambito_tipo = 'organismo'
+            ORDER BY l.nombre
+        ");
+        $stmt->execute([':temporada_id' => $temporadaId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * El organismo propietario autoriza o rechaza la participación de una liga.
+     * También permite autorizar una liga aunque todavía no haya enviado solicitud.
+     */
+    public function actualizarParticipacionLiga(int $temporadaId, int $ligaId, string $estado, int $usuarioId): bool
+    {
+        if (!in_array($estado, ['activo', 'rechazado'], true)) {
+            throw new InvalidArgumentException('Estado de participación no válido.');
+        }
+
+        $this->pdo->beginTransaction();
+        try {
+            $temporada = $this->pdo->prepare("
+                SELECT t.organismo_id, t.temporada
+                FROM tb_temporadas t
+                WHERE t.id = :temporada_id AND t.ambito_tipo = 'organismo'
+                FOR UPDATE
+            ");
+            $temporada->execute([':temporada_id' => $temporadaId]);
+            $datosTemporada = $temporada->fetch(PDO::FETCH_ASSOC);
+            if (!$datosTemporada) {
+                $this->pdo->rollBack();
+                return false;
+            }
+
+            $liga = $this->pdo->prepare("
+                SELECT l.nombre
+                FROM tb_ligas l
+                INNER JOIN tb_liga_organismos lo ON lo.liga_id = l.id
+                WHERE l.id = :liga_id
+                  AND lo.organismo_id = :organismo_id
+                  AND lo.es_gestor = 1
+                  AND lo.estado = 'activa'
+                LIMIT 1
+            ");
+            $liga->execute([
+                ':liga_id' => $ligaId,
+                ':organismo_id' => (int) $datosTemporada['organismo_id']
+            ]);
+            $ligaNombre = $liga->fetchColumn();
+            if (!$ligaNombre) {
+                $this->pdo->rollBack();
+                return false;
+            }
+
+            $existente = $this->pdo->prepare("
+                SELECT id, estado FROM tb_liga_temporadas
+                WHERE liga_id = :liga_id AND temporada_id = :temporada_id
+                FOR UPDATE
+            ");
+            $existente->execute([':liga_id' => $ligaId, ':temporada_id' => $temporadaId]);
+            $vinculo = $existente->fetch(PDO::FETCH_ASSOC);
+
+            if ($vinculo) {
+                $anterior = (string) $vinculo['estado'];
+                if ($anterior === $estado) {
+                    $this->pdo->commit();
+                    return true;
+                }
+                $actualizar = $this->pdo->prepare("
+                    UPDATE tb_liga_temporadas
+                    SET estado = :estado,
+                        fecha_solicitud = COALESCE(fecha_solicitud, NOW()),
+                        fecha_alta = CASE WHEN :estado_fecha = 'activo' THEN NOW() ELSE NULL END
+                    WHERE id = :id
+                ");
+                $actualizar->execute([
+                    ':estado' => $estado,
+                    ':estado_fecha' => $estado,
+                    ':id' => (int) $vinculo['id']
+                ]);
+                $anterior = $anterior === 'pendiente' ? 'pendiente' : $anterior;
+            } else {
+                $anterior = 'sin_vinculo';
+                $insertar = $this->pdo->prepare("
+                    INSERT INTO tb_liga_temporadas
+                        (liga_id, temporada_id, estado, fecha_solicitud, fecha_alta)
+                    VALUES
+                        (:liga_id, :temporada_id, :estado, NOW(),
+                         CASE WHEN :estado_fecha = 'activo' THEN NOW() ELSE NULL END)
+                ");
+                $insertar->execute([
+                    ':liga_id' => $ligaId,
+                    ':temporada_id' => $temporadaId,
+                    ':estado' => $estado,
+                    ':estado_fecha' => $estado
+                ]);
+            }
+
+            $historial = $this->pdo->prepare("
+                INSERT INTO tb_liga_historial
+                    (liga_id, usuario_id, accion, campo, valor_anterior, valor_nuevo, descripcion)
+                VALUES
+                    (:liga_id, :usuario_id, :accion, 'temporada', :anterior, :nuevo, :descripcion)
+            ");
+            $historial->execute([
+                ':liga_id' => $ligaId,
+                ':usuario_id' => $usuarioId,
+                ':accion' => $estado === 'activo' ? 'autorizacion_temporada_organismo' : 'rechazo_temporada_organismo',
+                ':anterior' => $anterior,
+                ':nuevo' => $estado,
+                ':descripcion' => 'El organismo ' . $estado . ' la participación de la liga en la temporada ' . $datosTemporada['temporada'] . '.'
+            ]);
+
+            $this->pdo->commit();
+            return true;
+        } catch (Throwable $e) {
+            if ($this->pdo->inTransaction()) $this->pdo->rollBack();
+            throw $e;
+        }
+    }
+
     public function getById($id): ?array
     {
         $stmt = $this->pdo->prepare("
