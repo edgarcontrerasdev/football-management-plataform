@@ -51,8 +51,14 @@
                             <?php foreach ($ligasParticipantes as $ligaParticipante): ?>
                                 <?php
                                     $estadoParticipacion = $ligaParticipante['estado_participacion'];
-                                    $claseEstado = $estadoParticipacion === 'activo' ? 'success' : ($estadoParticipacion === 'pendiente' ? 'warning' : ($estadoParticipacion === 'rechazado' ? 'danger' : 'secondary'));
-                                    $etiquetaEstado = $estadoParticipacion === 'no_vinculada' ? 'Sin solicitud' : ucfirst($estadoParticipacion);
+                                    $claseEstado = $estadoParticipacion === 'activo'
+                                        ? 'success'
+                                        : ($estadoParticipacion === 'pendiente'
+                                            ? 'warning'
+                                            : (in_array($estadoParticipacion, ['rechazado', 'revocado'], true) ? 'danger' : 'secondary'));
+                                    $etiquetaEstado = $estadoParticipacion === 'no_vinculada'
+                                        ? 'Sin solicitud'
+                                        : ($estadoParticipacion === 'revocado' ? 'Autorización retirada' : ucfirst($estadoParticipacion));
                                 ?>
                                 <tr>
                                     <td>
@@ -71,12 +77,21 @@
                                                         <button type="submit" class="btn btn-sm btn-success">Autorizar</button>
                                                     </form>
                                                 <?php endif; ?>
-                                                <?php if ($estadoParticipacion !== 'rechazado'): ?>
+                                                <?php if (in_array($estadoParticipacion, ['no_vinculada', 'pendiente'], true)): ?>
                                                     <form method="POST" action="index.php?page=temporadas&action=resolverParticipacionLiga">
                                                         <input type="hidden" name="temporada_id" value="<?= (int) $temporada['id'] ?>">
                                                         <input type="hidden" name="liga_id" value="<?= (int) $ligaParticipante['liga_id'] ?>">
                                                         <input type="hidden" name="decision" value="rechazar">
                                                         <button type="submit" class="btn btn-sm btn-outline-danger">Rechazar</button>
+                                                    </form>
+                                                <?php endif; ?>
+                                                <?php if ($estadoParticipacion === 'activo'): ?>
+                                                    <form method="POST" action="index.php?page=temporadas&action=resolverParticipacionLiga"
+                                                          onsubmit="return confirm('¿Retirar la autorización de esta liga? Se conservará el historial de equipos y participaciones.');">
+                                                        <input type="hidden" name="temporada_id" value="<?= (int) $temporada['id'] ?>">
+                                                        <input type="hidden" name="liga_id" value="<?= (int) $ligaParticipante['liga_id'] ?>">
+                                                        <input type="hidden" name="decision" value="retirar">
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger">Retirar autorización</button>
                                                     </form>
                                                 <?php endif; ?>
                                             </div>
